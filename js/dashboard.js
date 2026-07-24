@@ -216,12 +216,21 @@ function displayExpenses() {
         filterCategory.value;
 
     }
-
     expenses.forEach((expense, index) => {
-        expense.name = expense.name || "Unknown";
-        expense.category = expense.category || "Others";
-        expense.amount = Number(expense.amount) || 0;
 
+expense.name = expense.name || expense["Expense Name"] || "Unknown";
+
+expense.category = expense.category || expense["Category"] || "Others";
+
+expense.amount = Number(
+    expense.amount ?? expense["Amount (₹)"] ?? 0
+);
+
+if(isNaN(expense.amount)){
+    expense.amount = 0;
+}
+
+expense.date = expense.date || expense["Date"] || "";
         let matchSearch =
         (String(expense.name || "").toLowerCase().includes(searchText)) ||
         (String(expense.category || "").toLowerCase().includes(searchText));
@@ -270,22 +279,34 @@ function displayExpenses() {
 
     let total = 0;
 
-    expenses.forEach((expense) => {
+    expenses.forEach((expense)=>{
 
-        total += Number(expense.amount);
+let amount = Number(
+    expense.amount ?? expense["Amount (₹)"] ?? 0
+);
 
-    });
+if(isNaN(amount)){
+    amount = 0;
+}
+
+total += amount;
+
+});
+
 
     let balance = income - total;
 
-    totalIncome.innerText =
-    formatCurrency(income);
- 
-    totalExpense.innerText =
-    formatCurrency(total);
- 
-    totalBalance.innerText =
-    formatCurrency(balance);
+    if(totalIncome){
+    totalIncome.innerText = formatCurrency(income);
+}
+
+if(totalExpense){
+    totalExpense.innerText = formatCurrency(total);
+}
+
+if(totalBalance){
+    totalBalance.innerText = formatCurrency(balance);
+}
 
     // LOW BALANCE REMINDER
 
