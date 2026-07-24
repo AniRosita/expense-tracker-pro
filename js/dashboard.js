@@ -218,10 +218,13 @@ function displayExpenses() {
     }
 
     expenses.forEach((expense, index) => {
+        expense.name = expense.name || "Unknown";
+        expense.category = expense.category || "Others";
+        expense.amount = Number(expense.amount) || 0;
 
         let matchSearch =
-        expense.name.toLowerCase().includes(searchText) ||
-        expense.category.toLowerCase().includes(searchText);
+        (String(expense.name || "").toLowerCase().includes(searchText)) ||
+        (String(expense.category || "").toLowerCase().includes(searchText));
 
         let matchCategory =
         selectedCategory === "All" ||
@@ -664,7 +667,16 @@ if(importExpenseBtn && expenseFileInput){
             const importedExpenses =
             XLSX.utils.sheet_to_json(worksheet);
 
-            expenses.push(...importedExpenses);
+            importedExpenses.forEach(item => {
+
+            expenses.push({
+            name: item.Name || item.name || "Unknown",
+            amount: Number(item.Amount || item.amount) || 0,
+            category: item.Category || item.category || "Others",
+            date: item.Date || item.date || new Date().toISOString().split("T")[0]
+            });
+
+        });
 
             localStorage.setItem(
                 "expenses",
