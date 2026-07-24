@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Reports</title>
+    <link rel="icon" type="image/png" href="assets/profile.png">
+
+
+    <link rel="stylesheet" href="css/reports.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>📊 Expense Reports</h1>
+
+        <!-- Main Stats -->
+
+        <div class="report-cards">
+
+            <div class="card">
+                <h3>Total Income</h3>
+                <h2 id="reportIncome">₹0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Total Expense</h3>
+                <h2 id="reportExpense">₹0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Current Balance</h3>
+                <h2 id="reportBalance">₹0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Total Savings</h3>
+                <h2 id="totalSavings">₹0</h2>
+            </div>
+
+        </div>
+
+
+        <!-- Charts -->
+
+        <div class="charts-container">
+
+            <div class="chart-card">
+
+                <h3>Expense By Category</h3>
+
+                <canvas id="expensePieChart"></canvas>
+
+            </div>
+
+            <div class="chart-card">
+
+                <h3>Monthly Expenses</h3>
+
+                <canvas id="monthlyExpenseChart"></canvas>
+
+            </div>
+            <div class="chart-card">
+
+        <h3>Saving Trend</h3>
+
+        <canvas id="savingTrendChart"></canvas>
+
+    </div>
+<div class="chart-card">
+
+    <h3>Income vs Expense</h3>
+
+    <canvas id="incomeExpenseChart"></canvas>
+
+</div>
+            
+            
+
+        </div>
+
+
+        <!-- Insights -->
+
+        <div class="report-cards">
+
+            <div class="card">
+                <h3>Highest Expense</h3>
+                <h2 id="highestExpense">₹0</h2>
+            </div>
+
+            <div class="card">
+                <h3>Most Used Category</h3>
+                <h2 id="topCategory">-</h2>
+            </div>
+
+            <div class="card">
+                <h3>Financial Score</h3>
+                <h2 id="financialScore">0/100</h2>
+            </div>
+
+            <div class="card">
+                <h3>Total Transactions</h3>
+                <h2 id="reportTransactions">0</h2>
+            </div>
+
+        </div>
+
+
+        <!-- Smart Suggestion -->
+
+        <div class="smart-card">
+
+            <h3>💡 Smart Suggestion</h3>
+
+            <p id="smartSuggestion">
+                Loading...
+            </p>
+
+        </div>
+
+
+        <a href="dashboard.html" class="back-btn">
+            ← Back To Dashboard
+        </a>
+
+    </div>
+    <script src="js/currency.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+
+</body>
+
+</html>

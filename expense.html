@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Expense History</title>
+<link rel="icon" type="image/png" href="assets/profile.png">
+
+
+<link rel="stylesheet" href="css/expense.css">
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>💰 Expense History</h1>
+
+
+
+<div class="filters">
+
+
+
+<div>
+
+<label>Month</label>
+
+<select id="monthFilter">
+
+<option value="all">
+All Months
+</option>
+
+<option value="0">January</option>
+<option value="1">February</option>
+<option value="2">March</option>
+<option value="3">April</option>
+<option value="4">May</option>
+<option value="5">June</option>
+<option value="6">July</option>
+<option value="7">August</option>
+<option value="8">September</option>
+<option value="9">October</option>
+<option value="10">November</option>
+<option value="11">December</option>
+
+</select>
+
+</div>
+
+
+
+
+
+<div>
+
+<label>Year</label>
+
+<select id="yearFilter">
+
+<option value="all">
+All Years
+</option>
+
+</select>
+
+</div>
+
+
+
+
+
+<div>
+
+<label>Amount Filter</label>
+
+<select id="amountFilter">
+
+<option value="all">
+All Amount
+</option>
+
+<option value="below">
+Below Amount
+</option>
+
+<option value="above">
+Above Amount
+</option>
+
+</select>
+
+
+<input 
+type="number"
+id="amountValue"
+placeholder="Enter Amount">
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<div class="buttons">
+
+
+<button id="viewReport">
+👁 View Report
+</button>
+
+
+
+<button id="downloadPdf">
+📄 Download PDF
+</button>
+
+
+
+<button id="downloadExcel">
+📊 Export Excel
+</button>
+
+
+</div>
+
+
+
+
+
+<h2>
+
+Total Expense:
+
+<span id="totalExpense">
+₹0
+</span>
+
+
+</h2>
+
+
+
+
+
+<div id="expenseHistory">
+
+</div>
+
+
+
+
+
+<button class="back"
+onclick="goDashboard()">
+
+⬅ Dashboard
+
+</button>
+
+
+
+
+</div>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+<script src="js/expense.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+</body>
+
+</html>
