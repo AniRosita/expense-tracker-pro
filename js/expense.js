@@ -1,133 +1,388 @@
-let expenses =
-JSON.parse(localStorage.getItem("expenses")) || [];
+// ===================== LOAD DATA =====================
+
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+const monthFilter = document.getElementById("monthFilter");
+const yearFilter = document.getElementById("yearFilter");
+const history = document.getElementById("expenseHistory");
+const totalExpense = document.getElementById("totalExpense");
+
+const amountType = document.getElementById("amountFilter");
+const amountValue = document.getElementById("amountValue");
 
 
+// ===================== PAGINATION =====================
 
-const monthFilter =
-document.getElementById("monthFilter");
+const recordsPerPage = 50;
 
+let currentPage = 1;
 
-const yearFilter =
-document.getElementById("yearFilter");
-
-
-const history =
-document.getElementById("expenseHistory");
+let filteredExpenses = [];
 
 
-const totalExpense =
-document.getElementById("totalExpense");
+// ===================== YEAR LIST =====================
 
-
-// AMOUNT FILTER
-
-const amountType =
-document.getElementById("amountFilter");
-
-
-const amountValue =
-document.getElementById("amountValue");
-
-
-
-
-
-// YEAR CREATE
-
-let years=[];
-
+let years = [];
 
 expenses.forEach(item=>{
 
+    let date = new Date(item.date);
 
-let year =
-new Date(item.date).getFullYear();
+    if(!isNaN(date)){
 
+        let year = date.getFullYear();
 
-if(!years.includes(year)){
+        if(!years.includes(year)){
 
-years.push(year);
+            years.push(year);
 
-}
+        }
+
+    }
 
 });
 
+
+years.sort((a,b)=>a-b);
 
 
 years.forEach(year=>{
 
+    let option = document.createElement("option");
 
-let option=document.createElement("option");
+    option.value = year;
 
-option.value=year;
+    option.innerText = year;
 
-option.innerText=year;
-
-
-yearFilter.appendChild(option);
-
+    yearFilter.appendChild(option);
 
 });
 
 
 
+// ===================== FILTER FUNCTION =====================
+
+function filterExpenses(){
+
+    let month = monthFilter.value;
+
+    let year = yearFilter.value;
+
+
+    let amount =
+    Number(amountValue?.value || 0);
+
+
+    filteredExpenses = expenses.filter(item=>{
+
+
+        let date = new Date(item.date);
+
+
+        if(isNaN(date)) return false;
+
+
+        let itemMonth = date.getMonth();
+
+        let itemYear = date.getFullYear();
 
 
 
+        let matchMonth =
+        month==="all" ||
+        Number(month)===itemMonth;
+
+
+
+        let matchYear =
+        year==="all" ||
+        Number(year)===itemYear;
+
+
+
+        let matchAmount = true;
+
+
+
+        if(amountType && amountType.value==="below" && amount){
+
+            matchAmount =
+            Number(item.amount) < amount;
+
+        }
+
+
+
+        if(amountType && amountType.value==="above" && amount){
+
+            matchAmount =
+            Number(item.amount) > amount;
+
+        }
+
+
+
+        return (
+            matchMonth &&
+            matchYear &&
+            matchAmount
+        );
+
+
+    });
+
+
+}
+
+
+
+// ===================== SHOW EXPENSE =====================
 
 function showExpense(){
 
 
-history.innerHTML="";
+    filterExpenses();
 
 
-let total=0;
+    history.innerHTML="";
 
 
-
-let month =
-monthFilter.value;
+    let total = 0;
 
 
-let year =
-yearFilter.value;
+    filteredExpenses.forEach(item=>{
+
+        total += Number(item.amount) || 0;
+
+    });
 
 
-
-let filteredExpenses=[...expenses];
-
-
-
-
-
-// MONTH + YEAR FILTER
-
-filteredExpenses =
-filteredExpenses.filter(item=>{
-
-
-let date =
-new Date(item.date);
-
-
-let itemMonth =
-date.getMonth();
-
-
-let itemYear =
-date.getFullYear();
+    totalExpense.innerText = "₹"+total;
 
 
 
-return (
+    let startIndex =
+    (currentPage-1)*recordsPerPage;
 
-(month==="all" || month==itemMonth)
 
-&&
 
-(year==="all" || year==itemYear)
+    let endIndex =
+    startIndex+recordsPerPage;
 
-);
+
+
+    let pageExpenses =
+    filteredExpenses.slice(
+        startIndex,
+        endIndex
+    );
+
+
+
+    let html="";
+
+
+
+    pageExpenses.forEach(item=>{
+
+
+        let date = new Date(item.date);
+
+
+
+        html += `
+
+        <div class="expense-card">
+
+
+            <div class="line">
+
+                <h3>${item.name}</h3>
+
+                <p>₹${item.amount}</p>
+
+            </div>
+
+
+
+            <p>
+            Category : ${item.category}
+            </p>
+
+
+
+            <span>
+
+            ${date.getDate()}
+            ${date.toLocaleString(
+            'default',
+            {month:'long'}
+            )}
+
+            ${date.getFullYear()}
+
+            </span>
+
+
+        </div>
+
+
+        `;
+
+
+    });
+
+
+
+    // FIXED EMPTY EXPENSE CHECK
+
+    if(pageExpenses.length===0){
+
+        history.innerHTML =
+        "<h3>No Expenses Found</h3>";
+
+    }else{
+
+        history.innerHTML = html;
+
+    }
+
+
+
+    createPagination();
+
+
+}
+// ===================== PAGINATION =====================
+
+function createPagination(){
+
+
+    const oldPagination =
+    document.getElementById("pagination");
+
+
+    if(oldPagination){
+
+        oldPagination.remove();
+
+    }
+
+
+
+    let totalPages =
+    Math.ceil(
+        filteredExpenses.length /
+        recordsPerPage
+    );
+
+
+
+    if(totalPages <= 1){
+
+        return;
+
+    }
+
+
+
+    let pagination =
+    document.createElement("div");
+
+
+
+    pagination.id="pagination";
+
+
+
+    pagination.style.textAlign="center";
+
+    pagination.style.marginTop="20px";
+
+
+
+    pagination.innerHTML = `
+
+        <button id="prevBtn">
+        ◀ Previous
+        </button>
+
+
+        <span style="margin:0 15px;">
+
+        Page ${currentPage}
+        of
+        ${totalPages}
+
+        </span>
+
+
+        <button id="nextBtn">
+        Next ▶
+        </button>
+
+    `;
+
+
+
+    history.after(pagination);
+
+
+
+
+    document
+    .getElementById("prevBtn")
+    .onclick=function(){
+
+
+        if(currentPage>1){
+
+            currentPage--;
+
+            showExpense();
+
+        }
+
+
+    };
+
+
+
+
+
+    document
+    .getElementById("nextBtn")
+    .onclick=function(){
+
+
+        if(currentPage<totalPages){
+
+            currentPage++;
+
+            showExpense();
+
+        }
+
+
+    };
+
+
+
+}
+
+
+
+
+
+// ===================== FILTER EVENTS =====================
+
+
+monthFilter.addEventListener("change",()=>{
+
+
+    currentPage=1;
+
+    showExpense();
 
 
 });
@@ -136,188 +391,53 @@ return (
 
 
 
-
-// CUSTOM AMOUNT FILTER
-
-
-let amount =
-Number(amountValue.value);
+yearFilter.addEventListener("change",()=>{
 
 
+    currentPage=1;
 
-if(
-amountType &&
-amountType.value==="below"
-&&
-amount
-){
-
-
-filteredExpenses =
-filteredExpenses.filter(item=>{
-
-
-return Number(item.amount) < amount;
+    showExpense();
 
 
 });
 
 
-}
-
-
-
-
-else if(
-
-amountType &&
-amountType.value==="above"
-
-&&
-
-amount
-
-){
-
-
-filteredExpenses =
-filteredExpenses.filter(item=>{
-
-
-return Number(item.amount) > amount;
-
-
-});
-
-
-}
-
-
-
-
-
-
-
-
-// DISPLAY HISTORY
-
-
-filteredExpenses.forEach((item)=>{
-
-
-let date =
-new Date(item.date);
-
-
-
-let itemYear =
-date.getFullYear();
-
-
-
-
-total += Number(item.amount);
-
-
-
-
-history.innerHTML +=`
-
-
-<div class="expense-card">
-
-
-<div class="line">
-
-
-<h3>
-${item.name}
-</h3>
-
-
-<p>
-₹${item.amount}
-</p>
-
-
-</div>
-
-
-
-<p>
-Category : ${item.category}
-</p>
-
-
-
-<span>
-${date.getDate()} 
-${date.toLocaleString(
-'default',
-{
-month:'long'
-}
-)}
- ${itemYear}
-</span>
-
-
-
-</div>
-
-
-`;
-
-
-
-});
-
-
-
-
-totalExpense.innerText =
-"₹"+total;
-
-
-
-}
-
-
-
-
-
-
-
-monthFilter.addEventListener(
-"change",
-showExpense
-);
-
-
-yearFilter.addEventListener(
-"change",
-showExpense
-);
 
 
 
 if(amountType){
 
-amountType.addEventListener(
-"change",
-showExpense
-);
+
+    amountType.addEventListener("change",()=>{
+
+
+        currentPage=1;
+
+        showExpense();
+
+
+    });
+
 
 }
+
+
 
 
 
 if(amountValue){
 
-amountValue.addEventListener(
-"input",
-showExpense
-);
+
+    amountValue.addEventListener("input",()=>{
+
+
+        currentPage=1;
+
+        showExpense();
+
+
+    });
+
 
 }
 
@@ -325,182 +445,199 @@ showExpense
 
 
 
+// ===================== PDF DOWNLOAD =====================
+
+
+const pdfBtn =
+document.getElementById("downloadPdf");
 
 
 
-
-// PDF DOWNLOAD
-
-
-document
-.getElementById("downloadPdf")
-.onclick=function(){
+if(pdfBtn){
 
 
-const {jsPDF}=window.jspdf;
+pdfBtn.onclick=function(){
 
 
-let pdf=new jsPDF();
+    const {jsPDF}=window.jspdf;
 
 
 
-pdf.text(
-"Expense Tracker Report",
-20,
-20
-);
+    let pdf=new jsPDF();
 
 
 
-let y=40;
+    pdf.setFontSize(18);
 
 
 
-expenses.forEach(item=>{
-
-
-pdf.text(
-
-`${item.name} - ₹${item.amount} - ${item.category}`,
-
-20,
-
-y
-
-);
+    pdf.text(
+    "Expense Tracker Report",
+    20,
+    20
+    );
 
 
 
-y+=10;
-
-
-});
+    let y=35;
 
 
 
-pdf.save(
-"Expense_Report.pdf"
-);
+    filterExpenses();
 
 
 
-};
+    filteredExpenses.forEach(item=>{
+
+
+        if(y>270){
+
+
+            pdf.addPage();
+
+            y=20;
+
+
+        }
 
 
 
+        pdf.text(
+
+        `${item.name} | ₹${item.amount} | ${item.category} | ${item.date}`,
+
+        20,
+
+        y
+
+        );
 
 
 
+        y+=10;
 
 
 
-// EXCEL DOWNLOAD
-
-
-document
-.getElementById("downloadExcel")
-.onclick=function(){
+    });
 
 
 
-let data = expenses.map(item=>{
-
-
-return{
-
-
-Name:item.name,
-
-Amount:item.amount,
-
-Category:item.category,
-
-Date:item.date
+    pdf.save(
+    "Expense_Report.pdf"
+    );
 
 
 };
 
 
-
-});
-
+}
 
 
 
 
-let sheet =
-XLSX.utils.json_to_sheet(data);
+
+// ===================== EXCEL DOWNLOAD =====================
+
+
+const excelBtn =
+document.getElementById("downloadExcel");
 
 
 
-let book =
-XLSX.utils.book_new();
+if(excelBtn){
+
+
+excelBtn.onclick=function(){
+
+
+    filterExpenses();
 
 
 
-
-XLSX.utils.book_append_sheet(
-
-book,
-
-sheet,
-
-"Expenses"
-
-);
+    let data =
+    filteredExpenses.map(item=>({
 
 
+        Name:item.name,
+
+        Amount:item.amount,
+
+        Category:item.category,
+
+        Date:item.date
 
 
-XLSX.writeFile(
+    }));
 
-book,
 
-"Expense_Report.xlsx"
 
-);
+    let sheet =
+    XLSX.utils.json_to_sheet(data);
 
+
+
+    let book =
+    XLSX.utils.book_new();
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        book,
+
+        sheet,
+
+        "Expenses"
+
+    );
+
+
+
+    XLSX.writeFile(
+
+        book,
+
+        "Expense_Report.xlsx"
+
+    );
 
 
 };
 
 
+}
+// ===================== VIEW REPORT =====================
+
+const reportBtn =
+document.getElementById("viewReport");
 
 
+if(reportBtn){
 
 
+reportBtn.onclick=function(){
 
 
-
-// VIEW REPORT
-
-
-document
-.getElementById("viewReport")
-.onclick=function(){
-
-
-window.open(
-
-"expense.html",
-
-"_blank"
-
-);
+    showExpense();
 
 
 };
 
 
+}
 
 
 
 
+
+// ===================== DASHBOARD =====================
 
 
 function goDashboard(){
 
-window.location.href="dashboard.html";
+
+    window.location.href="dashboard.html";
+
 
 }
 
@@ -509,11 +646,21 @@ window.location.href="dashboard.html";
 
 
 
-showExpense();
-// LOAD SAVED THEME
+// ===================== LOAD PAGE =====================
 
-if(localStorage.getItem("theme") === "light"){
+
+showExpense();
+
+
+
+
+// ===================== THEME =====================
+
+
+if(localStorage.getItem("theme")==="light"){
+
 
     document.body.classList.add("light-mode");
+
 
 }
