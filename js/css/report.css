@@ -1,0 +1,55 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    padding:30px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    color:#a855f7;
+    margin-bottom:30px;
+}
+
+.report-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#1e293b;
+    padding:25px;
+    border-radius:18px;
+    text-align:center;
+}
+
+.card h3{
+    margin-bottom:15px;
+    color:#cbd5e1;
+}
+
+.card h2{
+    color:#22c55e;
+}
+
+.back-btn{
+    display:inline-block;
+    margin-top:30px;
+    text-decoration:none;
+    background:#a855f7;
+    color:white;
+    padding:12px 20px;
+    border-radius:10px;
+}
