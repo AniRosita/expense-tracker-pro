@@ -1,3 +1,7 @@
+// ======================================================
+// ================= EXPENSE TRACKER SERVER ==============
+// ======================================================
+
 const express = require("express");
 const mysql = require("mysql2");
 const path = require("path");
@@ -6,1282 +10,1410 @@ const app = express();
 
 
 // ======================================================
+// ================= PORT ================================
+// ======================================================
+
+const PORT = process.env.PORT || 5000;
+
+
+// ======================================================
 // ================= MIDDLEWARE ==========================
 // ======================================================
 
 app.use(express.json());
-
-app.use(
-    express.urlencoded({
-        extended: true
-    })
-);
-
-
-// ======================================================
-// ================= CORS ================================
-// ======================================================
-
-app.use((req, res, next) => {
-
-    const allowedOrigin =
-        "https://expense-tracker-pro-production-9a0b.up.railway.app";
-
-    res.setHeader(
-        "Access-Control-Allow-Origin",
-        allowedOrigin
-    );
-
-    res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS"
-    );
-
-    res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type"
-    );
-
-    res.setHeader(
-        "Access-Control-Max-Age",
-        "86400"
-    );
-
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
-    }
-
-    next();
-
-});
+app.use(express.urlencoded({ extended: true }));
 
 
 // ======================================================
 // ================= STATIC FILES ========================
 // ======================================================
 
-app.use(
-    express.static(__dirname)
-);
+app.use(express.static(__dirname));
+
+
+// ======================================================
+// ================= MYSQL CONFIG ========================
+// ======================================================
+
+// Railway MySQL variables
+// Local MySQL fallback values
+
+const dbConfig = {
+
+    host:
+        process.env.MYSQLHOST ||
+        process.env.MYSQL_HOST ||
+        "localhost",
+
+    user:
+        process.env.MYSQLUSER ||
+        process.env.MYSQL_USER ||
+        "root",
+
+    password:
+        process.env.MYSQLPASSWORD ||
+        process.env.MYSQL_PASSWORD ||
+        "Rosi@2006",
+
+    database:
+        process.env.MYSQLDATABASE ||
+        process.env.MYSQL_DATABASE ||
+        "expense_tracker",
+
+    port:
+        Number(
+            process.env.MYSQLPORT ||
+            process.env.MYSQL_PORT ||
+            3306
+        )
+
+};
 
 
 // ======================================================
 // ================= MYSQL CONNECTION ====================
 // ======================================================
 
-const dbConfig = {
-
-    host: process.env.MYSQLHOST,
-
-    port: Number(process.env.MYSQLPORT),
-
-    user: process.env.MYSQLUSER,
-
-    password: process.env.MYSQLPASSWORD,
-
-    database: process.env.MYSQLDATABASE,
-
-    waitForConnections: true,
-
-    connectionLimit: 10,
-
-    queueLimit: 0
-
-};
+const db = mysql.createConnection(dbConfig);
 
 
-console.log("======================================");
+db.connect((err) => {
 
-console.log(
-    "Connecting to MySQL..."
-);
+    if (err) {
 
-console.log(
-    "MySQL Host:",
-    dbConfig.host
-);
-
-console.log(
-    "MySQL Port:",
-    dbConfig.port
-);
-
-console.log(
-    "MySQL Database:",
-    dbConfig.database
-);
-
-console.log("======================================");
-
-
-// ======================================================
-// ================= MYSQL POOL ==========================
-// ======================================================
-
-const db = mysql.createPool(dbConfig);
-
-
-// ======================================================
-// ================= MYSQL TEST ==========================
-// ======================================================
-
-db.query(
-    "SELECT 1 AS connected",
-    (err) => {
-
-        if (err) {
-
-            console.error(
-                "MySQL Connection Failed ❌"
-            );
-
-            console.error(err);
-
-            return;
-
-        }
-
-        console.log(
-            "MySQL Connected Successfully ✅"
+        console.error(
+            "❌ MySQL Connection Error:",
+            err.message
         );
 
-    }
-);
-
-
-// ======================================================
-// ================= HOME ================================
-// ======================================================
-
-app.get(
-    "/",
-    (req, res) => {
-
-        res.sendFile(
-            path.join(
-                __dirname,
-                "index.html"
-            )
-        );
+        return;
 
     }
-);
+
+    console.log(
+        "MySQL Connected ✅"
+    );
+
+    console.log(
+        "Database:",
+        dbConfig.database
+    );
+
+});
 
 
 // ======================================================
-// ================= REGISTER ============================
+// ================= HOME ROUTE ==========================
 // ======================================================
 
-app.post(
-    "/register",
-    (req, res) => {
+app.get("/", (req, res) => {
 
-        const {
-            name,
-            email,
-            password
-        } = req.body;
+    res.sendFile(
+        path.join(
+            __dirname,
+            "index.html"
+        )
+    );
+
+});
 
 
-        if (
-            !name ||
-            !email ||
-            !password
-        ) {
+// ======================================================
+// ================= STATUS API ==========================
+// ======================================================
 
-            return res.status(400).json({
+app.get("/api/status", (req, res) => {
 
-                success: false,
+    db.query(
+        "SELECT 1 AS test",
+        (err) => {
+
+            if (err) {
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    server: "running",
+
+                    mysql: "disconnected",
+
+                    error: err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                server: "running",
+
+                mysql: "connected",
+
+                database:
+                    dbConfig.database,
 
                 message:
-                    "All fields are required"
+                    "Expense Tracker API is working ✅"
 
             });
 
         }
+    );
+
+});
 
 
-        const checkSql = `
+// ======================================================
+// ================= TEST MYSQL ==========================
+// ======================================================
 
-            SELECT *
-            FROM users
-            WHERE email = ?
+app.get("/api/test-db", (req, res) => {
 
-        `;
+    db.query(
+        "SELECT DATABASE() AS database_name",
+        (err, result) => {
 
+            if (err) {
 
-        db.query(
-            checkSql,
-            [email],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Register Check Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Database Error"
-
-                    });
-
-                }
-
-
-                if (
-                    result.length > 0
-                ) {
-
-                    return res.json({
-
-                        success: false,
-
-                        message:
-                            "You already have an account. Please login."
-
-                    });
-
-                }
-
-
-                const insertSql = `
-
-                    INSERT INTO users
-                    (
-                        name,
-                        email,
-                        password
-                    )
-
-                    VALUES (?, ?, ?)
-
-                `;
-
-
-                db.query(
-                    insertSql,
-                    [
-                        name,
-                        email,
-                        password
-                    ],
-                    (err, result) => {
-
-                        if (err) {
-
-                            console.error(
-                                "Register Insert Error:",
-                                err
-                            );
-
-                            return res.status(500).json({
-
-                                success: false,
-
-                                message:
-                                    "Registration Failed"
-
-                            });
-
-                        }
-
-
-                        return res.json({
-
-                            success: true,
-
-                            message:
-                                "Registration Successful",
-
-                            id:
-                                result.insertId
-
-                        });
-
-                    }
+                console.error(
+                    "Database Test Error:",
+                    err
                 );
 
-            }
-        );
+                return res.status(500).json({
 
-    }
-);
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                database:
+                    result[0].database_name
+
+            });
+
+        }
+    );
+
+});
 
 
 // ======================================================
 // ================= LOGIN ===============================
 // ======================================================
 
-app.post(
-    "/login",
-    (req, res) => {
+app.post("/api/login", (req, res) => {
 
-        const {
+    const {
+        email,
+        password
+    } = req.body;
+
+
+    if (!email || !password) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Email and password are required"
+
+        });
+
+    }
+
+
+    const sql = `
+
+        SELECT
+            id,
+            name,
             email,
             password
-        } = req.body;
+
+        FROM users
+
+        WHERE email = ?
+
+        LIMIT 1
+
+    `;
 
 
-        if (
-            !email ||
-            !password
-        ) {
+    db.query(
+        sql,
+        [email],
+        (err, results) => {
 
-            return res.status(400).json({
+            if (err) {
 
-                success: false,
+                console.error(
+                    "Login Error:",
+                    err
+                );
 
-                message:
-                    "Email and password are required"
-
-            });
-
-        }
-
-
-        const sql = `
-
-            SELECT *
-            FROM users
-
-            WHERE email = ?
-            AND password = ?
-
-        `;
-
-
-        db.query(
-            sql,
-            [
-                email,
-                password
-            ],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Login Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Database Error"
-
-                    });
-
-                }
-
-
-                if (
-                    result.length > 0
-                ) {
-
-                    return res.json({
-
-                        success: true,
-
-                        message:
-                            "Login Successful",
-
-                        user:
-                            result[0]
-
-                    });
-
-                }
-
-
-                return res.json({
+                return res.status(500).json({
 
                     success: false,
 
                     message:
-                        "Invalid Email or Password"
+                        "Database error",
+
+                    error:
+                        err.message
 
                 });
 
             }
-        );
-
-    }
-);
 
 
-// ======================================================
-// ================= ADD INCOME ==========================
-// ======================================================
+            if (
+                results.length === 0
+            ) {
 
-app.post(
-    "/add-income",
-    (req, res) => {
+                return res.status(401).json({
 
-        const {
-            email,
-            source,
-            amount,
-            date
-        } = req.body;
-
-
-        if (
-            !email ||
-            !source ||
-            !amount ||
-            !date
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "All income fields are required"
-
-            });
-
-        }
-
-
-        const sql = `
-
-            INSERT INTO income
-            (
-                email,
-                source,
-                amount,
-                date
-            )
-
-            VALUES (?, ?, ?, ?)
-
-        `;
-
-
-        db.query(
-            sql,
-            [
-                email,
-                source,
-                amount,
-                date
-            ],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Income Add Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Income Add Failed"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
+                    success: false,
 
                     message:
-                        "Income Added Successfully",
-
-                    id:
-                        result.insertId
+                        "Invalid email or password"
 
                 });
 
             }
-        );
-
-    }
-);
 
 
-// ======================================================
-// ================= GET INCOME ==========================
-// ======================================================
-
-app.get(
-    "/income/:email",
-    (req, res) => {
-
-        const email =
-            decodeURIComponent(
-                req.params.email
-            );
+            const user =
+                results[0];
 
 
-        const sql = `
+            if (
+                String(
+                    user.password
+                ) !==
+                String(password)
+            ) {
 
-            SELECT *
-            FROM income
+                return res.status(401).json({
 
-            WHERE email = ?
+                    success: false,
 
-            ORDER BY date DESC, id DESC
-
-        `;
-
-
-        db.query(
-            sql,
-            [email],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Income Fetch Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Database Error"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    income:
-                        result || []
+                    message:
+                        "Invalid email or password"
 
                 });
 
             }
-        );
-
-    }
-);
 
 
-// ======================================================
-// ================= UPDATE INCOME =======================
-// ======================================================
+            res.json({
 
-app.put(
-    "/update-income/:id",
-    (req, res) => {
-
-        const id =
-            Number(
-                req.params.id
-            );
-
-        const {
-            source,
-            amount,
-            date
-        } = req.body;
-
-
-        if (
-            !id ||
-            !source ||
-            !amount ||
-            !date
-        ) {
-
-            return res.status(400).json({
-
-                success: false,
+                success: true,
 
                 message:
-                    "All income fields are required"
+                    "Login successful",
+
+                user: {
+
+                    id:
+                        user.id,
+
+                    name:
+                        user.name,
+
+                    email:
+                        user.email
+
+                }
 
             });
 
         }
+    );
+
+});
 
 
-        const sql = `
+// ======================================================
+// ================= REGISTER ============================
+// ======================================================
 
-            UPDATE income
+app.post("/api/register", (req, res) => {
 
-            SET
-                source = ?,
-                amount = ?,
-                date = ?
-
-            WHERE id = ?
-
-        `;
+    const {
+        name,
+        email,
+        password
+    } = req.body;
 
 
-        db.query(
-            sql,
-            [
-                source,
-                amount,
-                date,
-                id
-            ],
-            (err, result) => {
+    if (
+        !name ||
+        !email ||
+        !password
+    ) {
 
-                if (err) {
+        return res.status(400).json({
 
-                    console.error(
-                        "Income Update Error:",
-                        err
-                    );
+            success: false,
 
-                    return res.status(500).json({
+            message:
+                "All fields are required"
 
-                        success: false,
+        });
 
-                        message:
-                            "Income Update Failed"
+    }
 
-                    });
 
-                }
+    const sql = `
+
+        INSERT INTO users
+        (
+            name,
+            email,
+            password
+        )
+
+        VALUES (?, ?, ?)
+
+    `;
+
+
+    db.query(
+        sql,
+        [
+            name,
+            email,
+            password
+        ],
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "Register Error:",
+                    err
+                );
 
 
                 if (
-                    result.affectedRows === 0
+                    err.code ===
+                    "ER_DUP_ENTRY"
                 ) {
 
-                    return res.status(404).json({
+                    return res.status(409).json({
 
                         success: false,
 
                         message:
-                            "Income Not Found"
+                            "Email already exists"
 
                     });
 
                 }
 
 
-                return res.json({
+                return res.status(500).json({
 
-                    success: true,
+                    success: false,
 
                     message:
-                        "Income Updated Successfully"
+                        "Database error",
+
+                    error:
+                        err.message
 
                 });
 
             }
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Registration successful",
+
+                userId:
+                    result.insertId
+
+            });
+
+        }
+    );
+
+});
+
+
+// ======================================================
+// ================= GET USER ============================
+// ======================================================
+
+app.get("/api/user/:email", (req, res) => {
+
+    const email =
+        req.params.email;
+
+
+    db.query(
+
+        `
+
+        SELECT
+            id,
+            name,
+            email
+
+        FROM users
+
+        WHERE email = ?
+
+        LIMIT 1
+
+        `,
+
+        [email],
+
+        (err, results) => {
+
+            if (err) {
+
+                console.error(
+                    "Get User Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            if (
+                results.length === 0
+            ) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "User not found"
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                user:
+                    results[0]
+
+            });
+
+        }
+
+    );
+
+});
+
+
+// ======================================================
+// ================= GET EXPENSES =======================
+// ======================================================
+
+app.get("/expenses/:email", (req, res) => {
+
+    const email =
+        decodeURIComponent(
+            req.params.email
         );
 
-    }
-);
+
+    console.log(
+        "GET EXPENSES:",
+        email
+    );
 
 
-// ======================================================
-// ================= ADD EXPENSE =========================
-// ======================================================
+    const sql = `
 
-app.post(
-    "/add-expense",
-    (req, res) => {
-
-        const {
+        SELECT
+            id,
             email,
             name,
             amount,
             category,
             date
-        } = req.body;
+
+        FROM expenses
+
+        WHERE email = ?
+
+        ORDER BY date DESC, id DESC
+
+    `;
 
 
-        if (
-            !email ||
-            !name ||
-            !amount ||
-            !category ||
-            !date
-        ) {
+    db.query(
+        sql,
+        [email],
+        (err, results) => {
 
-            return res.status(400).json({
+            if (err) {
 
-                success: false,
+                console.error(
+                    "❌ Get Expenses Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to load expenses",
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            console.log(
+                "Expenses found:",
+                results.length
+            );
+
+
+            res.json({
+
+                success: true,
+
+                expenses:
+                    results
+
+            });
+
+        }
+    );
+
+});
+
+
+// ======================================================
+// ================= ADD EXPENSE ========================
+// ======================================================
+
+app.post("/expenses", (req, res) => {
+
+    const {
+        email,
+        name,
+        amount,
+        category,
+        date
+    } = req.body;
+
+
+    if (
+        !email ||
+        !name ||
+        amount === undefined ||
+        !category ||
+        !date
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Email, name, amount, category and date are required"
+
+        });
+
+    }
+
+
+    const sql = `
+
+        INSERT INTO expenses
+        (
+            email,
+            name,
+            amount,
+            category,
+            date
+        )
+
+        VALUES (?, ?, ?, ?, ?)
+
+    `;
+
+
+    db.query(
+
+        sql,
+
+        [
+            email,
+            name,
+            amount,
+            category,
+            date
+        ],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Add Expense Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to add expense",
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
 
                 message:
-                    "All expense fields are required"
+                    "Expense added successfully",
+
+                expenseId:
+                    result.insertId
 
             });
 
         }
 
+    );
 
-        const sql = `
-
-            INSERT INTO expenses
-            (
-                email,
-                name,
-                amount,
-                category,
-                date
-            )
-
-            VALUES (?, ?, ?, ?, ?)
-
-        `;
-
-
-        db.query(
-            sql,
-            [
-                email,
-                name,
-                amount,
-                category,
-                date
-            ],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Expense Add Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Failed to add expense"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    message:
-                        "Expense Added Successfully",
-
-                    id:
-                        result.insertId
-
-                });
-
-            }
-        );
-
-    }
-);
-
-
-// ======================================================
-// ================= GET EXPENSES ========================
-// ======================================================
-
-app.get(
-    "/expenses/:email",
-    (req, res) => {
-
-        const email =
-            decodeURIComponent(
-                req.params.email
-            );
-
-
-        const sql = `
-
-            SELECT
-                id,
-                email,
-                name,
-                amount,
-                category,
-                date,
-                created_at
-
-            FROM expenses
-
-            WHERE email = ?
-
-            ORDER BY date DESC, id DESC
-
-        `;
-
-
-        db.query(
-            sql,
-            [email],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Expense Fetch Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Database Error"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    expenses:
-                        result || []
-
-                });
-
-            }
-        );
-
-    }
-);
+});
 
 
 // ======================================================
 // ================= UPDATE EXPENSE ======================
 // ======================================================
 
-app.put(
-    "/update-expense/:id",
-    (req, res) => {
+app.put("/expenses/:id", (req, res) => {
 
-        const id =
-            Number(
-                req.params.id
-            );
+    const id =
+        req.params.id;
 
-        const {
+
+    const {
+        name,
+        amount,
+        category,
+        date
+    } = req.body;
+
+
+    if (
+        !name ||
+        amount === undefined ||
+        !category ||
+        !date
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "All expense fields are required"
+
+        });
+
+    }
+
+
+    const sql = `
+
+        UPDATE expenses
+
+        SET
+            name = ?,
+            amount = ?,
+            category = ?,
+            date = ?
+
+        WHERE id = ?
+
+    `;
+
+
+    db.query(
+
+        sql,
+
+        [
             name,
             amount,
             category,
-            date
-        } = req.body;
+            date,
+            id
+        ],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Update Expense Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
 
 
-        if (
-            !id ||
-            !name ||
-            !amount ||
-            !category ||
-            !date
-        ) {
+            res.json({
 
-            return res.status(400).json({
-
-                success: false,
+                success: true,
 
                 message:
-                    "All expense fields are required"
+                    "Expense updated successfully",
+
+                affectedRows:
+                    result.affectedRows
 
             });
 
         }
 
+    );
 
-        const sql = `
-
-            UPDATE expenses
-
-            SET
-                name = ?,
-                amount = ?,
-                category = ?,
-                date = ?
-
-            WHERE id = ?
-
-        `;
-
-
-        db.query(
-            sql,
-            [
-                name,
-                amount,
-                category,
-                date,
-                id
-            ],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Expense Update Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Update Failed"
-
-                    });
-
-                }
-
-
-                if (
-                    result.affectedRows === 0
-                ) {
-
-                    return res.status(404).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Not Found"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    message:
-                        "Expense Updated Successfully"
-
-                });
-
-            }
-        );
-
-    }
-);
+});
 
 
 // ======================================================
 // ================= DELETE EXPENSE ======================
 // ======================================================
 
-app.delete(
-    "/delete-expense/:id",
-    (req, res) => {
+app.delete("/expenses/:id", (req, res) => {
 
-        const id =
-            Number(
-                req.params.id
-            );
+    const id =
+        req.params.id;
 
 
-        if (!id) {
+    db.query(
 
-            return res.status(400).json({
+        `
 
-                success: false,
+        DELETE FROM expenses
+
+        WHERE id = ?
+
+        `,
+
+        [id],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Delete Expense Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
 
                 message:
-                    "Invalid expense ID"
+                    "Expense deleted successfully",
+
+                affectedRows:
+                    result.affectedRows
 
             });
 
         }
 
+    );
 
-        const sql = `
-
-            DELETE FROM expenses
-
-            WHERE id = ?
-
-        `;
+});
 
 
-        db.query(
-            sql,
-            [id],
-            (err, result) => {
+// ======================================================
+// ================= GET INCOME =========================
+// ======================================================
 
-                if (err) {
+app.get("/income/:email", (req, res) => {
 
-                    console.error(
-                        "Expense Delete Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Delete Failed"
-
-                    });
-
-                }
+    const email =
+        decodeURIComponent(
+            req.params.email
+        );
 
 
-                if (
-                    result.affectedRows === 0
-                ) {
-
-                    return res.status(404).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Not Found"
-
-                    });
-
-                }
+    console.log(
+        "GET INCOME:",
+        email
+    );
 
 
-                return res.json({
+    const sql = `
 
-                    success: true,
+        SELECT
+            id,
+            email,
+            amount,
+            date
+
+        FROM income
+
+        WHERE email = ?
+
+        ORDER BY date DESC, id DESC
+
+    `;
+
+
+    db.query(
+        sql,
+        [email],
+        (err, results) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Get Income Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
 
                     message:
-                        "Expense Deleted Successfully"
+                        "Unable to load income",
+
+                    error:
+                        err.message
 
                 });
 
             }
-        );
+
+
+            console.log(
+                "Income found:",
+                results.length
+            );
+
+
+            res.json({
+
+                success: true,
+
+                income:
+                    results
+
+            });
+
+        }
+    );
+
+});
+
+
+// ======================================================
+// ================= ADD INCOME =========================
+// ======================================================
+
+app.post("/income", (req, res) => {
+
+    const {
+        email,
+        amount,
+        date
+    } = req.body;
+
+
+    if (
+        !email ||
+        amount === undefined ||
+        !date
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Email, amount and date are required"
+
+        });
 
     }
-);
 
 
-// ======================================================
-// ================= IMPORT EXPENSES =====================
-// ======================================================
+    const sql = `
 
-app.post(
-    "/import-expenses",
-    (req, res) => {
+        INSERT INTO income
+        (
+            email,
+            amount,
+            date
+        )
 
-        const expenses =
-            req.body.expenses;
+        VALUES (?, ?, ?)
+
+    `;
 
 
-        if (
-            !Array.isArray(expenses) ||
-            expenses.length === 0
-        ) {
+    db.query(
 
-            return res.status(400).json({
+        sql,
 
-                success: false,
+        [
+            email,
+            amount,
+            date
+        ],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Add Income Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to add income",
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
 
                 message:
-                    "No expenses found"
+                    "Income added successfully",
+
+                incomeId:
+                    result.insertId
 
             });
 
         }
 
+    );
 
-        const values =
-            expenses.map(
-                exp => [
+});
 
-                    exp.email,
 
-                    exp.name,
+// ======================================================
+// ================= UPDATE INCOME =======================
+// ======================================================
 
-                    exp.amount,
+app.put("/income/:id", (req, res) => {
 
-                    exp.category,
+    const id =
+        req.params.id;
 
-                    exp.date
 
-                ]
+    const {
+        amount,
+        date
+    } = req.body;
+
+
+    if (
+        amount === undefined ||
+        !date
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Amount and date are required"
+
+        });
+
+    }
+
+
+    const sql = `
+
+        UPDATE income
+
+        SET
+            amount = ?,
+            date = ?
+
+        WHERE id = ?
+
+    `;
+
+
+    db.query(
+
+        sql,
+
+        [
+            amount,
+            date,
+            id
+        ],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Update Income Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Income updated successfully",
+
+                affectedRows:
+                    result.affectedRows
+
+            });
+
+        }
+
+    );
+
+});
+
+
+// ======================================================
+// ================= DELETE INCOME =======================
+// ======================================================
+
+app.delete("/income/:id", (req, res) => {
+
+    const id =
+        req.params.id;
+
+
+    db.query(
+
+        `
+
+        DELETE FROM income
+
+        WHERE id = ?
+
+        `,
+
+        [id],
+
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ Delete Income Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Income deleted successfully",
+
+                affectedRows:
+                    result.affectedRows
+
+            });
+
+        }
+
+    );
+
+});
+
+
+// ======================================================
+// ================= GET ALL USER DATA ==================
+// ======================================================
+
+app.get("/api/data/:email", (req, res) => {
+
+    const email =
+        decodeURIComponent(
+            req.params.email
+        );
+
+
+    db.query(
+
+        `
+
+        SELECT
+            id,
+            name,
+            amount,
+            category,
+            date
+
+        FROM expenses
+
+        WHERE email = ?
+
+        ORDER BY date DESC, id DESC
+
+        `,
+
+        [email],
+
+        (expenseErr, expenses) => {
+
+            if (expenseErr) {
+
+                console.error(
+                    "Data Expense Error:",
+                    expenseErr
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        expenseErr.message
+
+                });
+
+            }
+
+
+            db.query(
+
+                `
+
+                SELECT
+                    id,
+                    email,
+                    amount,
+                    date
+
+                FROM income
+
+                WHERE email = ?
+
+                ORDER BY date DESC, id DESC
+
+                `,
+
+                [email],
+
+                (incomeErr, income) => {
+
+                    if (incomeErr) {
+
+                        console.error(
+                            "Data Income Error:",
+                            incomeErr
+                        );
+
+                        return res.status(500).json({
+
+                            success: false,
+
+                            error:
+                                incomeErr.message
+
+                        });
+
+                    }
+
+
+                    res.json({
+
+                        success: true,
+
+                        expenses:
+                            expenses,
+
+                        income:
+                            income
+
+                    });
+
+                }
+
             );
 
+        }
 
-        const sql = `
+    );
 
-            INSERT INTO expenses
-            (
-                email,
-                name,
-                amount,
-                category,
-                date
-            )
-
-            VALUES ?
-
-        `;
-
-
-        db.query(
-            sql,
-            [values],
-            (err, result) => {
-
-                if (err) {
-
-                    console.error(
-                        "Expense Import Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Import Failed"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    message:
-                        "Expenses Imported Successfully",
-
-                    inserted:
-                        result.affectedRows
-
-                });
-
-            }
-        );
-
-    }
-);
+});
 
 
 // ======================================================
-// ================= API STATUS ==========================
-// ======================================================
-
-app.get(
-    "/api/status",
-    (req, res) => {
-
-        db.query(
-            "SELECT 1 AS connected",
-            (err) => {
-
-                if (err) {
-
-                    console.error(
-                        "Status Database Error:",
-                        err
-                    );
-
-                    return res.status(500).json({
-
-                        success: false,
-
-                        message:
-                            "Expense Tracker Server is running",
-
-                        database:
-                            "disconnected"
-
-                    });
-
-                }
-
-
-                return res.json({
-
-                    success: true,
-
-                    message:
-                        "Expense Tracker Server is running",
-
-                    database:
-                        "connected"
-
-                });
-
-            }
-        );
-
-    }
-);
-
-
-// ======================================================
-// ================= 404 API =============================
+// ================= 404 HANDLER =========================
 // ======================================================
 
 app.use(
-    (req, res, next) => {
+    (req, res) => {
 
-        if (
-            req.path.startsWith("/api/") ||
-            req.method !== "GET"
-        ) {
+        res.status(404).json({
 
-            return res.status(404).json({
+            success: false,
 
-                success: false,
+            message:
+                "API route not found",
 
-                message:
-                    "API route not found"
+            route:
+                req.originalUrl
 
-            });
-
-        }
-
-        next();
+        });
 
     }
 );
 
 
 // ======================================================
-// ================= SERVER START ========================
+// ================= ERROR HANDLER =======================
 // ======================================================
 
-const PORT =
-    process.env.PORT || 5000;
+app.use(
+    (err, req, res, next) => {
 
+        console.error(
+            "❌ Server Error:",
+            err
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Internal Server Error",
+
+            error:
+                err.message
+
+        });
+
+    }
+);
+
+
+// ======================================================
+// ================= START SERVER ========================
+// ======================================================
 
 app.listen(
     PORT,
-    "0.0.0.0",
     () => {
 
         console.log(
@@ -1293,17 +1425,23 @@ app.listen(
         );
 
         console.log(
-            "Express Backend Ready ✅"
+            "MySQL + Express Backend Ready ✅"
         );
 
         console.log(
-            `Server running on port ${PORT}`
+            "Server running on port " +
+            PORT
         );
 
         console.log(
-            `Environment: ${
-                process.env.NODE_ENV || "production"
-            }`
+            "Local URL: http://localhost:" +
+            PORT
+        );
+
+        console.log(
+            "Status URL: http://localhost:" +
+            PORT +
+            "/api/status"
         );
 
         console.log(
