@@ -2,12 +2,16 @@
 // ================= LOGIN PAGE ==========================
 // ======================================================
 
+
 // ======================================================
-// ================= RAILWAY API =========================
+// ================= API BASE ============================
 // ======================================================
 
-const API_BASE =
-    "https://expense-tracker-pro-production-99eb.up.railway.app";
+// Frontend and backend are running on the same Railway service.
+// So we use relative API paths.
+// Example: /login, /register
+
+const API_BASE = "";
 
 
 // ======================================================
@@ -203,9 +207,9 @@ if (loginForm) {
                             errorData.message ||
                             errorMessage;
 
-                    } catch (
-                        jsonError
-                    ) {
+                    }
+
+                    catch (jsonError) {
 
                         console.error(
                             "Response JSON Error:",
@@ -256,6 +260,18 @@ if (loginForm) {
                     );
 
 
+                    // ================= SAVE USER NAME ==================
+
+                    if (data.user.name) {
+
+                        localStorage.setItem(
+                            "userName",
+                            data.user.name
+                        );
+
+                    }
+
+
                     // ================= SAVE PROFILE ====================
 
                     localStorage.setItem(
@@ -264,7 +280,9 @@ if (loginForm) {
                     );
 
 
+                    // ==================================================
                     // ================= MESSAGE =========================
+                    // ==================================================
 
                     const message =
                         document.getElementById(
