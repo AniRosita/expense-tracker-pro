@@ -24,25 +24,23 @@ app.use(
 
 app.use((req, res, next) => {
 
-    res.header(
+    res.setHeader(
         "Access-Control-Allow-Origin",
-        "*"
+        "https://expense-tracker-pro-production-9a0b.up.railway.app"
     );
 
-    res.header(
+    res.setHeader(
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS"
     );
 
-    res.header(
+    res.setHeader(
         "Access-Control-Allow-Headers",
         "Content-Type"
     );
 
     if (req.method === "OPTIONS") {
-
         return res.sendStatus(200);
-
     }
 
     next();
@@ -64,44 +62,18 @@ app.use(
 // ======================================================
 
 // Railway MySQL variables
-//
-// Railway normally provides:
-// MYSQLHOST
-// MYSQLPORT
-// MYSQLUSER
-// MYSQLPASSWORD
-// MYSQLDATABASE
-//
-// Localhost fallback is kept only for local testing.
 
 const dbConfig = {
 
-    host:
-        process.env.MYSQLHOST ||
-        process.env.MYSQL_HOST ||
-        "localhost",
+    host: process.env.MYSQLHOST,
 
-    port:
-        Number(
-            process.env.MYSQLPORT ||
-            process.env.MYSQL_PORT ||
-            3306
-        ),
+    port: Number(process.env.MYSQLPORT),
 
-    user:
-        process.env.MYSQLUSER ||
-        process.env.MYSQL_USER ||
-        "root",
+    user: process.env.MYSQLUSER,
 
-    password:
-        process.env.MYSQLPASSWORD ||
-        process.env.MYSQL_PASSWORD ||
-        "Rosi@2006",
+    password: process.env.MYSQLPASSWORD,
 
-    database:
-        process.env.MYSQLDATABASE ||
-        process.env.MYSQL_DATABASE ||
-        "expense_tracker",
+    database: process.env.MYSQLDATABASE,
 
     waitForConnections: true,
 
@@ -1326,15 +1298,13 @@ app.use(
 // ================= SERVER START ========================
 // ======================================================
 
-// Railway gives PORT automatically.
-// Localhost fallback = 5000.
-
 const PORT =
     process.env.PORT || 5000;
 
 
 app.listen(
     PORT,
+    "0.0.0.0",
     () => {
 
         console.log(
@@ -1354,8 +1324,11 @@ app.listen(
         );
 
         console.log(
-            "======================================"
+            `Environment: ${process.env.NODE_ENV || "production"}`
+        );
 
+        console.log(
+            "======================================"
         );
 
     }
