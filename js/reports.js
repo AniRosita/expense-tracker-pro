@@ -15,8 +15,8 @@ let incomeExpenseChart = null;
 // ================= API BASE URL ========================
 // ======================================================
 
-const API_BASE =
-    "https://YOUR-RAILWAY-DOMAIN";
+// Same Railway server
+const API_BASE = "";
 
 
 // ======================================================
@@ -96,6 +96,11 @@ async function loadReportData() {
 
     try {
 
+        console.log(
+            "Loading report data..."
+        );
+
+
         // ==================================================
         // ================= EXPENSE ========================
         // ==================================================
@@ -103,7 +108,9 @@ async function loadReportData() {
         const expenseRes =
             await fetch(
 
-                `${API_BASE}/expenses/${encodeURIComponent(email)}`
+                API_BASE +
+                "/expenses/" +
+                encodeURIComponent(email)
 
             );
 
@@ -122,16 +129,27 @@ async function loadReportData() {
             await expenseRes.json();
 
 
-        if (expenseData.success) {
+        if (
+            expenseData.success &&
+            Array.isArray(
+                expenseData.expenses
+            )
+        ) {
 
             allExpenses =
-                expenseData.expenses || [];
+                expenseData.expenses;
 
         } else {
 
             allExpenses = [];
 
         }
+
+
+        console.log(
+            "Expenses loaded:",
+            allExpenses
+        );
 
 
         // ==================================================
@@ -141,7 +159,9 @@ async function loadReportData() {
         const incomeRes =
             await fetch(
 
-                `${API_BASE}/income/${encodeURIComponent(email)}`
+                API_BASE +
+                "/income/" +
+                encodeURIComponent(email)
 
             );
 
@@ -160,16 +180,27 @@ async function loadReportData() {
             await incomeRes.json();
 
 
-        if (incomeData.success) {
+        if (
+            incomeData.success &&
+            Array.isArray(
+                incomeData.income
+            )
+        ) {
 
             allIncome =
-                incomeData.income || [];
+                incomeData.income;
 
         } else {
 
             allIncome = [];
 
         }
+
+
+        console.log(
+            "Income loaded:",
+            allIncome
+        );
 
 
         // ==================================================
@@ -192,7 +223,6 @@ async function loadReportData() {
             "Reports loaded successfully ✅"
         );
 
-
     }
 
     catch (error) {
@@ -212,14 +242,14 @@ async function loadReportData() {
                 title: "Report Error",
 
                 text:
-                    "Unable to load report. Please try again."
+                    "Unable to load report. Please check the server connection."
 
             });
 
         } else {
 
             alert(
-                "Unable to load report."
+                "Unable to load report. Please check the server connection."
             );
 
         }
@@ -241,7 +271,11 @@ function loadAvailableYears() {
         );
 
 
-    if (!reportYear) return;
+    if (!reportYear) {
+
+        return;
+
+    }
 
 
     const years =
@@ -253,19 +287,22 @@ function loadAvailableYears() {
     allExpenses.forEach(
         expense => {
 
-            if (expense.date) {
+            if (!expense.date) {
 
-                const year =
-                    String(
-                        expense.date
-                    ).substring(0, 4);
+                return;
+
+            }
 
 
-                if (year) {
+            const year =
+                String(
+                    expense.date
+                ).substring(0, 4);
 
-                    years.add(year);
 
-                }
+            if (year) {
+
+                years.add(year);
 
             }
 
@@ -283,18 +320,21 @@ function loadAvailableYears() {
                 income.created_at;
 
 
-            if (date) {
+            if (!date) {
 
-                const year =
-                    String(date)
-                        .substring(0, 4);
+                return;
+
+            }
 
 
-                if (year) {
+            const year =
+                String(date)
+                    .substring(0, 4);
 
-                    years.add(year);
 
-                }
+            if (year) {
+
+                years.add(year);
 
             }
 
@@ -387,7 +427,11 @@ function loadAvailableMonths() {
     allExpenses.forEach(
         expense => {
 
-            if (!expense.date) return;
+            if (!expense.date) {
+
+                return;
+
+            }
 
 
             const date =
@@ -422,7 +466,11 @@ function loadAvailableMonths() {
                 income.created_at;
 
 
-            if (!date) return;
+            if (!date) {
+
+                return;
+
+            }
 
 
             const dateString =
@@ -1002,7 +1050,11 @@ function loadExpensePieChart(
         );
 
 
-    if (!canvas) return;
+    if (!canvas) {
+
+        return;
+
+    }
 
 
     if (pieChart) {
@@ -1081,7 +1133,8 @@ function loadExpensePieChart(
 
                         responsive: true,
 
-                        maintainAspectRatio: false,
+                        maintainAspectRatio:
+                            false,
 
                         cutout: "72%",
 
@@ -1156,7 +1209,8 @@ function loadExpensePieChart(
 
                     responsive: true,
 
-                    maintainAspectRatio: false,
+                    maintainAspectRatio:
+                        false,
 
                     cutout: "68%",
 
@@ -1270,7 +1324,11 @@ function loadMonthlyExpenseChart(
         );
 
 
-    if (!canvas) return;
+    if (!canvas) {
+
+        return;
+
+    }
 
 
     if (monthlyChart) {
@@ -1560,7 +1618,11 @@ function loadSavingTrendChart() {
         );
 
 
-    if (!canvas) return;
+    if (!canvas) {
+
+        return;
+
+    }
 
 
     if (savingChart) {
@@ -1583,7 +1645,11 @@ function loadSavingTrendChart() {
                 income.created_at;
 
 
-            if (!date) return;
+            if (!date) {
+
+                return;
+
+            }
 
 
             const month =
@@ -1618,7 +1684,11 @@ function loadSavingTrendChart() {
     allExpenses.forEach(
         expense => {
 
-            if (!expense.date) return;
+            if (!expense.date) {
+
+                return;
+
+            }
 
 
             const month =
@@ -1974,7 +2044,11 @@ function loadIncomeExpenseChart(
         );
 
 
-    if (!canvas) return;
+    if (!canvas) {
+
+        return;
+
+    }
 
 
     if (incomeExpenseChart) {

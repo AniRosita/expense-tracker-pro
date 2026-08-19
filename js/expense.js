@@ -2,24 +2,21 @@
 // ================= EXPENSE PAGE ========================
 // ======================================================
 
-
 // ======================================================
 // ================= LOGIN CHECK =========================
 // ======================================================
 
 if (!localStorage.getItem("userEmail")) {
-
     window.location.href = "index.html";
-
 }
 
 
 // ======================================================
-// ================= API BASE URL ========================
+// ================= RAILWAY API =========================
 // ======================================================
 
-// Railway + Localhost இரண்டிலும் வேலை செய்யும்
-const API_BASE = "";
+const API_BASE =
+    "https://expense-tracker-pro-production-99eb.up.railway.app";
 
 
 // ======================================================
@@ -64,7 +61,7 @@ let filteredExpenses = [];
 
 
 // ======================================================
-// ================= LOAD EXPENSES FROM MYSQL ============
+// ================= LOAD EXPENSES =======================
 // ======================================================
 
 async function loadExpensesFromDatabase() {
@@ -72,38 +69,59 @@ async function loadExpensesFromDatabase() {
     const email =
         localStorage.getItem("userEmail");
 
-
     if (!email) {
 
         window.location.href = "index.html";
 
-        return;
-
+        return false;
     }
 
 
     try {
 
         console.log(
-            "Loading expenses from MySQL..."
+            "Loading expenses from Railway MySQL..."
+        );
+
+        const url =
+            `${API_BASE}/expenses/${encodeURIComponent(email)}`;
+
+        console.log(
+            "Expense API URL:",
+            url
         );
 
 
         const response =
-            await fetch(
+            await fetch(url, {
 
-                API_BASE +
-                "/expenses/" +
-                encodeURIComponent(email)
+                method: "GET",
 
-            );
+                headers: {
+                    "Accept": "application/json"
+                }
+
+            });
+
+
+        console.log(
+            "Expense API Status:",
+            response.status
+        );
 
 
         if (!response.ok) {
 
+            const errorText =
+                await response.text();
+
+            console.error(
+                "Expense API Response:",
+                errorText
+            );
+
             throw new Error(
-                "Expense API Error: " +
-                response.status
+                `Expense API Error: ${response.status}`
             );
 
         }
@@ -111,6 +129,12 @@ async function loadExpensesFromDatabase() {
 
         const data =
             await response.json();
+
+
+        console.log(
+            "Expense API Data:",
+            data
+        );
 
 
         if (
@@ -121,9 +145,8 @@ async function loadExpensesFromDatabase() {
             expenses =
                 data.expenses;
 
-
             console.log(
-                "Expense Page - MySQL Data Loaded:",
+                "Expenses Loaded Successfully ✅",
                 expenses
             );
 
@@ -131,13 +154,15 @@ async function loadExpensesFromDatabase() {
 
             expenses = [];
 
-
             console.log(
                 data.message ||
                 "No expenses found"
             );
 
         }
+
+
+        return true;
 
 
     } catch (error) {
@@ -153,13 +178,29 @@ async function loadExpensesFromDatabase() {
 
         if (history) {
 
-            history.innerHTML =
-                "<h3>Unable to load expenses. Please check the server connection.</h3>";
+            history.innerHTML = `
+
+                <div style="
+                    text-align:center;
+                    padding:30px;
+                ">
+
+                    <h3>
+                        Unable to load expenses
+                    </h3>
+
+                    <p>
+                        Please check the server connection.
+                    </p>
+
+                </div>
+
+            `;
 
         }
 
-        return;
 
+        return false;
     }
 
 }
@@ -172,20 +213,14 @@ async function loadExpensesFromDatabase() {
 function loadYearList() {
 
     if (!yearFilter) {
-
         return;
-
     }
 
-
-    // Remove previously added dynamic years
 
     yearFilter
         .querySelectorAll(".dynamic-year")
         .forEach(option => {
-
             option.remove();
-
         });
 
 
@@ -275,17 +310,12 @@ function filterExpenses() {
     filteredExpenses =
         expenses.filter(item => {
 
-
             const date =
                 new Date(item.date);
 
 
-            if (
-                isNaN(date.getTime())
-            ) {
-
+            if (isNaN(date.getTime())) {
                 return false;
-
             }
 
 
@@ -297,19 +327,14 @@ function filterExpenses() {
                 date.getFullYear();
 
 
-            // ================= MONTH =================
-
             const matchMonth =
 
                 month === "all"
 
                 ||
 
-                Number(month) ===
-                itemMonth;
+                Number(month) === itemMonth;
 
-
-            // ================= YEAR =================
 
             const matchYear =
 
@@ -317,11 +342,8 @@ function filterExpenses() {
 
                 ||
 
-                Number(year) ===
-                itemYear;
+                Number(year) === itemYear;
 
-
-            // ================= AMOUNT =================
 
             let matchAmount = true;
 
@@ -333,8 +355,7 @@ function filterExpenses() {
             ) {
 
                 matchAmount =
-                    Number(item.amount) <
-                    amount;
+                    Number(item.amount) < amount;
 
             }
 
@@ -346,20 +367,15 @@ function filterExpenses() {
             ) {
 
                 matchAmount =
-                    Number(item.amount) >
-                    amount;
+                    Number(item.amount) > amount;
 
             }
 
 
             return (
-
                 matchMonth &&
-
                 matchYear &&
-
                 matchAmount
-
             );
 
         });
@@ -374,9 +390,7 @@ function filterExpenses() {
 function showExpense() {
 
     if (!history) {
-
         return;
-
     }
 
 
@@ -385,10 +399,6 @@ function showExpense() {
 
     history.innerHTML = "";
 
-
-    // ==================================================
-    // ================= TOTAL ==========================
-    // ==================================================
 
     let total = 0;
 
@@ -400,10 +410,6 @@ function showExpense() {
 
     });
 
-
-    // ==================================================
-    // ================= CURRENCY =======================
-    // ==================================================
 
     if (totalExpense) {
 
@@ -426,10 +432,6 @@ function showExpense() {
     }
 
 
-    // ==================================================
-    // ================= PAGINATION =====================
-    // ==================================================
-
     const startIndex =
         (currentPage - 1) *
         recordsPerPage;
@@ -447,35 +449,21 @@ function showExpense() {
         );
 
 
-    // ==================================================
-    // ================= EMPTY CHECK ====================
-    // ==================================================
-
-    if (
-        pageExpenses.length === 0
-    ) {
+    if (pageExpenses.length === 0) {
 
         history.innerHTML =
             "<h3>No Expenses Found</h3>";
 
-
         createPagination();
 
-
         return;
-
     }
 
-
-    // ==================================================
-    // ================= CREATE HTML ====================
-    // ==================================================
 
     let html = "";
 
 
     pageExpenses.forEach(item => {
-
 
         const date =
             new Date(item.date);
@@ -520,12 +508,10 @@ function showExpense() {
 
             </div>
 
-
             <p>
                 Category :
                 ${item.category || "Others"}
             </p>
-
 
             <span>
 
@@ -541,7 +527,6 @@ function showExpense() {
                 ${date.getFullYear()}
 
             </span>
-
 
         </div>
 
@@ -572,9 +557,7 @@ function createPagination() {
 
 
     if (oldPagination) {
-
         oldPagination.remove();
-
     }
 
 
@@ -585,19 +568,13 @@ function createPagination() {
         );
 
 
-    if (
-        totalPages <= 1
-    ) {
-
+    if (totalPages <= 1) {
         return;
-
     }
 
 
     const pagination =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
 
     pagination.id =
@@ -618,7 +595,6 @@ function createPagination() {
             ◀ Previous
         </button>
 
-
         <span style="margin:0 15px;">
 
             Page
@@ -628,7 +604,6 @@ function createPagination() {
 
         </span>
 
-
         <button id="nextBtn">
             Next ▶
         </button>
@@ -636,9 +611,7 @@ function createPagination() {
     `;
 
 
-    history.after(
-        pagination
-    );
+    history.after(pagination);
 
 
     const prevBtn =
@@ -653,16 +626,12 @@ function createPagination() {
         );
 
 
-    // ================= PREVIOUS =================
-
     if (prevBtn) {
 
         prevBtn.onclick =
             function () {
 
-                if (
-                    currentPage > 1
-                ) {
+                if (currentPage > 1) {
 
                     currentPage--;
 
@@ -674,8 +643,6 @@ function createPagination() {
 
     }
 
-
-    // ================= NEXT =================
 
     if (nextBtn) {
 
@@ -783,7 +750,6 @@ if (pdfBtn) {
     pdfBtn.onclick =
         function () {
 
-
             if (
                 typeof window.jspdf ===
                 "undefined"
@@ -794,22 +760,18 @@ if (pdfBtn) {
                 );
 
                 return;
-
             }
 
 
-            const {
-                jsPDF
-            } = window.jspdf;
+            const { jsPDF } =
+                window.jspdf;
 
 
             const pdf =
                 new jsPDF();
 
 
-            pdf.setFontSize(
-                18
-            );
+            pdf.setFontSize(18);
 
 
             pdf.text(
@@ -825,60 +787,54 @@ if (pdfBtn) {
             filterExpenses();
 
 
-            filteredExpenses.forEach(
-                item => {
+            filteredExpenses.forEach(item => {
 
+                if (y > 270) {
 
-                    if (y > 270) {
+                    pdf.addPage();
 
-                        pdf.addPage();
-
-                        y = 20;
-
-                    }
-
-
-                    let amount;
-
-
-                    if (
-                        typeof formatCurrency ===
-                        "function"
-                    ) {
-
-                        amount =
-                            formatCurrency(
-                                Number(
-                                    item.amount
-                                ) || 0
-                            );
-
-                    } else {
-
-                        amount =
-                            "₹" +
-                            Number(
-                                item.amount || 0
-                            ).toFixed(2);
-
-                    }
-
-
-                    pdf.text(
-
-                        `${item.name} | ${amount} | ${item.category} | ${item.date}`,
-
-                        20,
-
-                        y
-
-                    );
-
-
-                    y += 10;
+                    y = 20;
 
                 }
-            );
+
+
+                let amount;
+
+
+                if (
+                    typeof formatCurrency ===
+                    "function"
+                ) {
+
+                    amount =
+                        formatCurrency(
+                            Number(item.amount) || 0
+                        );
+
+                } else {
+
+                    amount =
+                        "₹" +
+                        Number(item.amount || 0)
+                            .toFixed(2);
+
+                }
+
+
+                pdf.text(
+
+                    `${item.name} | ${amount} | ${item.category} | ${item.date}`,
+
+                    20,
+
+                    y
+
+                );
+
+
+                y += 10;
+
+            });
 
 
             pdf.save(
@@ -905,7 +861,6 @@ if (excelBtn) {
     excelBtn.onclick =
         function () {
 
-
             if (
                 typeof XLSX ===
                 "undefined"
@@ -916,7 +871,6 @@ if (excelBtn) {
                 );
 
                 return;
-
             }
 
 
@@ -924,29 +878,25 @@ if (excelBtn) {
 
 
             const data =
-                filteredExpenses.map(
-                    item => ({
+                filteredExpenses.map(item => ({
 
-                        Name:
-                            item.name,
+                    Name:
+                        item.name,
 
-                        Amount:
-                            item.amount,
+                    Amount:
+                        item.amount,
 
-                        Category:
-                            item.category,
+                    Category:
+                        item.category,
 
-                        Date:
-                            item.date
+                    Date:
+                        item.date
 
-                    })
-                );
+                }));
 
 
             const sheet =
-                XLSX.utils.json_to_sheet(
-                    data
-                );
+                XLSX.utils.json_to_sheet(data);
 
 
             const book =
@@ -1020,9 +970,7 @@ function goDashboard() {
 function loadSavedTheme() {
 
     const savedTheme =
-        localStorage.getItem(
-            "theme"
-        );
+        localStorage.getItem("theme");
 
 
     document.body.classList.remove(
@@ -1031,9 +979,7 @@ function loadSavedTheme() {
     );
 
 
-    if (
-        savedTheme === "light"
-    ) {
+    if (savedTheme === "light") {
 
         document.body.classList.add(
             "light-mode"
@@ -1058,41 +1004,31 @@ document.addEventListener(
     "DOMContentLoaded",
     async () => {
 
-
         console.log(
             "Expense Page Loading..."
         );
 
 
-        // ================= THEME =================
-
         loadSavedTheme();
 
 
-        // ================= MYSQL =================
-
-        await loadExpensesFromDatabase();
-
-
-        // ================= YEAR LIST =============
-
-        loadYearList();
+        const loaded =
+            await loadExpensesFromDatabase();
 
 
-        // ================= RESET PAGE =============
+        if (loaded) {
 
-        currentPage = 1;
+            loadYearList();
 
+            currentPage = 1;
 
-        // ================= DISPLAY ================
+            showExpense();
 
-        showExpense();
+            console.log(
+                "Expense Page Loaded Successfully ✅"
+            );
 
-
-        console.log(
-            "Expense Page Loaded Successfully ✅"
-        );
-
+        }
 
     }
 );
