@@ -7,11 +7,9 @@
 // ================= API BASE ============================
 // ======================================================
 
-// Frontend and backend are running on the same Railway service.
-// So we use relative API paths.
-// Example: /login, /register
-
-const API_BASE = "";
+// Railway backend URL
+const API_BASE =
+    "https://expense-tracker-pro-production-99eb.up.railway.app";
 
 
 // ======================================================
@@ -159,9 +157,15 @@ if (loginForm) {
 
             try {
 
+                console.log(
+                    "Login API URL:",
+                    `${API_BASE}/api/login`
+                );
+
+
                 const response =
                     await fetch(
-                        `${API_BASE}/login`,
+                        `${API_BASE}/api/login`,
                         {
 
                             method:
@@ -170,6 +174,9 @@ if (loginForm) {
                             headers: {
 
                                 "Content-Type":
+                                    "application/json",
+
+                                "Accept":
                                     "application/json"
 
                             },
@@ -189,52 +196,34 @@ if (loginForm) {
                     );
 
 
-                // ==================================================
-                // ================= RESPONSE STATUS ==============
-                // ==================================================
-
-                if (!response.ok) {
-
-                    let errorMessage =
-                        "Server Error";
-
-                    try {
-
-                        const errorData =
-                            await response.json();
-
-                        errorMessage =
-                            errorData.message ||
-                            errorMessage;
-
-                    }
-
-                    catch (jsonError) {
-
-                        console.error(
-                            "Response JSON Error:",
-                            jsonError
-                        );
-
-                    }
-
-
-                    throw new Error(
-                        errorMessage +
-                        " (" +
-                        response.status +
-                        ")"
-                    );
-
-                }
+                console.log(
+                    "Login API Status:",
+                    response.status
+                );
 
 
                 // ==================================================
                 // ================= RESPONSE DATA =================
                 // ==================================================
 
-                const data =
-                    await response.json();
+                let data = null;
+
+
+                try {
+
+                    data =
+                        await response.json();
+
+                }
+
+                catch (jsonError) {
+
+                    console.error(
+                        "Login JSON Error:",
+                        jsonError
+                    );
+
+                }
 
 
                 console.log(
@@ -244,13 +233,35 @@ if (loginForm) {
 
 
                 // ==================================================
+                // ================= ERROR RESPONSE ================
+                // ==================================================
+
+                if (!response.ok) {
+
+                    throw new Error(
+
+                        data &&
+                        data.message
+
+                            ? data.message
+
+                            : `Server Error (${response.status})`
+
+                    );
+
+                }
+
+
+                // ==================================================
                 // ================= LOGIN SUCCESS =================
                 // ==================================================
 
                 if (
+                    data &&
                     data.success &&
                     data.user
                 ) {
+
 
                     // ================= SAVE USER EMAIL =================
 
@@ -267,6 +278,18 @@ if (loginForm) {
                         localStorage.setItem(
                             "userName",
                             data.user.name
+                        );
+
+                    }
+
+
+                    // ================= SAVE USER ID ====================
+
+                    if (data.user.id) {
+
+                        localStorage.setItem(
+                            "userId",
+                            data.user.id
                         );
 
                     }
@@ -317,7 +340,7 @@ if (loginForm) {
                             "#4f46e5",
 
                         timer:
-                            1000,
+                            1200,
 
                         showConfirmButton:
                             false
@@ -347,8 +370,12 @@ if (loginForm) {
                             "Login Failed!",
 
                         text:
-                            data.message ||
-                            "Invalid email or password",
+                            (
+                                data &&
+                                data.message
+                            )
+                                ? data.message
+                                : "Invalid email or password",
 
                         icon:
                             "error",

@@ -5,6 +5,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 
@@ -17,26 +18,55 @@ const PORT = process.env.PORT || 5000;
 
 
 // ======================================================
+// ================= CORS ================================
+// ======================================================
+
+app.use(cors({
+    origin: [
+        "https://expense-tracker-pro-production-9a0b.up.railway.app",
+        "https://expense-tracker-pro-production-99eb.up.railway.app",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
+    ],
+    methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+    ],
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization"
+    ]
+}));
+
+
+// ======================================================
 // ================= MIDDLEWARE ==========================
 // ======================================================
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
 
 
 // ======================================================
 // ================= STATIC FILES ========================
 // ======================================================
 
-app.use(express.static(__dirname));
+app.use(
+    express.static(__dirname)
+);
 
 
 // ======================================================
 // ================= MYSQL CONFIG ========================
 // ======================================================
-
-// Railway MySQL variables
-// Local MySQL fallback values
 
 const dbConfig = {
 
@@ -74,7 +104,8 @@ const dbConfig = {
 // ================= MYSQL CONNECTION ====================
 // ======================================================
 
-const db = mysql.createConnection(dbConfig);
+const db =
+    mysql.createConnection(dbConfig);
 
 
 db.connect((err) => {
@@ -138,12 +169,12 @@ app.get("/api/status", (req, res) => {
 
                     mysql: "disconnected",
 
-                    error: err.message
+                    error:
+                        err.message
 
                 });
 
             }
-
 
             res.json({
 
@@ -195,7 +226,6 @@ app.get("/api/test-db", (req, res) => {
 
             }
 
-
             res.json({
 
                 success: true,
@@ -212,10 +242,10 @@ app.get("/api/test-db", (req, res) => {
 
 
 // ======================================================
-// ================= LOGIN ===============================
+// ================= LOGIN FUNCTION ======================
 // ======================================================
 
-app.post("/api/login", (req, res) => {
+function loginUser(req, res) {
 
     const {
         email,
@@ -262,7 +292,7 @@ app.post("/api/login", (req, res) => {
             if (err) {
 
                 console.error(
-                    "Login Error:",
+                    "❌ Login Database Error:",
                     err
                 );
 
@@ -302,9 +332,7 @@ app.post("/api/login", (req, res) => {
 
 
             if (
-                String(
-                    user.password
-                ) !==
+                String(user.password) !==
                 String(password)
             ) {
 
@@ -345,14 +373,32 @@ app.post("/api/login", (req, res) => {
         }
     );
 
-});
+}
 
 
 // ======================================================
-// ================= REGISTER ============================
+// ================= LOGIN ROUTES ========================
 // ======================================================
 
-app.post("/api/register", (req, res) => {
+// Main route used by auth.js
+app.post(
+    "/login",
+    loginUser
+);
+
+
+// Compatibility route
+app.post(
+    "/api/login",
+    loginUser
+);
+
+
+// ======================================================
+// ================= REGISTER FUNCTION ===================
+// ======================================================
+
+function registerUser(req, res) {
 
     const {
         name,
@@ -405,7 +451,7 @@ app.post("/api/register", (req, res) => {
             if (err) {
 
                 console.error(
-                    "Register Error:",
+                    "❌ Register Database Error:",
                     err
                 );
 
@@ -457,903 +503,928 @@ app.post("/api/register", (req, res) => {
         }
     );
 
-});
+}
+
+
+// ======================================================
+// ================= REGISTER ROUTES =====================
+// ======================================================
+
+// Main route used by register.js
+app.post(
+    "/register",
+    registerUser
+);
+
+
+// Compatibility route
+app.post(
+    "/api/register",
+    registerUser
+);
 
 
 // ======================================================
 // ================= GET USER ============================
 // ======================================================
 
-app.get("/api/user/:email", (req, res) => {
+app.get(
+    "/api/user/:email",
+    (req, res) => {
 
-    const email =
-        req.params.email;
-
-
-    db.query(
-
-        `
-
-        SELECT
-            id,
-            name,
-            email
-
-        FROM users
-
-        WHERE email = ?
-
-        LIMIT 1
-
-        `,
-
-        [email],
-
-        (err, results) => {
-
-            if (err) {
-
-                console.error(
-                    "Get User Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        err.message
-
-                });
-
-            }
-
-
-            if (
-                results.length === 0
-            ) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "User not found"
-
-                });
-
-            }
-
-
-            res.json({
-
-                success: true,
-
-                user:
-                    results[0]
-
-            });
-
-        }
-
-    );
-
-});
-
-
-// ======================================================
-// ================= GET EXPENSES =======================
-// ======================================================
-
-app.get("/expenses/:email", (req, res) => {
-
-    const email =
-        decodeURIComponent(
-            req.params.email
-        );
-
-
-    console.log(
-        "GET EXPENSES:",
-        email
-    );
-
-
-    const sql = `
-
-        SELECT
-            id,
-            email,
-            name,
-            amount,
-            category,
-            date
-
-        FROM expenses
-
-        WHERE email = ?
-
-        ORDER BY date DESC, id DESC
-
-    `;
-
-
-    db.query(
-        sql,
-        [email],
-        (err, results) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Get Expenses Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    message:
-                        "Unable to load expenses",
-
-                    error:
-                        err.message
-
-                });
-
-            }
-
-
-            console.log(
-                "Expenses found:",
-                results.length
+        const email =
+            decodeURIComponent(
+                req.params.email
             );
 
 
-            res.json({
+        db.query(
 
-                success: true,
+            `
 
-                expenses:
-                    results
+            SELECT
+                id,
+                name,
+                email
 
-            });
+            FROM users
 
-        }
-    );
+            WHERE email = ?
 
-});
+            LIMIT 1
+
+            `,
+
+            [email],
+
+            (err, results) => {
+
+                if (err) {
+
+                    console.error(
+                        "Get User Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                if (
+                    results.length === 0
+                ) {
+
+                    return res.status(404).json({
+
+                        success: false,
+
+                        message:
+                            "User not found"
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    user:
+                        results[0]
+
+                });
+
+            }
+
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= GET EXPENSES ========================
+// ======================================================
+
+app.get(
+    "/expenses/:email",
+    (req, res) => {
+
+        const email =
+            decodeURIComponent(
+                req.params.email
+            );
+
+
+        console.log(
+            "GET EXPENSES:",
+            email
+        );
+
+
+        const sql = `
+
+            SELECT
+                id,
+                email,
+                name,
+                amount,
+                category,
+                date
+
+            FROM expenses
+
+            WHERE email = ?
+
+            ORDER BY date DESC, id DESC
+
+        `;
+
+
+        db.query(
+            sql,
+            [email],
+            (err, results) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Get Expenses Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to load expenses",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                console.log(
+                    "Expenses found:",
+                    results.length
+                );
+
+
+                res.json({
+
+                    success: true,
+
+                    expenses:
+                        results
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= ADD EXPENSE ========================
 // ======================================================
 
-app.post("/expenses", (req, res) => {
+app.post(
+    "/expenses",
+    (req, res) => {
 
-    const {
-        email,
-        name,
-        amount,
-        category,
-        date
-    } = req.body;
-
-
-    if (
-        !email ||
-        !name ||
-        amount === undefined ||
-        !category ||
-        !date
-    ) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "Email, name, amount, category and date are required"
-
-        });
-
-    }
-
-
-    const sql = `
-
-        INSERT INTO expenses
-        (
+        const {
             email,
             name,
             amount,
             category,
             date
-        )
-
-        VALUES (?, ?, ?, ?, ?)
-
-    `;
+        } = req.body;
 
 
-    db.query(
+        if (
+            !email ||
+            !name ||
+            amount === undefined ||
+            !category ||
+            !date
+        ) {
 
-        sql,
+            return res.status(400).json({
 
-        [
-            email,
-            name,
-            amount,
-            category,
-            date
-        ],
-
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Add Expense Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    message:
-                        "Unable to add expense",
-
-                    error:
-                        err.message
-
-                });
-
-            }
-
-
-            res.json({
-
-                success: true,
+                success: false,
 
                 message:
-                    "Expense added successfully",
-
-                expenseId:
-                    result.insertId
+                    "Email, name, amount, category and date are required"
 
             });
 
         }
 
-    );
 
-});
+        const sql = `
+
+            INSERT INTO expenses
+            (
+                email,
+                name,
+                amount,
+                category,
+                date
+            )
+
+            VALUES (?, ?, ?, ?, ?)
+
+        `;
+
+
+        db.query(
+            sql,
+            [
+                email,
+                name,
+                amount,
+                category,
+                date
+            ],
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Add Expense Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to add expense",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Expense added successfully",
+
+                    expenseId:
+                        result.insertId
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= UPDATE EXPENSE ======================
 // ======================================================
 
-app.put("/expenses/:id", (req, res) => {
+app.put(
+    "/expenses/:id",
+    (req, res) => {
 
-    const id =
-        req.params.id;
-
-
-    const {
-        name,
-        amount,
-        category,
-        date
-    } = req.body;
+        const id =
+            req.params.id;
 
 
-    if (
-        !name ||
-        amount === undefined ||
-        !category ||
-        !date
-    ) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "All expense fields are required"
-
-        });
-
-    }
-
-
-    const sql = `
-
-        UPDATE expenses
-
-        SET
-            name = ?,
-            amount = ?,
-            category = ?,
-            date = ?
-
-        WHERE id = ?
-
-    `;
-
-
-    db.query(
-
-        sql,
-
-        [
+        const {
             name,
             amount,
             category,
-            date,
-            id
-        ],
-
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Update Expense Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        err.message
-
-                });
-
-            }
+            date
+        } = req.body;
 
 
-            res.json({
+        if (
+            !name ||
+            amount === undefined ||
+            !category ||
+            !date
+        ) {
 
-                success: true,
+            return res.status(400).json({
+
+                success: false,
 
                 message:
-                    "Expense updated successfully",
-
-                affectedRows:
-                    result.affectedRows
+                    "All expense fields are required"
 
             });
 
         }
 
-    );
 
-});
+        const sql = `
+
+            UPDATE expenses
+
+            SET
+                name = ?,
+                amount = ?,
+                category = ?,
+                date = ?
+
+            WHERE id = ?
+
+        `;
+
+
+        db.query(
+            sql,
+            [
+                name,
+                amount,
+                category,
+                date,
+                id
+            ],
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Update Expense Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Expense updated successfully",
+
+                    affectedRows:
+                        result.affectedRows
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= DELETE EXPENSE ======================
 // ======================================================
 
-app.delete("/expenses/:id", (req, res) => {
+app.delete(
+    "/expenses/:id",
+    (req, res) => {
 
-    const id =
-        req.params.id;
-
-
-    db.query(
-
-        `
-
-        DELETE FROM expenses
-
-        WHERE id = ?
-
-        `,
-
-        [id],
-
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Delete Expense Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        err.message
-
-                });
-
-            }
+        const id =
+            req.params.id;
 
 
-            res.json({
+        db.query(
 
-                success: true,
+            `
+            DELETE FROM expenses
+            WHERE id = ?
+            `,
 
-                message:
-                    "Expense deleted successfully",
+            [id],
 
-                affectedRows:
-                    result.affectedRows
+            (err, result) => {
 
-            });
+                if (err) {
 
-        }
+                    console.error(
+                        "❌ Delete Expense Error:",
+                        err
+                    );
 
-    );
+                    return res.status(500).json({
 
-});
+                        success: false,
 
+                        error:
+                            err.message
 
-// ======================================================
-// ================= GET INCOME =========================
-// ======================================================
+                    });
 
-app.get("/income/:email", (req, res) => {
-
-    const email =
-        decodeURIComponent(
-            req.params.email
-        );
-
-
-    console.log(
-        "GET INCOME:",
-        email
-    );
+                }
 
 
-    const sql = `
+                res.json({
 
-        SELECT
-            id,
-            email,
-            amount,
-            date
-
-        FROM income
-
-        WHERE email = ?
-
-        ORDER BY date DESC, id DESC
-
-    `;
-
-
-    db.query(
-        sql,
-        [email],
-        (err, results) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Get Income Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
+                    success: true,
 
                     message:
-                        "Unable to load income",
+                        "Expense deleted successfully",
 
-                    error:
-                        err.message
+                    affectedRows:
+                        result.affectedRows
 
                 });
 
             }
+        );
+
+    }
+);
 
 
-            console.log(
-                "Income found:",
-                results.length
+// ======================================================
+// ================= GET INCOME ==========================
+// ======================================================
+
+app.get(
+    "/income/:email",
+    (req, res) => {
+
+        const email =
+            decodeURIComponent(
+                req.params.email
             );
 
 
-            res.json({
-
-                success: true,
-
-                income:
-                    results
-
-            });
-
-        }
-    );
-
-});
+        console.log(
+            "GET INCOME:",
+            email
+        );
 
 
-// ======================================================
-// ================= ADD INCOME =========================
-// ======================================================
+        const sql = `
 
-app.post("/income", (req, res) => {
+            SELECT
+                id,
+                email,
+                amount,
+                date
 
-    const {
-        email,
-        amount,
-        date
-    } = req.body;
+            FROM income
 
+            WHERE email = ?
 
-    if (
-        !email ||
-        amount === undefined ||
-        !date
-    ) {
+            ORDER BY date DESC, id DESC
 
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "Email, amount and date are required"
-
-        });
-
-    }
+        `;
 
 
-    const sql = `
+        db.query(
+            sql,
+            [email],
+            (err, results) => {
 
-        INSERT INTO income
-        (
-            email,
-            amount,
-            date
-        )
+                if (err) {
 
-        VALUES (?, ?, ?)
+                    console.error(
+                        "❌ Get Income Error:",
+                        err
+                    );
 
-    `;
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to load income",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
 
 
-    db.query(
-
-        sql,
-
-        [
-            email,
-            amount,
-            date
-        ],
-
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Add Income Error:",
-                    err
+                console.log(
+                    "Income found:",
+                    results.length
                 );
 
-                return res.status(500).json({
 
-                    success: false,
+                res.json({
 
-                    message:
-                        "Unable to add income",
+                    success: true,
 
-                    error:
-                        err.message
+                    income:
+                        results
 
                 });
 
             }
+        );
+
+    }
+);
 
 
-            res.json({
+// ======================================================
+// ================= ADD INCOME ==========================
+// ======================================================
 
-                success: true,
+app.post(
+    "/income",
+    (req, res) => {
+
+        const {
+            email,
+            amount,
+            date
+        } = req.body;
+
+
+        if (
+            !email ||
+            amount === undefined ||
+            !date
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
 
                 message:
-                    "Income added successfully",
-
-                incomeId:
-                    result.insertId
+                    "Email, amount and date are required"
 
             });
 
         }
 
-    );
 
-});
+        const sql = `
+
+            INSERT INTO income
+            (
+                email,
+                amount,
+                date
+            )
+
+            VALUES (?, ?, ?)
+
+        `;
+
+
+        db.query(
+            sql,
+            [
+                email,
+                amount,
+                date
+            ],
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Add Income Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to add income",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Income added successfully",
+
+                    incomeId:
+                        result.insertId
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= UPDATE INCOME =======================
 // ======================================================
 
-app.put("/income/:id", (req, res) => {
+app.put(
+    "/income/:id",
+    (req, res) => {
 
-    const id =
-        req.params.id;
-
-
-    const {
-        amount,
-        date
-    } = req.body;
+        const id =
+            req.params.id;
 
 
-    if (
-        amount === undefined ||
-        !date
-    ) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "Amount and date are required"
-
-        });
-
-    }
-
-
-    const sql = `
-
-        UPDATE income
-
-        SET
-            amount = ?,
-            date = ?
-
-        WHERE id = ?
-
-    `;
-
-
-    db.query(
-
-        sql,
-
-        [
+        const {
             amount,
-            date,
-            id
-        ],
-
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ Update Income Error:",
-                    err
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        err.message
-
-                });
-
-            }
+            date
+        } = req.body;
 
 
-            res.json({
+        if (
+            amount === undefined ||
+            !date
+        ) {
 
-                success: true,
+            return res.status(400).json({
+
+                success: false,
 
                 message:
-                    "Income updated successfully",
-
-                affectedRows:
-                    result.affectedRows
+                    "Amount and date are required"
 
             });
 
         }
 
-    );
 
-});
+        const sql = `
+
+            UPDATE income
+
+            SET
+                amount = ?,
+                date = ?
+
+            WHERE id = ?
+
+        `;
+
+
+        db.query(
+            sql,
+            [
+                amount,
+                date,
+                id
+            ],
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Update Income Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Income updated successfully",
+
+                    affectedRows:
+                        result.affectedRows
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= DELETE INCOME =======================
 // ======================================================
 
-app.delete("/income/:id", (req, res) => {
+app.delete(
+    "/income/:id",
+    (req, res) => {
 
-    const id =
-        req.params.id;
+        const id =
+            req.params.id;
 
 
-    db.query(
+        db.query(
 
-        `
+            `
+            DELETE FROM income
+            WHERE id = ?
+            `,
 
-        DELETE FROM income
+            [id],
 
-        WHERE id = ?
+            (err, result) => {
 
-        `,
+                if (err) {
 
-        [id],
+                    console.error(
+                        "❌ Delete Income Error:",
+                        err
+                    );
 
-        (err, result) => {
+                    return res.status(500).json({
 
-            if (err) {
+                        success: false,
 
-                console.error(
-                    "❌ Delete Income Error:",
-                    err
-                );
+                        error:
+                            err.message
 
-                return res.status(500).json({
+                    });
 
-                    success: false,
+                }
 
-                    error:
-                        err.message
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Income deleted successfully",
+
+                    affectedRows:
+                        result.affectedRows
 
                 });
 
             }
+        );
 
-
-            res.json({
-
-                success: true,
-
-                message:
-                    "Income deleted successfully",
-
-                affectedRows:
-                    result.affectedRows
-
-            });
-
-        }
-
-    );
-
-});
+    }
+);
 
 
 // ======================================================
 // ================= GET ALL USER DATA ==================
 // ======================================================
 
-app.get("/api/data/:email", (req, res) => {
+app.get(
+    "/api/data/:email",
+    (req, res) => {
 
-    const email =
-        decodeURIComponent(
-            req.params.email
-        );
-
-
-    db.query(
-
-        `
-
-        SELECT
-            id,
-            name,
-            amount,
-            category,
-            date
-
-        FROM expenses
-
-        WHERE email = ?
-
-        ORDER BY date DESC, id DESC
-
-        `,
-
-        [email],
-
-        (expenseErr, expenses) => {
-
-            if (expenseErr) {
-
-                console.error(
-                    "Data Expense Error:",
-                    expenseErr
-                );
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        expenseErr.message
-
-                });
-
-            }
+        const email =
+            decodeURIComponent(
+                req.params.email
+            );
 
 
-            db.query(
+        db.query(
 
-                `
+            `
 
-                SELECT
-                    id,
-                    email,
-                    amount,
-                    date
+            SELECT
+                id,
+                email,
+                name,
+                amount,
+                category,
+                date
 
-                FROM income
+            FROM expenses
 
-                WHERE email = ?
+            WHERE email = ?
 
-                ORDER BY date DESC, id DESC
+            ORDER BY date DESC, id DESC
 
-                `,
+            `,
 
-                [email],
+            [email],
 
-                (incomeErr, income) => {
+            (expenseErr, expenses) => {
 
-                    if (incomeErr) {
+                if (expenseErr) {
 
-                        console.error(
-                            "Data Income Error:",
-                            incomeErr
-                        );
+                    console.error(
+                        "Data Expense Error:",
+                        expenseErr
+                    );
 
-                        return res.status(500).json({
+                    return res.status(500).json({
 
-                            success: false,
+                        success: false,
 
-                            error:
-                                incomeErr.message
-
-                        });
-
-                    }
-
-
-                    res.json({
-
-                        success: true,
-
-                        expenses:
-                            expenses,
-
-                        income:
-                            income
+                        error:
+                            expenseErr.message
 
                     });
 
                 }
 
-            );
 
-        }
+                db.query(
 
-    );
+                    `
 
-});
+                    SELECT
+                        id,
+                        email,
+                        amount,
+                        date
+
+                    FROM income
+
+                    WHERE email = ?
+
+                    ORDER BY date DESC, id DESC
+
+                    `,
+
+                    [email],
+
+                    (incomeErr, income) => {
+
+                        if (incomeErr) {
+
+                            console.error(
+                                "Data Income Error:",
+                                incomeErr
+                            );
+
+                            return res.status(500).json({
+
+                                success: false,
+
+                                error:
+                                    incomeErr.message
+
+                            });
+
+                        }
+
+
+                        res.json({
+
+                            success: true,
+
+                            expenses:
+                                expenses,
+
+                            income:
+                                income
+
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
