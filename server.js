@@ -6,6 +6,19 @@ const app = express();
 
 
 // ======================================================
+// ================= MIDDLEWARE ==========================
+// ======================================================
+
+app.use(express.json());
+
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
+
+
+// ======================================================
 // ================= CORS ================================
 // ======================================================
 
@@ -38,16 +51,8 @@ app.use((req, res, next) => {
 
 
 // ======================================================
-// ================= MIDDLEWARE ==========================
+// ================= STATIC FILES ========================
 // ======================================================
-
-app.use(express.json());
-
-app.use(
-    express.urlencoded({
-        extended: true
-    })
-);
 
 app.use(
     express.static(__dirname)
@@ -58,58 +63,132 @@ app.use(
 // ================= MYSQL CONNECTION ====================
 // ======================================================
 
-const db = mysql.createConnection({
+// Railway MySQL variables
+//
+// Railway normally provides:
+// MYSQLHOST
+// MYSQLPORT
+// MYSQLUSER
+// MYSQLPASSWORD
+// MYSQLDATABASE
+//
+// Localhost fallback is kept only for local testing.
 
-    host: "localhost",
+const dbConfig = {
 
-    user: "root",
+    host:
+        process.env.MYSQLHOST ||
+        process.env.MYSQL_HOST ||
+        "localhost",
 
-    password: "Rosi@2006",
+    port:
+        Number(
+            process.env.MYSQLPORT ||
+            process.env.MYSQL_PORT ||
+            3306
+        ),
 
-    database: "expense_tracker"
+    user:
+        process.env.MYSQLUSER ||
+        process.env.MYSQL_USER ||
+        "root",
 
-});
+    password:
+        process.env.MYSQLPASSWORD ||
+        process.env.MYSQL_PASSWORD ||
+        "Rosi@2006",
+
+    database:
+        process.env.MYSQLDATABASE ||
+        process.env.MYSQL_DATABASE ||
+        "expense_tracker",
+
+    waitForConnections: true,
+
+    connectionLimit: 10,
+
+    queueLimit: 0
+
+};
+
+
+console.log(
+    "Connecting to MySQL..."
+);
+
+console.log(
+    "MySQL Host:",
+    dbConfig.host
+);
+
+console.log(
+    "MySQL Port:",
+    dbConfig.port
+);
+
+console.log(
+    "MySQL Database:",
+    dbConfig.database
+);
 
 
 // ======================================================
-// ================= MYSQL CONNECT =======================
+// ================= MYSQL POOL ==========================
 // ======================================================
 
-db.connect((err) => {
-
-    if (err) {
-
-        console.log(
-            "Database Connection Failed ❌"
-        );
-
-        console.log(err);
-
-        return;
-
-    }
-
-    console.log(
-        "MySQL Connected ✅"
+const db =
+    mysql.createPool(
+        dbConfig
     );
 
-});
+
+// ======================================================
+// ================= MYSQL TEST ==========================
+// ======================================================
+
+db.query(
+    "SELECT 1 AS connected",
+    (err) => {
+
+        if (err) {
+
+            console.error(
+                "MySQL Connection Failed ❌"
+            );
+
+            console.error(
+                err
+            );
+
+            return;
+
+        }
+
+        console.log(
+            "MySQL Connected Successfully ✅"
+        );
+
+    }
+);
 
 
 // ======================================================
 // ================= HOME ================================
 // ======================================================
 
-app.get("/", (req, res) => {
+app.get(
+    "/",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            __dirname,
-            "index.html"
-        )
-    );
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
 
-});
+    }
+);
 
 
 // ======================================================
@@ -146,9 +225,11 @@ app.post(
 
 
         const checkSql = `
+
             SELECT *
             FROM users
-            WHERE email=?
+            WHERE email = ?
+
         `;
 
 
@@ -159,7 +240,7 @@ app.post(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Register Check Error:",
                         err
                     );
@@ -176,7 +257,9 @@ app.post(
                 }
 
 
-                if (result.length > 0) {
+                if (
+                    result.length > 0
+                ) {
 
                     return res.json({
 
@@ -211,11 +294,11 @@ app.post(
                         email,
                         password
                     ],
-                    (err) => {
+                    (err, result) => {
 
                         if (err) {
 
-                            console.log(
+                            console.error(
                                 "Register Insert Error:",
                                 err
                             );
@@ -237,7 +320,10 @@ app.post(
                             success: true,
 
                             message:
-                                "Registration Successful"
+                                "Registration Successful",
+
+                            id:
+                                result.insertId
 
                         });
 
@@ -287,8 +373,8 @@ app.post(
             SELECT *
             FROM users
 
-            WHERE email=?
-            AND password=?
+            WHERE email = ?
+            AND password = ?
 
         `;
 
@@ -303,7 +389,7 @@ app.post(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Login Error:",
                         err
                     );
@@ -320,7 +406,9 @@ app.post(
                 }
 
 
-                if (result.length > 0) {
+                if (
+                    result.length > 0
+                ) {
 
                     return res.json({
 
@@ -354,11 +442,8 @@ app.post(
 
 
 // ======================================================
-// ================= INCOME SECTION =====================
-// ======================================================
-
-
 // ================= ADD INCOME ==========================
+// ======================================================
 
 app.post(
     "/add-income",
@@ -418,7 +503,7 @@ app.post(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Income Add Error:",
                         err
                     );
@@ -454,7 +539,9 @@ app.post(
 );
 
 
+// ======================================================
 // ================= GET INCOME ==========================
+// ======================================================
 
 app.get(
     "/income/:email",
@@ -485,7 +572,7 @@ app.get(
             SELECT *
             FROM income
 
-            WHERE email=?
+            WHERE email = ?
 
             ORDER BY date DESC, id DESC
 
@@ -499,7 +586,7 @@ app.get(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Income Fetch Error:",
                         err
                     );
@@ -532,14 +619,18 @@ app.get(
 );
 
 
+// ======================================================
 // ================= UPDATE INCOME =======================
+// ======================================================
 
 app.put(
     "/update-income/:id",
     (req, res) => {
 
         const id =
-            Number(req.params.id);
+            Number(
+                req.params.id
+            );
 
         const {
             source,
@@ -572,11 +663,11 @@ app.put(
             UPDATE income
 
             SET
-                source=?,
-                amount=?,
-                date=?
+                source = ?,
+                amount = ?,
+                date = ?
 
-            WHERE id=?
+            WHERE id = ?
 
         `;
 
@@ -593,7 +684,7 @@ app.put(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Income Update Error:",
                         err
                     );
@@ -643,11 +734,8 @@ app.put(
 
 
 // ======================================================
-// ================= EXPENSE SECTION ====================
-// ======================================================
-
-
 // ================= ADD EXPENSE =========================
+// ======================================================
 
 app.post(
     "/add-expense",
@@ -711,7 +799,7 @@ app.post(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Expense Add Error:",
                         err
                     );
@@ -747,7 +835,9 @@ app.post(
 );
 
 
+// ======================================================
 // ================= GET EXPENSES ========================
+// ======================================================
 
 app.get(
     "/expenses/:email",
@@ -786,7 +876,7 @@ app.get(
 
             FROM expenses
 
-            WHERE email=?
+            WHERE email = ?
 
             ORDER BY date DESC, id DESC
 
@@ -800,7 +890,7 @@ app.get(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Expense Fetch Error:",
                         err
                     );
@@ -831,6 +921,8 @@ app.get(
 
     }
 );
+
+
 // ======================================================
 // ================= UPDATE EXPENSE ======================
 // ======================================================
@@ -840,7 +932,9 @@ app.put(
     (req, res) => {
 
         const id =
-            Number(req.params.id);
+            Number(
+                req.params.id
+            );
 
         const {
             name,
@@ -875,12 +969,12 @@ app.put(
             UPDATE expenses
 
             SET
-                name=?,
-                amount=?,
-                category=?,
-                date=?
+                name = ?,
+                amount = ?,
+                category = ?,
+                date = ?
 
-            WHERE id=?
+            WHERE id = ?
 
         `;
 
@@ -898,7 +992,7 @@ app.put(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Expense Update Error:",
                         err
                     );
@@ -956,7 +1050,9 @@ app.delete(
     (req, res) => {
 
         const id =
-            Number(req.params.id);
+            Number(
+                req.params.id
+            );
 
 
         if (!id) {
@@ -977,7 +1073,7 @@ app.delete(
 
             DELETE FROM expenses
 
-            WHERE id=?
+            WHERE id = ?
 
         `;
 
@@ -989,7 +1085,7 @@ app.delete(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Expense Delete Error:",
                         err
                     );
@@ -1068,19 +1164,21 @@ app.post(
 
 
         const values =
-            expenses.map(exp => [
+            expenses.map(
+                exp => [
 
-                exp.email,
+                    exp.email,
 
-                exp.name,
+                    exp.name,
 
-                exp.amount,
+                    exp.amount,
 
-                exp.category,
+                    exp.category,
 
-                exp.date
+                    exp.date
 
-            ]);
+                ]
+            );
 
 
         const sql = `
@@ -1106,7 +1204,7 @@ app.post(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Expense Import Error:",
                         err
                     );
@@ -1143,27 +1241,7 @@ app.post(
 
 
 // ======================================================
-// ================= REPORTS =============================
-// ======================================================
-
-// Reports page uses:
-//
-// GET /expenses/:email
-// GET /income/:email
-//
-// So reports.js can calculate:
-// Income
-// Expense
-// Balance
-// Savings
-// Categories
-// Monthly charts
-//
-// No separate Reports database route is required.
-
-
-// ======================================================
-// ================= API STATUS ===========================
+// ================= API STATUS ==========================
 // ======================================================
 
 app.get(
@@ -1176,7 +1254,7 @@ app.get(
 
                 if (err) {
 
-                    console.log(
+                    console.error(
                         "Status Database Error:",
                         err
                     );
@@ -1216,10 +1294,43 @@ app.get(
 
 
 // ======================================================
+// ================= 404 API =============================
+// ======================================================
+
+app.use(
+    (req, res, next) => {
+
+        if (
+            req.path.startsWith("/api/") ||
+            req.method !== "GET"
+        ) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "API route not found"
+
+            });
+
+        }
+
+        next();
+
+    }
+);
+
+
+// ======================================================
 // ================= SERVER START ========================
 // ======================================================
 
-const PORT = 5000;
+// Railway gives PORT automatically.
+// Localhost fallback = 5000.
+
+const PORT =
+    process.env.PORT || 5000;
 
 
 app.listen(
@@ -1235,19 +1346,11 @@ app.listen(
         );
 
         console.log(
-            "MySQL + Express Backend Ready ✅"
+            "Express Backend Ready ✅"
         );
 
         console.log(
             `Server running on port ${PORT}`
-        );
-
-        console.log(
-            `Local URL: http://localhost:${PORT}`
-        );
-
-        console.log(
-            `Status URL: http://localhost:${PORT}/api/status`
         );
 
         console.log(
