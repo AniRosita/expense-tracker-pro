@@ -24,9 +24,12 @@ app.use(
 
 app.use((req, res, next) => {
 
+    const allowedOrigin =
+        "https://expense-tracker-pro-production-9a0b.up.railway.app";
+
     res.setHeader(
         "Access-Control-Allow-Origin",
-        "https://expense-tracker-pro-production-9a0b.up.railway.app"
+        allowedOrigin
     );
 
     res.setHeader(
@@ -39,8 +42,13 @@ app.use((req, res, next) => {
         "Content-Type"
     );
 
+    res.setHeader(
+        "Access-Control-Max-Age",
+        "86400"
+    );
+
     if (req.method === "OPTIONS") {
-        return res.sendStatus(200);
+        return res.sendStatus(204);
     }
 
     next();
@@ -60,8 +68,6 @@ app.use(
 // ======================================================
 // ================= MYSQL CONNECTION ====================
 // ======================================================
-
-// Railway MySQL variables
 
 const dbConfig = {
 
@@ -84,6 +90,8 @@ const dbConfig = {
 };
 
 
+console.log("======================================");
+
 console.log(
     "Connecting to MySQL..."
 );
@@ -103,15 +111,14 @@ console.log(
     dbConfig.database
 );
 
+console.log("======================================");
+
 
 // ======================================================
 // ================= MYSQL POOL ==========================
 // ======================================================
 
-const db =
-    mysql.createPool(
-        dbConfig
-    );
+const db = mysql.createPool(dbConfig);
 
 
 // ======================================================
@@ -128,9 +135,7 @@ db.query(
                 "MySQL Connection Failed ❌"
             );
 
-            console.error(
-                err
-            );
+            console.error(err);
 
             return;
 
@@ -525,20 +530,6 @@ app.get(
             );
 
 
-        if (!email) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Email is required"
-
-            });
-
-        }
-
-
         const sql = `
 
             SELECT *
@@ -819,20 +810,6 @@ app.get(
             decodeURIComponent(
                 req.params.email
             );
-
-
-        if (!email) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Email is required"
-
-            });
-
-        }
 
 
         const sql = `
@@ -1324,7 +1301,9 @@ app.listen(
         );
 
         console.log(
-            `Environment: ${process.env.NODE_ENV || "production"}`
+            `Environment: ${
+                process.env.NODE_ENV || "production"
+            }`
         );
 
         console.log(
