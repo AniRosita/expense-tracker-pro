@@ -12,11 +12,11 @@ if (!localStorage.getItem("userEmail")) {
 
 
 // ======================================================
-// ================= RAILWAY API =========================
+// ================= API BASE URL ========================
 // ======================================================
 
-const API_BASE =
-    "https://expense-tracker-pro-production-99eb.up.railway.app";
+// Same Railway server as the current website
+const API_BASE = "";
 
 
 // ======================================================
@@ -83,8 +83,10 @@ async function loadExpensesFromDatabase() {
             "Loading expenses from Railway MySQL..."
         );
 
+
         const url =
             `${API_BASE}/expenses/${encodeURIComponent(email)}`;
+
 
         console.log(
             "Expense API URL:",
@@ -145,6 +147,7 @@ async function loadExpensesFromDatabase() {
             expenses =
                 data.expenses;
 
+
             console.log(
                 "Expenses Loaded Successfully ✅",
                 expenses
@@ -153,6 +156,7 @@ async function loadExpensesFromDatabase() {
         } else {
 
             expenses = [];
+
 
             console.log(
                 data.message ||
@@ -213,6 +217,7 @@ async function loadExpensesFromDatabase() {
 function loadYearList() {
 
     if (!yearFilter) {
+
         return;
     }
 
@@ -220,7 +225,9 @@ function loadYearList() {
     yearFilter
         .querySelectorAll(".dynamic-year")
         .forEach(option => {
+
             option.remove();
+
         });
 
 
@@ -315,6 +322,7 @@ function filterExpenses() {
 
 
             if (isNaN(date.getTime())) {
+
                 return false;
             }
 
@@ -390,6 +398,7 @@ function filterExpenses() {
 function showExpense() {
 
     if (!history) {
+
         return;
     }
 
@@ -454,7 +463,9 @@ function showExpense() {
         history.innerHTML =
             "<h3>No Expenses Found</h3>";
 
+
         createPagination();
+
 
         return;
     }
@@ -557,7 +568,9 @@ function createPagination() {
 
 
     if (oldPagination) {
+
         oldPagination.remove();
+
     }
 
 
@@ -569,6 +582,7 @@ function createPagination() {
 
 
     if (totalPages <= 1) {
+
         return;
     }
 
@@ -1020,9 +1034,12 @@ document.addEventListener(
 
             loadYearList();
 
+
             currentPage = 1;
 
+
             showExpense();
+
 
             console.log(
                 "Expense Page Loaded Successfully ✅"
