@@ -3,19 +3,30 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>Expense Reports</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<link rel="icon" type="image/png" href="assets/profile.png">
+    <title>Expense Reports</title>
 
-<link rel="stylesheet" href="css/reports.css">
+    <link
+        rel="icon"
+        type="image/png"
+        href="assets/profile.png">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
+    <link
+        rel="stylesheet"
+        href="css/reports.css">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
 
 </head>
 
@@ -26,366 +37,358 @@ rel="stylesheet">
 <div class="container">
 
 
-<h1>
-📈 Expense Reports
-</h1>
+    <!-- ================================================= -->
+    <!-- ================= PAGE TITLE ==================== -->
+    <!-- ================================================= -->
+
+    <h1>
+        📈 Expense Reports
+    </h1>
 
 
+    <!-- ================================================= -->
+    <!-- ================= YEAR & MONTH ================== -->
+    <!-- ================================================= -->
 
-<!-- MONTH SELECT -->
-
-<!-- YEAR & MONTH FILTER -->
-
-<div class="filter-box">
+    <div class="filter-box">
 
 
-    <div class="filter-item">
+        <div class="filter-item">
 
-        <label>
-            📅 Select Year
-        </label>
+            <label for="reportYear">
+                📅 Select Year
+            </label>
 
-        <select id="reportYear">
+            <select id="reportYear">
+            </select>
 
-        </select>
+        </div>
+
+
+        <div class="filter-item">
+
+            <label for="reportMonth">
+                🗓️ Select Month
+            </label>
+
+            <select id="reportMonth">
+
+                <option value="01">
+                    January
+                </option>
+
+                <option value="02">
+                    February
+                </option>
+
+                <option value="03">
+                    March
+                </option>
+
+                <option value="04">
+                    April
+                </option>
+
+                <option value="05">
+                    May
+                </option>
+
+                <option value="06">
+                    June
+                </option>
+
+                <option value="07">
+                    July
+                </option>
+
+                <option value="08">
+                    August
+                </option>
+
+                <option value="09">
+                    September
+                </option>
+
+                <option value="10">
+                    October
+                </option>
+
+                <option value="11">
+                    November
+                </option>
+
+                <option value="12">
+                    December
+                </option>
+
+            </select>
+
+        </div>
+
 
     </div>
 
 
+    <!-- ================================================= -->
+    <!-- ================= MAIN STATS ==================== -->
+    <!-- ================================================= -->
 
-    <div class="filter-item">
-
-        <label>
-            🗓️ Select Month
-        </label>
-
-        <select id="reportMonth">
+    <div class="report-cards">
 
 
-            <option value="01">
-            January
-            </option>
+        <!-- MONTHLY INCOME -->
 
-            <option value="02">
-            February
-            </option>
+        <div class="card">
 
-            <option value="03">
-            March
-            </option>
+            <h3>
+                Monthly Income
+            </h3>
 
-            <option value="04">
-            April
-            </option>
+            <h2 id="reportIncome">
+                ₹0
+            </h2>
 
-            <option value="05">
-            May
-            </option>
-
-            <option value="06">
-            June
-            </option>
-
-            <option value="07">
-            July
-            </option>
-
-            <option value="08">
-            August
-            </option>
-
-            <option value="09">
-            September
-            </option>
-
-            <option value="10">
-            October
-            </option>
-
-            <option value="11">
-            November
-            </option>
-
-            <option value="12">
-            December
-            </option>
+        </div>
 
 
-        </select>
+        <!-- MONTHLY EXPENSE -->
+
+        <div class="card">
+
+            <h3>
+                Monthly Expense
+            </h3>
+
+            <h2 id="reportExpense">
+                ₹0
+            </h2>
+
+        </div>
+
+
+        <!-- MONTHLY BALANCE -->
+
+        <div class="card">
+
+            <h3>
+                Monthly Balance
+            </h3>
+
+            <h2 id="reportBalance">
+                ₹0
+            </h2>
+
+        </div>
+
+
+        <!-- MONTHLY SAVING -->
+
+        <div class="card">
+
+            <h3>
+                Monthly Saving
+            </h3>
+
+            <h2 id="totalSavings">
+                ₹0
+            </h2>
+
+        </div>
+
 
     </div>
 
 
-</div>
+    <!-- ================================================= -->
+    <!-- ===================== CHARTS ==================== -->
+    <!-- ================================================= -->
 
-<!-- MAIN STATS -->
+    <div class="charts-container">
 
 
-<div class="report-cards">
+        <!-- EXPENSE BY CATEGORY -->
 
+        <div class="chart-card">
 
-<div class="card">
+            <h3>
+                Expense By Category
+            </h3>
 
-<h3>
-Monthly Income
-</h3>
+            <canvas
+                id="expensePieChart">
+            </canvas>
 
-<h2 id="reportIncome">
-₹0
-</h2>
+        </div>
 
-</div>
 
+        <!-- MONTHLY EXPENSE -->
 
+        <div class="chart-card">
 
-<div class="card">
+            <h3>
+                Monthly Expense
+            </h3>
 
-<h3>
-Monthly Expense
-</h3>
+            <canvas
+                id="monthlyExpenseChart">
+            </canvas>
 
-<h2 id="reportExpense">
-₹0
-</h2>
+        </div>
 
-</div>
 
+        <!-- SAVING TREND -->
 
+        <div class="chart-card">
 
+            <h3>
+                Saving Trend
+            </h3>
 
-<div class="card">
+            <canvas
+                id="savingTrendChart">
+            </canvas>
 
-<h3>
-Monthly Balance
-</h3>
+        </div>
 
-<h2 id="reportBalance">
-₹0
-</h2>
 
-</div>
+        <!-- INCOME VS EXPENSE -->
 
+        <div class="chart-card">
 
+            <h3>
+                Income vs Expense
+            </h3>
 
+            <canvas
+                id="incomeExpenseChart">
+            </canvas>
 
-<div class="card">
+        </div>
 
-<h3>
-Monthly Saving
-</h3>
 
-<h2 id="totalSavings">
-₹0
-</h2>
+    </div>
 
-</div>
 
+    <!-- ================================================= -->
+    <!-- ===================== INSIGHTS ================== -->
+    <!-- ================================================= -->
 
+    <div class="report-cards">
 
-</div>
 
+        <!-- HIGHEST EXPENSE -->
 
+        <div class="card">
 
+            <h3>
+                Highest Expense
+            </h3>
 
+            <h2 id="highestExpense">
+                ₹0
+            </h2>
 
+        </div>
 
 
-<!-- CHARTS -->
+        <!-- MOST USED CATEGORY -->
 
+        <div class="card">
 
-<div class="charts-container">
+            <h3>
+                Most Used Category
+            </h3>
 
+            <h2 id="topCategory">
+                -
+            </h2>
 
+        </div>
 
-<div class="chart-card">
 
-<h3>
-Expense By Category
-</h3>
+        <!-- FINANCIAL SCORE -->
 
-<canvas id="expensePieChart"></canvas>
+        <div class="card">
 
-</div>
+            <h3>
+                Financial Score
+            </h3>
 
+            <h2 id="financialScore">
+                0/100
+            </h2>
 
+        </div>
 
 
+        <!-- TOTAL TRANSACTIONS -->
 
-<div class="chart-card">
+        <div class="card">
 
-<h3>
-Monthly Expense
-</h3>
+            <h3>
+                Total Transactions
+            </h3>
 
-<canvas id="monthlyExpenseChart"></canvas>
+            <h2 id="reportTransactions">
+                0
+            </h2>
 
-</div>
+        </div>
 
 
+    </div>
 
 
+    <!-- ================================================= -->
+    <!-- ================= SMART SUGGESTION ============== -->
+    <!-- ================================================= -->
 
+    <div class="smart-card">
 
-<div class="chart-card">
+        <h3>
+            💡 Smart Suggestion
+        </h3>
 
-<h3>
-Saving Trend
-</h3>
+        <p id="smartSuggestion">
+            Loading...
+        </p>
 
-<canvas id="savingTrendChart"></canvas>
+    </div>
 
-</div>
 
+    <!-- ================================================= -->
+    <!-- ================= BACK BUTTON =================== -->
+    <!-- ================================================= -->
 
+    <a
+        href="dashboard.html"
+        class="back-btn">
 
+        ← Back To Dashboard
 
-
-
-<div class="chart-card">
-
-<h3>
-Income vs Expense
-</h3>
-
-<canvas id="incomeExpenseChart"></canvas>
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-<!-- INSIGHTS -->
-
-
-<div class="report-cards">
-
-
-<div class="card">
-
-<h3>
-Highest Expense
-</h3>
-
-<h2 id="highestExpense">
-₹0
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>
-Most Used Category
-</h3>
-
-<h2 id="topCategory">
--
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>
-Financial Score
-</h3>
-
-<h2 id="financialScore">
-0/100
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card">
-
-<h3>
-Total Transactions
-</h3>
-
-<h2 id="reportTransactions">
-0
-</h2>
-
-</div>
-
+    </a>
 
 
 </div>
 
 
+<!-- ===================================================== -->
+<!-- ===================== SCRIPTS ======================= -->
+<!-- ===================================================== -->
+
+<script
+    src="js/currency.js">
+</script>
 
 
+<script
+    src="js/reports.js">
+</script>
 
 
-
-
-<!-- SMART SUGGESTION -->
-
-
-<div class="smart-card">
-
-
-<h3>
-💡 Smart Suggestion
-</h3>
-
-
-<p id="smartSuggestion">
-
-Loading...
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<a href="dashboard.html" class="back-btn">
-
-← Back To Dashboard
-
-</a>
-
-
-
-
-</div>
-
-
-
-
-
-
-<script src="js/currency.js"></script>
-
-<script src="js/reports.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<script
+    src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+</script>
 
 
 </body>
