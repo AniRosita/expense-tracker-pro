@@ -1,7 +1,9 @@
-// ================= CURRENCY CONVERTER =================
+// ======================================================
+// ================= CURRENCY SYSTEM =====================
+// ======================================================
 
-
-// Default exchange rates (Base INR)
+// ================= EXCHANGE RATES ======================
+// Base currency = INR
 
 const exchangeRates = {
 
@@ -16,161 +18,227 @@ const exchangeRates = {
 };
 
 
-
-// Currency symbols
+// ================= CURRENCY SYMBOLS ====================
 
 const currencySymbols = {
 
-    INR:"₹",
+    INR: "₹",
 
-    USD:"$",
+    USD: "$",
 
-    EUR:"€",
+    EUR: "€",
 
-    GBP:"£"
+    GBP: "£"
 
 };
 
 
+// ======================================================
+// ================= GET USER CURRENCY ==================
+// ======================================================
 
+function getUserCurrency() {
 
-// Convert Amount
+    try {
 
-function convertCurrency(amount, currency){
+        const profile =
+            JSON.parse(
+                localStorage.getItem("profileData")
+            );
 
-    let rate = exchangeRates[currency] || 1;
+        if (
+            profile &&
+            profile.currency &&
+            currencySymbols[profile.currency]
+        ) {
 
-    return Number(amount) * rate;
+            return profile.currency;
 
-}
+        }
 
+    } catch (error) {
 
-
-
-// Get Selected Currency
-
-function getUserCurrency(){
-
-    let profile = JSON.parse(
-        localStorage.getItem("profileData")
-    );
-
-
-    if(profile && profile.currency){
-
-        return profile.currency;
+        console.error(
+            "Currency Profile Error:",
+            error
+        );
 
     }
-
 
     return "INR";
 
 }
 
 
+// ======================================================
+// ================= CONVERT CURRENCY ===================
+// ======================================================
 
+function convertCurrency(amount, currency) {
 
-// Format Currency
+    const value =
+        Number(amount) || 0;
 
-function formatCurrency(amount){
+    const rate =
+        exchangeRates[currency] || 1;
 
-
-    let currency = getUserCurrency();
-
-
-    let symbol = currencySymbols[currency];
-
-
-    let convertedAmount = convertCurrency(
-        amount,
-        currency
-    );
-
-
-    return symbol + Number(convertedAmount).toFixed(2);
-
+    return value * rate;
 
 }
 
 
+// ======================================================
+// ================= FORMAT CURRENCY ====================
+// ======================================================
 
+function formatCurrency(amount) {
 
-// Update All Money Values
+    const currency =
+        getUserCurrency();
 
-function updateCurrencyDisplay(){
+    const symbol =
+        currencySymbols[currency] || "₹";
 
+    const convertedAmount =
+        convertCurrency(
+            amount,
+            currency
+        );
 
-    let income =
-    Number(localStorage.getItem("income")) || 0;
-
-
-
-    let expenses =
-    JSON.parse(localStorage.getItem("expenses")) || [];
-
-
-
-    let totalExpense = expenses.reduce(
-        (sum,item)=>sum + Number(item.amount),
-        0
+    return (
+        symbol +
+        convertedAmount.toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        )
     );
-
-
-
-    let balance = income - totalExpense;
-
-
-
-    let incomeBox =
-    document.getElementById("totalIncome");
-
-
-    let expenseBox =
-    document.getElementById("totalExpense");
-
-
-    let balanceBox =
-    document.getElementById("totalBalance");
-
-
-
-    if(incomeBox){
-
-        incomeBox.innerText =
-        formatCurrency(income);
-
-    }
-
-
-
-    if(expenseBox){
-
-        expenseBox.innerText =
-        formatCurrency(totalExpense);
-
-    }
-
-
-
-    if(balanceBox){
-
-        balanceBox.innerText =
-        formatCurrency(balance);
-
-    }
-
-
 
 }
 
 
+// ======================================================
+// ============== UPDATE SINGLE ELEMENT ================
+// ======================================================
 
-// Run Automatically
+function updateCurrencyElement(
+    elementId,
+    amount
+) {
 
-document.addEventListener(
-"DOMContentLoaded",
-()=>{
+    const element =
+        document.getElementById(elementId);
+
+    if (element) {
+
+        element.innerText =
+            formatCurrency(amount);
+
+    }
+
+}
+
+
+// ======================================================
+// ============== UPDATE LOCAL STORAGE DATA =============
+// ======================================================
+// This function is kept for old pages which still use
+// localStorage. Dashboard now uses MySQL and its own
+// calculateTotals() function.
+
+function updateCurrencyDisplay() {
+
+    let income = 0;
+
+    let totalExpense = 0;
+
+
+    try {
+
+        income =
+            Number(
+                localStorage.getItem("income")
+            ) || 0;
+
+
+        const expenses =
+            JSON.parse(
+                localStorage.getItem("expenses")
+            ) || [];
+
+
+        if (Array.isArray(expenses)) {
+
+            totalExpense =
+                expenses.reduce(
+                    (sum, item) => {
+
+                        return (
+                            sum +
+                            (
+                                Number(
+                                    item.amount
+                                ) || 0
+                            )
+                        );
+
+                    },
+                    0
+                );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Local Currency Update Error:",
+            error
+        );
+
+    }
+
+
+    const balance =
+        income -
+        totalExpense;
+
+
+    updateCurrencyElement(
+        "totalIncome",
+        income
+    );
+
+
+    updateCurrencyElement(
+        "totalExpense",
+        totalExpense
+    );
+
+
+    updateCurrencyElement(
+        "totalBalance",
+        balance
+    );
+
+}
+
+
+// ======================================================
+// ============== REFRESH CURRENCY DISPLAY ==============
+// ======================================================
+
+function refreshCurrencyDisplay() {
 
     updateCurrencyDisplay();
 
-});
+}
+
+
+// ======================================================
+// ================= NO AUTO UPDATE =====================
+// ======================================================
+// Dashboard uses MySQL data.
+// Therefore we DO NOT automatically overwrite
+// dashboard totals with localStorage data.
