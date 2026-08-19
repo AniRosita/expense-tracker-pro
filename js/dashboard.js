@@ -13,7 +13,156 @@ if (!localStorage.getItem("userEmail")) {
 // ================= API BASE URL ========================
 // ======================================================
 
-const API_BASE = "http://localhost:5000";
+// Railway + Localhost compatible
+const API_BASE = "";
+
+
+// ======================================================
+// ================= SIDEBAR MENU + THEME ===============
+// ======================================================
+
+const menuBtn =
+    document.getElementById("menuBtn");
+
+const sideMenu =
+    document.querySelector(".side-menu");
+
+const themeBtn =
+    document.getElementById("themeBtn");
+
+
+// ======================================================
+// ================= MENU BUTTON =========================
+// ======================================================
+
+if (menuBtn && sideMenu) {
+
+    menuBtn.addEventListener("click", function () {
+
+        sideMenu.classList.toggle("active");
+
+        console.log(
+            "Sidebar:",
+            sideMenu.classList.contains("active")
+                ? "OPEN"
+                : "CLOSED"
+        );
+
+    });
+
+}
+
+
+// ======================================================
+// ================= LOAD SAVED THEME ====================
+// ======================================================
+
+function loadSavedTheme() {
+
+    const savedTheme =
+        localStorage.getItem("theme");
+
+    if (savedTheme === "light") {
+
+        document.body.classList.add("light-mode");
+
+    } else {
+
+        document.body.classList.remove("light-mode");
+
+    }
+
+}
+
+
+// ======================================================
+// ================= UPDATE THEME BUTTON ================
+// ======================================================
+
+function updateThemeButton() {
+
+    if (!themeBtn) {
+
+        return;
+
+    }
+
+    if (
+        document.body.classList.contains(
+            "light-mode"
+        )
+    ) {
+
+        themeBtn.innerHTML =
+            "🌙 Dark Mode";
+
+    } else {
+
+        themeBtn.innerHTML =
+            "☀️ Light Mode";
+
+    }
+
+}
+
+
+// ======================================================
+// ================= THEME BUTTON ========================
+// ======================================================
+
+if (themeBtn) {
+
+    themeBtn.addEventListener(
+        "click",
+        function () {
+
+            document.body.classList.toggle(
+                "light-mode"
+            );
+
+            const isLight =
+                document.body.classList.contains(
+                    "light-mode"
+                );
+
+            if (isLight) {
+
+                localStorage.setItem(
+                    "theme",
+                    "light"
+                );
+
+            } else {
+
+                localStorage.setItem(
+                    "theme",
+                    "dark"
+                );
+
+            }
+
+            updateThemeButton();
+
+            console.log(
+                "Theme changed:",
+                isLight
+                    ? "LIGHT"
+                    : "DARK"
+            );
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// ================= APPLY SAVED THEME ===================
+// ======================================================
+
+loadSavedTheme();
+
+updateThemeButton();
 
 
 // ======================================================
@@ -22,7 +171,6 @@ const API_BASE = "http://localhost:5000";
 
 const logoutBtn =
     document.getElementById("logoutBtn");
-
 
 if (logoutBtn) {
 
@@ -194,13 +342,11 @@ async function loadExpenses() {
     const email =
         localStorage.getItem("userEmail");
 
-
     if (!email) {
 
         return;
 
     }
-
 
     try {
 
@@ -211,7 +357,6 @@ async function loadExpenses() {
                 encodeURIComponent(email)
             );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -221,10 +366,8 @@ async function loadExpenses() {
 
         }
 
-
         const data =
             await response.json();
-
 
         if (data.success) {
 
@@ -232,7 +375,6 @@ async function loadExpenses() {
                 Array.isArray(data.expenses)
                     ? data.expenses
                     : [];
-
 
             console.log(
                 "Expenses Loaded:",
@@ -260,7 +402,7 @@ async function loadExpenses() {
         expenses = [];
 
         alert(
-            "Unable to load expenses. Please start the server."
+            "Unable to load expenses. Please check the server."
         );
 
     }
@@ -277,13 +419,11 @@ async function loadIncome() {
     const email =
         localStorage.getItem("userEmail");
 
-
     if (!email) {
 
         return;
 
     }
-
 
     try {
 
@@ -294,7 +434,6 @@ async function loadIncome() {
                 encodeURIComponent(email)
             );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -304,10 +443,8 @@ async function loadIncome() {
 
         }
 
-
         const data =
             await response.json();
-
 
         if (data.success) {
 
@@ -315,7 +452,6 @@ async function loadIncome() {
                 Array.isArray(data.income)
                     ? data.income
                     : [];
-
 
             console.log(
                 "Income Loaded:",
@@ -345,6 +481,8 @@ async function loadIncome() {
     }
 
 }
+
+
 // ======================================================
 // ================= ADD INCOME ==========================
 // ======================================================
@@ -364,7 +502,6 @@ if (addIncomeBtn) {
             const incomeDateInput =
                 document.getElementById("incomeDate");
 
-
             const source =
                 incomeNameInput
                     ? incomeNameInput.value.trim()
@@ -380,9 +517,6 @@ if (addIncomeBtn) {
                     ? incomeDateInput.value
                     : "";
 
-
-            // ================= VALIDATION =================
-
             if (
                 source === "" ||
                 amount === "" ||
@@ -397,7 +531,6 @@ if (addIncomeBtn) {
 
             }
 
-
             if (Number(amount) <= 0) {
 
                 alert(
@@ -408,10 +541,8 @@ if (addIncomeBtn) {
 
             }
 
-
             const email =
                 localStorage.getItem("userEmail");
-
 
             if (!email) {
 
@@ -423,7 +554,6 @@ if (addIncomeBtn) {
 
             }
 
-
             try {
 
                 const response =
@@ -434,10 +564,8 @@ if (addIncomeBtn) {
                             method: "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body:
@@ -460,10 +588,8 @@ if (addIncomeBtn) {
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (data.success) {
 
@@ -471,15 +597,11 @@ if (addIncomeBtn) {
                         "Income Added Successfully ✅"
                     );
 
-
-                    // ================= CLEAR INPUTS =================
-
                     if (incomeNameInput) {
 
                         incomeNameInput.value = "";
 
                     }
-
 
                     if (incomeAmountInput) {
 
@@ -487,24 +609,19 @@ if (addIncomeBtn) {
 
                     }
 
-
                     if (incomeDateInput) {
 
                         incomeDateInput.value = "";
 
                     }
 
-
-                    // ================= RELOAD DATA =================
-
                     await loadIncome();
 
                     await loadExpenses();
 
-                    displayExpenses();
+                    displayTransactions();
 
                     calculateTotals();
-
 
                 } else {
 
@@ -515,7 +632,6 @@ if (addIncomeBtn) {
 
                 }
 
-
             } catch (error) {
 
                 console.error(
@@ -523,9 +639,8 @@ if (addIncomeBtn) {
                     error
                 );
 
-
                 alert(
-                    "Server Error. Please check localhost:5000"
+                    "Server Error. Please try again."
                 );
 
             }
@@ -561,7 +676,6 @@ if (addExpenseBtn) {
             const dateInput =
                 document.getElementById("expenseDate");
 
-
             const name =
                 nameInput
                     ? nameInput.value.trim()
@@ -582,16 +696,12 @@ if (addExpenseBtn) {
                     ? dateInput.value
                     : "";
 
-
-            // ================= CUSTOM CATEGORY =================
-
             if (category === "Others") {
 
                 category =
                     customCategoryInput
                         ? customCategoryInput.value.trim()
                         : "";
-
 
                 if (category === "") {
 
@@ -604,9 +714,6 @@ if (addExpenseBtn) {
                 }
 
             }
-
-
-            // ================= VALIDATION =================
 
             if (
                 name === "" ||
@@ -622,7 +729,6 @@ if (addExpenseBtn) {
 
             }
 
-
             if (Number(amount) <= 0) {
 
                 alert(
@@ -633,10 +739,8 @@ if (addExpenseBtn) {
 
             }
 
-
             const email =
                 localStorage.getItem("userEmail");
-
 
             if (!email) {
 
@@ -648,7 +752,6 @@ if (addExpenseBtn) {
 
             }
 
-
             try {
 
                 const response =
@@ -659,10 +762,8 @@ if (addExpenseBtn) {
                             method: "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body:
@@ -688,10 +789,8 @@ if (addExpenseBtn) {
                         }
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (data.success) {
 
@@ -699,15 +798,11 @@ if (addExpenseBtn) {
                         "Expense Added Successfully ✅"
                     );
 
-
-                    // ================= CLEAR INPUTS =================
-
                     if (nameInput) {
 
                         nameInput.value = "";
 
                     }
-
 
                     if (amountInput) {
 
@@ -715,13 +810,11 @@ if (addExpenseBtn) {
 
                     }
 
-
                     if (dateInput) {
 
                         dateInput.value = "";
 
                     }
-
 
                     if (customCategoryInput) {
 
@@ -732,7 +825,6 @@ if (addExpenseBtn) {
 
                     }
 
-
                     if (categorySelect) {
 
                         categorySelect.value =
@@ -740,17 +832,13 @@ if (addExpenseBtn) {
 
                     }
 
-
-                    // ================= RELOAD DATA =================
-
                     await loadExpenses();
 
                     await loadIncome();
 
-                    displayExpenses();
+                    displayTransactions();
 
                     calculateTotals();
-
 
                 } else {
 
@@ -761,7 +849,6 @@ if (addExpenseBtn) {
 
                 }
 
-
             } catch (error) {
 
                 console.error(
@@ -769,9 +856,8 @@ if (addExpenseBtn) {
                     error
                 );
 
-
                 alert(
-                    "Server Error. Please check localhost:5000"
+                    "Server Error. Please try again."
                 );
 
             }
@@ -794,9 +880,7 @@ function displayExpenses() {
 
     }
 
-
     expenseList.innerHTML = "";
-
 
     const searchText =
         searchExpense
@@ -805,19 +889,12 @@ function displayExpenses() {
                 .trim()
             : "";
 
-
     const selectedType =
         filterType
             ? filterType.value.toLowerCase()
             : "all";
 
-
     let transactions = [];
-
-
-    // ==================================================
-    // ================= EXPENSES ========================
-    // ==================================================
 
     expenses.forEach(item => {
 
@@ -843,11 +920,6 @@ function displayExpenses() {
         });
 
     });
-
-
-    // ==================================================
-    // ================= INCOME ==========================
-    // ==================================================
 
     if (
         Array.isArray(window.allIncome)
@@ -881,11 +953,6 @@ function displayExpenses() {
 
     }
 
-
-    // ==================================================
-    // ================= SORT =============================
-    // ==================================================
-
     transactions.sort((a, b) => {
 
         return (
@@ -895,16 +962,10 @@ function displayExpenses() {
 
     });
 
-
-    // ==================================================
-    // ================= DISPLAY =========================
-    // ==================================================
-
     transactions.forEach(transaction => {
 
         const transactionType =
             transaction.type.toLowerCase();
-
 
         const matchSearch =
 
@@ -922,7 +983,6 @@ function displayExpenses() {
                 .toLowerCase()
                 .includes(searchText);
 
-
         const matchType =
 
             selectedType === "all"
@@ -932,7 +992,6 @@ function displayExpenses() {
             transactionType ===
                 selectedType;
 
-
         if (
             !matchSearch ||
             !matchType
@@ -941,7 +1000,6 @@ function displayExpenses() {
             return;
 
         }
-
 
         const amountDisplay =
 
@@ -957,15 +1015,7 @@ function displayExpenses() {
                         transaction.amount
                     );
 
-
-        // ==================================================
-        // ================= ACTION BUTTONS ==================
-        // ==================================================
-
         let actionButtons = "";
-
-
-        // EXPENSE → EDIT + DELETE
 
         if (
             transaction.type === "Expense"
@@ -993,9 +1043,6 @@ function displayExpenses() {
 
         }
 
-
-        // INCOME → EDIT ONLY
-
         if (
             transaction.type === "Income"
         ) {
@@ -1013,11 +1060,6 @@ function displayExpenses() {
             `;
 
         }
-
-
-        // ==================================================
-        // ================= TABLE ROW ======================
-        // ==================================================
 
         expenseList.innerHTML += `
 
@@ -1066,7 +1108,7 @@ if (searchExpense) {
         "input",
         () => {
 
-            displayExpenses();
+            displayTransactions();
 
         }
     );
@@ -1084,12 +1126,14 @@ if (filterType) {
         "change",
         () => {
 
-            displayExpenses();
+            displayTransactions();
 
         }
     );
 
 }
+
+
 // ======================================================
 // ================= EDIT EXPENSE BY ID ==================
 // ======================================================
@@ -1104,14 +1148,12 @@ function editExpenseById(id) {
 
     }
 
-
     const expenseItem =
         expenses.find(
             item =>
                 Number(item.id) ===
                 Number(id)
         );
-
 
     if (!expenseItem) {
 
@@ -1121,7 +1163,6 @@ function editExpenseById(id) {
 
     }
 
-
     if (!editPopup) {
 
         alert("Edit popup not found");
@@ -1130,14 +1171,12 @@ function editExpenseById(id) {
 
     }
 
-
     if (editIndex) {
 
         editIndex.value =
             expenseItem.id;
 
     }
-
 
     if (editName) {
 
@@ -1146,14 +1185,12 @@ function editExpenseById(id) {
 
     }
 
-
     if (editAmount) {
 
         editAmount.value =
             expenseItem.amount || "";
 
     }
-
 
     if (editCategory) {
 
@@ -1162,7 +1199,6 @@ function editExpenseById(id) {
 
     }
 
-
     if (editDate) {
 
         editDate.value =
@@ -1170,12 +1206,10 @@ function editExpenseById(id) {
 
     }
 
-
     editPopup.style.display =
         "block";
 
 }
-
 
 
 // ======================================================
@@ -1201,7 +1235,6 @@ if (closeEditBtn) {
 }
 
 
-
 // ======================================================
 // ================= UPDATE EXPENSE ======================
 // ======================================================
@@ -1217,12 +1250,10 @@ if (updateExpenseBtn) {
                     ? editIndex.value
                     : "";
 
-
             const name =
                 editName
                     ? editName.value.trim()
                     : "";
-
 
             const amount =
                 editAmount
@@ -1231,20 +1262,15 @@ if (updateExpenseBtn) {
                     )
                     : 0;
 
-
             const category =
                 editCategory
                     ? editCategory.value.trim()
                     : "";
 
-
             const date =
                 editDate
                     ? editDate.value
                     : "";
-
-
-            // ================= VALIDATION =================
 
             if (
                 !id ||
@@ -1262,7 +1288,6 @@ if (updateExpenseBtn) {
 
             }
 
-
             try {
 
                 const response =
@@ -1277,10 +1302,8 @@ if (updateExpenseBtn) {
                             method: "PUT",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body:
@@ -1304,19 +1327,14 @@ if (updateExpenseBtn) {
 
                     );
 
-
                 const data =
                     await response.json();
-
 
                 if (data.success) {
 
                     alert(
                         "Expense Updated Successfully ✅"
                     );
-
-
-                    // ================= CLOSE POPUP =================
 
                     if (editPopup) {
 
@@ -1325,18 +1343,13 @@ if (updateExpenseBtn) {
 
                     }
 
-
-                    // ================= RELOAD DATA =================
-
                     await loadExpenses();
 
                     await loadIncome();
 
-
                     displayTransactions();
 
                     calculateTotals();
-
 
                 } else {
 
@@ -1347,7 +1360,6 @@ if (updateExpenseBtn) {
 
                 }
 
-
             } catch (error) {
 
                 console.error(
@@ -1355,9 +1367,8 @@ if (updateExpenseBtn) {
                     error
                 );
 
-
                 alert(
-                    "Server Error. Please check localhost:5000"
+                    "Server Error. Please try again."
                 );
 
             }
@@ -1366,7 +1377,6 @@ if (updateExpenseBtn) {
     );
 
 }
-
 
 
 // ======================================================
@@ -1385,14 +1395,12 @@ async function deleteExpenseById(id) {
 
     }
 
-
     const expenseItem =
         expenses.find(
             item =>
                 Number(item.id) ===
                 Number(id)
         );
-
 
     if (!expenseItem) {
 
@@ -1403,7 +1411,6 @@ async function deleteExpenseById(id) {
         return;
 
     }
-
 
     const confirmDelete =
         confirm(
@@ -1420,13 +1427,11 @@ async function deleteExpenseById(id) {
 
         );
 
-
     if (!confirmDelete) {
 
         return;
 
     }
-
 
     try {
 
@@ -1445,10 +1450,8 @@ async function deleteExpenseById(id) {
 
             );
 
-
         const data =
             await response.json();
-
 
         if (data.success) {
 
@@ -1456,18 +1459,13 @@ async function deleteExpenseById(id) {
                 "Expense Deleted Successfully 🗑️"
             );
 
-
-            // ================= RELOAD =================
-
             await loadExpenses();
 
             await loadIncome();
 
-
             displayTransactions();
 
             calculateTotals();
-
 
         } else {
 
@@ -1478,7 +1476,6 @@ async function deleteExpenseById(id) {
 
         }
 
-
     } catch (error) {
 
         console.error(
@@ -1486,14 +1483,15 @@ async function deleteExpenseById(id) {
             error
         );
 
-
         alert(
-            "Server Error. Please check localhost:5000"
+            "Server Error. Please try again."
         );
 
     }
 
 }
+
+
 // ======================================================
 // ================= EDIT INCOME BY ID ===================
 // ======================================================
@@ -1508,14 +1506,12 @@ function editIncomeById(id) {
 
     }
 
-
     const incomeItem =
         window.allIncome.find(
             item =>
                 Number(item.id) ===
                 Number(id)
         );
-
 
     if (!incomeItem) {
 
@@ -1525,7 +1521,6 @@ function editIncomeById(id) {
 
     }
 
-
     if (!editIncomePopup) {
 
         alert("Income edit popup not found");
@@ -1534,16 +1529,12 @@ function editIncomeById(id) {
 
     }
 
-
-    // ================= SET VALUES =================
-
     if (editIncomeId) {
 
         editIncomeId.value =
             incomeItem.id;
 
     }
-
 
     if (editIncomeSource) {
 
@@ -1552,7 +1543,6 @@ function editIncomeById(id) {
 
     }
 
-
     if (editIncomeAmount) {
 
         editIncomeAmount.value =
@@ -1560,16 +1550,12 @@ function editIncomeById(id) {
 
     }
 
-
     if (editIncomeDate) {
 
         editIncomeDate.value =
             incomeItem.date || "";
 
     }
-
-
-    // ================= SHOW POPUP =================
 
     editIncomePopup.style.display =
         "block";
@@ -1589,10 +1575,8 @@ function displayTransactions() {
 
     }
 
-
     expenseList.innerHTML =
         "";
-
 
     const searchText =
 
@@ -1602,21 +1586,13 @@ function displayTransactions() {
                 .trim()
             : "";
 
-
     const selectedType =
 
         filterType
             ? filterType.value.toLowerCase()
             : "all";
 
-
     let transactions = [];
-
-
-
-    // ==================================================
-    // ================= EXPENSES =======================
-    // ==================================================
 
     expenses.forEach(
         item => {
@@ -1638,7 +1614,7 @@ function displayTransactions() {
                     ) || 0,
 
                 category:
-                    item.category,
+                    item.category || "Others",
 
                 date:
                     item.date
@@ -1647,12 +1623,6 @@ function displayTransactions() {
 
         }
     );
-
-
-
-    // ==================================================
-    // ================= INCOME =========================
-    // ==================================================
 
     if (
         Array.isArray(
@@ -1693,12 +1663,6 @@ function displayTransactions() {
 
     }
 
-
-
-    // ==================================================
-    // ================= SORT ===========================
-    // ==================================================
-
     transactions.sort(
         (a, b) => {
 
@@ -1712,17 +1676,10 @@ function displayTransactions() {
                     b.date
                 );
 
-
             return dateB - dateA;
 
         }
     );
-
-
-
-    // ==================================================
-    // ================= DISPLAY ========================
-    // ==================================================
 
     transactions.forEach(
         transaction => {
@@ -1730,7 +1687,6 @@ function displayTransactions() {
             const transactionType =
                 transaction.type
                     .toLowerCase();
-
 
             const matchSearch =
 
@@ -1754,7 +1710,6 @@ function displayTransactions() {
                         searchText
                     );
 
-
             const matchType =
 
                 selectedType ===
@@ -1765,7 +1720,6 @@ function displayTransactions() {
                 transactionType ===
                     selectedType;
 
-
             if (
                 !matchSearch ||
                 !matchType
@@ -1775,14 +1729,7 @@ function displayTransactions() {
 
             }
 
-
-
-            // ==================================================
-            // ================= AMOUNT ========================
-            // ==================================================
-
             let amountDisplay;
-
 
             if (
                 transaction.type ===
@@ -1805,18 +1752,8 @@ function displayTransactions() {
 
             }
 
-
-
-            // ==================================================
-            // ================= ACTION BUTTONS =================
-            // ==================================================
-
             let actionButtons =
                 "";
-
-
-
-            // ================= EXPENSE =================
 
             if (
                 transaction.type ===
@@ -1833,7 +1770,6 @@ function displayTransactions() {
 
                     </button>
 
-
                     <button
                         class="delete-btn"
                         onclick="deleteExpenseById(${transaction.id})">
@@ -1845,10 +1781,6 @@ function displayTransactions() {
                 `;
 
             }
-
-
-
-            // ================= INCOME ==================
 
             if (
                 transaction.type ===
@@ -1869,17 +1801,10 @@ function displayTransactions() {
 
             }
 
-
-
-            // ==================================================
-            // ================= TABLE ROW =====================
-            // ==================================================
-
             const row =
                 document.createElement(
                     "tr"
                 );
-
 
             row.innerHTML = `
 
@@ -1887,33 +1812,27 @@ function displayTransactions() {
                     ${transaction.type}
                 </td>
 
-
                 <td>
                     ${transaction.name}
                 </td>
-
 
                 <td>
                     ${amountDisplay}
                 </td>
 
-
                 <td>
                     ${transaction.category}
                 </td>
 
-
                 <td>
                     ${transaction.date || "-"}
                 </td>
-
 
                 <td>
                     ${actionButtons}
                 </td>
 
             `;
-
 
             expenseList.appendChild(
                 row
@@ -1925,33 +1844,163 @@ function displayTransactions() {
 }
 
 
-
 // ======================================================
-// ================= FORMAT CURRENCY =====================
+// ============== CURRENT MONTH TOTALS ==================
 // ======================================================
 
-function formatCurrency(amount) {
+function calculateTotals() {
 
-    const value =
-        Number(amount) || 0;
+    try {
+
+        const today = new Date();
+
+        const currentMonth =
+            today.getMonth();
+
+        const currentYear =
+            today.getFullYear();
 
 
-    return "₹" +
-        value.toLocaleString(
-            "en-IN",
+        // ==================================================
+        // CURRENT MONTH EXPENSES
+        // ==================================================
+
+        const expenseTotal =
+            Array.isArray(expenses)
+                ? expenses.reduce(
+                    (total, item) => {
+
+                        const itemDate =
+                            new Date(item.date);
+
+                        if (
+                            !isNaN(itemDate) &&
+                            itemDate.getMonth() === currentMonth &&
+                            itemDate.getFullYear() === currentYear
+                        ) {
+
+                            return total +
+                                (Number(item.amount) || 0);
+
+                        }
+
+                        return total;
+
+                    },
+                    0
+                )
+                : 0;
+
+
+        // ==================================================
+        // CURRENT MONTH INCOME
+        // ==================================================
+
+        const incomeTotal =
+            Array.isArray(window.allIncome)
+                ? window.allIncome.reduce(
+                    (total, item) => {
+
+                        const itemDate =
+                            new Date(
+                                item.date ||
+                                item.created_at
+                            );
+
+                        if (
+                            !isNaN(itemDate) &&
+                            itemDate.getMonth() === currentMonth &&
+                            itemDate.getFullYear() === currentYear
+                        ) {
+
+                            return total +
+                                (Number(item.amount) || 0);
+
+                        }
+
+                        return total;
+
+                    },
+                    0
+                )
+                : 0;
+
+
+        // ==================================================
+        // CURRENT MONTH BALANCE
+        // ==================================================
+
+        const balance =
+            incomeTotal -
+            expenseTotal;
+
+
+        // ==================================================
+        // UPDATE DASHBOARD
+        // ==================================================
+
+        if (totalExpense) {
+
+            totalExpense.textContent =
+                formatCurrency(
+                    expenseTotal
+                );
+
+        }
+
+        if (totalIncome) {
+
+            totalIncome.textContent =
+                formatCurrency(
+                    incomeTotal
+                );
+
+        }
+
+        if (totalBalance) {
+
+            totalBalance.textContent =
+                formatCurrency(
+                    balance
+                );
+
+        }
+
+        console.log(
+            "Current Month Totals:",
             {
+                month:
+                    today.toLocaleString(
+                        "default",
+                        {
+                            month: "long"
+                        }
+                    ),
 
-                minimumFractionDigits:
-                    2,
+                year:
+                    currentYear,
 
-                maximumFractionDigits:
-                    2
+                income:
+                    incomeTotal,
 
+                expenses:
+                    expenseTotal,
+
+                balance:
+                    balance
             }
         );
 
-}
+    } catch (error) {
 
+        console.error(
+            "Current Month Calculation Error:",
+            error
+        );
+
+    }
+
+}
 
 
 // ======================================================
@@ -1972,7 +2021,6 @@ if (searchExpense) {
 }
 
 
-
 // ======================================================
 // ================= FILTER ==============================
 // ======================================================
@@ -1991,7 +2039,6 @@ if (filterType) {
 }
 
 
-
 // ======================================================
 // ================= IMPORT EXPENSE ======================
 // ======================================================
@@ -2001,12 +2048,10 @@ const importExpenseBtn =
         "importExpenseBtn"
     );
 
-
 const expenseFileInput =
     document.getElementById(
         "expenseFileInput"
     );
-
 
 
 if (
@@ -2026,7 +2071,6 @@ if (
 }
 
 
-
 // ======================================================
 // ================= PROCESS EXCEL IMPORT ================
 // ======================================================
@@ -2040,13 +2084,11 @@ if (expenseFileInput) {
             const file =
                 this.files[0];
 
-
             if (!file) {
 
                 return;
 
             }
-
 
             try {
 
@@ -2063,10 +2105,8 @@ if (expenseFileInput) {
 
                 }
 
-
                 const data =
                     await file.arrayBuffer();
-
 
                 const workbook =
                     XLSX.read(
@@ -2077,16 +2117,13 @@ if (expenseFileInput) {
                         }
                     );
 
-
                 const sheetName =
                     workbook.SheetNames[0];
-
 
                 const worksheet =
                     workbook.Sheets[
                         sheetName
                     ];
-
 
                 const importedData =
                     XLSX.utils.sheet_to_json(
@@ -2096,7 +2133,6 @@ if (expenseFileInput) {
                                 ""
                         }
                     );
-
 
                 if (
                     importedData.length ===
@@ -2111,10 +2147,8 @@ if (expenseFileInput) {
 
                 }
 
-
                 let importedCount =
                     0;
-
 
 
                 // ==================================================
@@ -2133,7 +2167,6 @@ if (expenseFileInput) {
                         row.Expense ||
                         row.expense;
 
-
                     const amount =
 
                         Number(
@@ -2141,19 +2174,16 @@ if (expenseFileInput) {
                             row.amount
                         );
 
-
                     const category =
 
                         row.Category ||
                         row.category ||
                         "Others";
 
-
                     let date =
 
                         row.Date ||
                         row.date;
-
 
 
                     // ================= EXCEL DATE =================
@@ -2167,7 +2197,6 @@ if (expenseFileInput) {
                             XLSX.SSF.parse_date_code(
                                 date
                             );
-
 
                         if (excelDate) {
 
@@ -2190,7 +2219,6 @@ if (expenseFileInput) {
                     }
 
 
-
                     // ================= VALIDATION =================
 
                     if (
@@ -2203,7 +2231,6 @@ if (expenseFileInput) {
                         continue;
 
                     }
-
 
 
                     try {
@@ -2258,10 +2285,8 @@ if (expenseFileInput) {
 
                             );
 
-
                         const result =
                             await response.json();
-
 
                         if (
                             result.success
@@ -2270,7 +2295,6 @@ if (expenseFileInput) {
                             importedCount++;
 
                         }
-
 
                     } catch (
                         rowError
@@ -2286,18 +2310,15 @@ if (expenseFileInput) {
                 }
 
 
-
                 // ================= RELOAD =================
 
                 await loadExpenses();
 
                 await loadIncome();
 
-
                 displayTransactions();
 
                 calculateTotals();
-
 
                 alert(
 
@@ -2306,7 +2327,6 @@ if (expenseFileInput) {
 
                 );
 
-
             } catch (error) {
 
                 console.error(
@@ -2314,13 +2334,11 @@ if (expenseFileInput) {
                     error
                 );
 
-
                 alert(
                     "Unable to import the file."
                 );
 
             }
-
 
             this.value =
                 "";
@@ -2329,6 +2347,8 @@ if (expenseFileInput) {
     );
 
 }
+
+
 // ======================================================
 // ================= INITIAL DASHBOARD LOAD =============
 // ======================================================
@@ -2337,7 +2357,9 @@ async function initializeDashboard() {
 
     try {
 
-        console.log("Loading dashboard data...");
+        console.log(
+            "Loading dashboard data..."
+        );
 
         await loadExpenses();
 
@@ -2347,7 +2369,9 @@ async function initializeDashboard() {
 
         calculateTotals();
 
-        console.log("Dashboard data loaded successfully ✅");
+        console.log(
+            "Dashboard data loaded successfully ✅"
+        );
 
     } catch (error) {
 
@@ -2362,7 +2386,7 @@ async function initializeDashboard() {
 
 
 // ======================================================
-// ================= START DASHBOARD ====================
+// ================= START DASHBOARD =====================
 // ======================================================
 
 document.addEventListener(
@@ -2373,6 +2397,8 @@ document.addEventListener(
 
     }
 );
+
+
 // ======================================================
 // ============== FORCE INCOME UPDATE ===================
 // ======================================================
@@ -2382,29 +2408,45 @@ if (updateIncomeBtn) {
     updateIncomeBtn.onclick = async function () {
 
         const id =
-            document.getElementById("editIncomeId").value;
+            document.getElementById(
+                "editIncomeId"
+            ).value;
 
         const source =
-            document.getElementById("editIncomeSource").value.trim();
+            document.getElementById(
+                "editIncomeSource"
+            ).value.trim();
 
         const amount =
             Number(
-                document.getElementById("editIncomeAmount").value
+                document.getElementById(
+                    "editIncomeAmount"
+                ).value
             );
 
         const date =
-            document.getElementById("editIncomeDate").value;
+            document.getElementById(
+                "editIncomeDate"
+            ).value;
 
 
-        console.log("Income Update:", {
-            id,
-            source,
-            amount,
-            date
-        });
+        console.log(
+            "Income Update:",
+            {
+                id,
+                source,
+                amount,
+                date
+            }
+        );
 
 
-        if (!id || !source || amount <= 0 || !date) {
+        if (
+            !id ||
+            !source ||
+            amount <= 0 ||
+            !date
+        ) {
 
             alert(
                 "Please fill all income fields correctly"
@@ -2417,30 +2459,41 @@ if (updateIncomeBtn) {
 
         try {
 
-            const response = await fetch(
-                API_BASE +
-                "/update-income/" +
-                id,
-                {
+            const response =
+                await fetch(
 
-                    method: "PUT",
+                    API_BASE +
+                    "/update-income/" +
+                    id,
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    {
 
-                    body: JSON.stringify({
+                        method: "PUT",
 
-                        source: source,
+                        headers: {
 
-                        amount: amount,
+                            "Content-Type":
+                                "application/json"
 
-                        date: date
+                        },
 
-                    })
+                        body:
+                            JSON.stringify({
 
-                }
-            );
+                                source:
+                                    source,
+
+                                amount:
+                                    amount,
+
+                                date:
+                                    date
+
+                            })
+
+                    }
+
+                );
 
 
             const data =
@@ -2474,17 +2527,11 @@ if (updateIncomeBtn) {
                 }
 
 
-                // Reload MySQL data
-
                 await loadIncome();
 
                 await loadExpenses();
 
-
-                // Refresh history
-
                 displayTransactions();
-
 
                 if (
                     typeof calculateTotals ===

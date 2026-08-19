@@ -26,9 +26,19 @@ async function loadHistory() {
 
         const response =
             await fetch(
-                "http://localhost:5000/delete-history/" +
+                "/delete-history/" +
                 encodeURIComponent(email)
             );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "History API Error: " +
+                response.status
+            );
+
+        }
 
 
         const data =
@@ -58,7 +68,9 @@ async function loadHistory() {
 
 
         const box =
-            document.getElementById("historyList");
+            document.getElementById(
+                "historyList"
+            );
 
 
         if (box) {
@@ -72,7 +84,7 @@ async function loadHistory() {
                     </h3>
 
                     <p>
-                        Please make sure the server is running.
+                        Please check the server connection.
                     </p>
 
                 </div>
@@ -91,7 +103,9 @@ async function loadHistory() {
 function showNoHistory() {
 
     const box =
-        document.getElementById("historyList");
+        document.getElementById(
+            "historyList"
+        );
 
 
     if (!box) return;
@@ -121,7 +135,9 @@ function showNoHistory() {
 function showHistory() {
 
     const box =
-        document.getElementById("historyList");
+        document.getElementById(
+            "historyList"
+        );
 
 
     if (!box) return;
@@ -133,7 +149,9 @@ function showHistory() {
     // ================= TYPE FILTER =================
 
     const typeSelect =
-        document.getElementById("historyType");
+        document.getElementById(
+            "historyType"
+        );
 
 
     const selectedType =
@@ -145,7 +163,9 @@ function showHistory() {
     // ================= DATE FILTER =================
 
     const dateSelect =
-        document.getElementById("dateFilter");
+        document.getElementById(
+            "dateFilter"
+        );
 
 
     const selectedDate =
@@ -190,7 +210,9 @@ function showHistory() {
 
 
             const deletedDate =
-                new Date(item.deleted_at);
+                new Date(
+                    item.deleted_at
+                );
 
 
             if (
@@ -263,7 +285,9 @@ function showHistory() {
         // ================= DELETED DATE =================
 
         const deletedDate =
-            new Date(item.deleted_at);
+            new Date(
+                item.deleted_at
+            );
 
 
         // ================= DAYS LEFT =================
@@ -307,7 +331,9 @@ function showHistory() {
             item.date
                 ? new Date(
                     item.date
-                  ).toLocaleDateString("en-IN")
+                  ).toLocaleDateString(
+                    "en-IN"
+                  )
                 : "-";
 
 
@@ -317,7 +343,9 @@ function showHistory() {
             !isNaN(
                 deletedDate.getTime()
             )
-                ? deletedDate.toLocaleDateString("en-IN")
+                ? deletedDate.toLocaleDateString(
+                    "en-IN"
+                  )
                 : "-";
 
 
@@ -334,13 +362,17 @@ function showHistory() {
         const amount =
             Number(
                 item.amount || 0
-            ).toLocaleString("en-IN");
+            ).toLocaleString(
+                "en-IN"
+            );
 
 
         // ================= CREATE HISTORY ITEM =================
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
 
         card.className =
@@ -403,7 +435,9 @@ function showHistory() {
         `;
 
 
-        box.appendChild(card);
+        box.appendChild(
+            card
+        );
 
     });
 
@@ -461,7 +495,9 @@ function goDashboard() {
 function loadSavedTheme() {
 
     const savedTheme =
-        localStorage.getItem("darkMode");
+        localStorage.getItem(
+            "darkMode"
+        );
 
 
     if (
