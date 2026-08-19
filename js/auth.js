@@ -1,118 +1,123 @@
 const loginForm = document.getElementById("loginForm");
 
-if(loginForm){
+if (loginForm) {
 
-loginForm.addEventListener("submit", async function(e){
+    loginForm.addEventListener("submit", async function (e) {
 
-e.preventDefault();
+        e.preventDefault();
 
-const email =
-document.getElementById("email").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-const password =
-document.getElementById("password").value.trim();
+        if (email === "" || password === "") {
 
-if(email === "" || password === ""){
+            Swal.fire({
+                title: "Missing Fields!",
+                text: "Please fill all fields",
+                icon: "warning",
+                confirmButtonColor: "#4f46e5"
+            });
 
-Swal.fire({
-title:"Missing Fields!",
-text:"Please fill all fields",
-icon:"warning",
-confirmButtonColor:"#4f46e5"
-});
+            return;
+        }
 
-return;
+        const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
-}
+        if (!gmailPattern.test(email)) {
 
-const gmailPattern =
-/^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+            Swal.fire({
+                title: "Invalid Email!",
+                text: "Only Gmail address allowed",
+                icon: "error",
+                confirmButtonColor: "#4f46e5"
+            });
 
-if(!gmailPattern.test(email)){
+            return;
+        }
 
-Swal.fire({
-title:"Invalid Email!",
-text:"Only Gmail address allowed",
-icon:"error",
-confirmButtonColor:"#4f46e5"
-});
+        const passwordPattern = /^\d{6}$/;
 
-return;
+        if (!passwordPattern.test(password)) {
 
-}
+            Swal.fire({
+                title: "Invalid Password!",
+                text: "Password must be exactly 6 digits",
+                icon: "error",
+                confirmButtonColor: "#4f46e5"
+            });
 
-const passwordPattern =
-/^\d{6}$/;
+            return;
+        }
 
-if(!passwordPattern.test(password)){
+        try {
 
-Swal.fire({
-title:"Invalid Password!",
-text:"Password must be exactly 6 digits",
-icon:"error",
-confirmButtonColor:"#4f46e5"
-});
+            const response = await fetch("http://localhost:5000/login", {
 
-return;
+                method: "POST",
 
-}
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-const users =
-JSON.parse(localStorage.getItem("users")) || [];
+                body: JSON.stringify({
+                    email,
+                    password
+                })
 
-const user = users.find(
-u => u.email === email &&
-u.password === password
-);
+            });
 
-if(user){
+            const data = await response.json();
 
-localStorage.setItem(
-"userEmail",
-email
-);
+            if (data.success) {
 
-localStorage.setItem(
-"gmailProfile",
-"assets/profile.png"
-);
+                localStorage.setItem("userEmail", data.user.email);
 
-const message =
-document.getElementById("message");
+                localStorage.setItem(
+                    "gmailProfile",
+                    "assets/profile.png"
+                );
 
-if(message){
+                const message = document.getElementById("message");
 
-message.innerHTML =
-"Login Successful ✅";
+                if (message) {
+                    message.innerHTML = "Login Successful ✅";
+                }
 
-}
+                Swal.fire({
+                    title: "Login Successful!",
+                    text: "Welcome Back",
+                    icon: "success",
+                    confirmButtonColor: "#4f46e5"
+                });
 
-Swal.fire({
-title:"Login Successful!",
-text:"Welcome Back",
-icon:"success",
-confirmButtonColor:"#4f46e5"
-});
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
 
-setTimeout(()=>{
+            } else {
 
-window.location.href =
-"dashboard.html";
+                Swal.fire({
+                    title: "Login Failed!",
+                    text: data.message,
+                    icon: "error",
+                    confirmButtonColor: "#4f46e5"
+                });
 
-},1000);
+            }
 
-}
-else{
+        } catch (error) {
 
-Swal.fire({
-title:"Login Failed!",
-text:"Invalid Email or Password",
-icon:"error",
-confirmButtonColor:"#4f46e5"
-});
+            console.error(error);
 
-}
+            Swal.fire({
+                title: "Server Error!",
+                text: "Backend server is not running.",
+                icon: "error",
+                confirmButtonColor: "#4f46e5"
+            });
 
-});
+        }
+
+    });
 
 }

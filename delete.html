@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Delete History</title>
+
+<link rel="stylesheet" href="css/delete.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<div class="navbar">
+
+    <h2>
+        Expense Tracker Pro
+    </h2>
+
+
+    <button onclick="goDashboard()">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+        Dashboard
+
+    </button>
+
+</div>
+
+
+<!-- ================= MAIN CONTENT ================= -->
+
+<div class="main-content">
+
+
+    <!-- ================= PAGE TITLE ================= -->
+
+    <div class="page-title">
+
+        <h1>
+            🗑 Delete History
+        </h1>
+
+        <p>
+            Deleted income and expense records
+        </p>
+
+    </div>
+
+
+    <!-- ================= FILTER ================= -->
+
+    <div class="filter-card">
+
+
+        <!-- TYPE FILTER -->
+
+        <select id="historyType">
+
+            <option value="all">
+                All History
+            </option>
+
+            <option value="expense">
+                Expense
+            </option>
+
+            <option value="income">
+                Income
+            </option>
+
+        </select>
+
+
+        <!-- DATE FILTER -->
+
+        <select id="dateFilter">
+
+            <option value="all">
+                All Time
+            </option>
+
+            <option value="month">
+                Last 30 Days
+            </option>
+
+            <option value="old">
+                Older Records
+            </option>
+
+        </select>
+
+
+    </div>
+
+
+    <!-- ================= HISTORY ================= -->
+
+    <div class="history-card">
+
+
+        <h2>
+            History Records
+        </h2>
+
+
+        <div id="historyList">
+
+            <!-- Deleted records will load here -->
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script src="js/delete.js"></script>
+
+
+</body>
+
+</html>

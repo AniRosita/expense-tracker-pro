@@ -3,146 +3,390 @@
 
 <head>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Expense Reports</title>
-    <link rel="icon" type="image/png" href="assets/profile.png">
+<title>Expense Reports</title>
 
+<link rel="icon" type="image/png" href="assets/profile.png">
 
-    <link rel="stylesheet" href="css/reports.css">
+<link rel="stylesheet" href="css/reports.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
+
 <body>
 
-    <div class="container">
 
-        <h1>
-    <span class="report-icon">📈</span>
-    Expense Reports
+<div class="container">
+
+
+<h1>
+📈 Expense Reports
 </h1>
 
-        <!-- Main Stats -->
-
-        <div class="report-cards">
-
-            <div class="card">
-                <h3>Total Income</h3>
-                <h2 id="reportIncome">₹0</h2>
-            </div>
-
-            <div class="card">
-                <h3>Total Expense</h3>
-                <h2 id="reportExpense">₹0</h2>
-            </div>
-
-            <div class="card">
-                <h3>Current Balance</h3>
-                <h2 id="reportBalance">₹0</h2>
-            </div>
-
-            <div class="card">
-                <h3>Total Savings</h3>
-                <h2 id="totalSavings">₹0</h2>
-            </div>
-
-        </div>
 
 
-        <!-- Charts -->
+<!-- MONTH SELECT -->
 
-        <div class="charts-container">
+<!-- YEAR & MONTH FILTER -->
 
-            <div class="chart-card">
+<div class="filter-box">
 
-                <h3>Expense By Category</h3>
 
-                <canvas id="expensePieChart"></canvas>
+    <div class="filter-item">
 
-            </div>
+        <label>
+            📅 Select Year
+        </label>
 
-            <div class="chart-card">
+        <select id="reportYear">
 
-                <h3>Monthly Expenses</h3>
-
-                <canvas id="monthlyExpenseChart"></canvas>
-
-            </div>
-            <div class="chart-card">
-
-        <h3>Saving Trend</h3>
-
-        <canvas id="savingTrendChart"></canvas>
+        </select>
 
     </div>
-<div class="chart-card">
 
-    <h3>Income vs Expense</h3>
 
-    <canvas id="incomeExpenseChart"></canvas>
+
+    <div class="filter-item">
+
+        <label>
+            🗓️ Select Month
+        </label>
+
+        <select id="reportMonth">
+
+
+            <option value="01">
+            January
+            </option>
+
+            <option value="02">
+            February
+            </option>
+
+            <option value="03">
+            March
+            </option>
+
+            <option value="04">
+            April
+            </option>
+
+            <option value="05">
+            May
+            </option>
+
+            <option value="06">
+            June
+            </option>
+
+            <option value="07">
+            July
+            </option>
+
+            <option value="08">
+            August
+            </option>
+
+            <option value="09">
+            September
+            </option>
+
+            <option value="10">
+            October
+            </option>
+
+            <option value="11">
+            November
+            </option>
+
+            <option value="12">
+            December
+            </option>
+
+
+        </select>
+
+    </div>
+
 
 </div>
-            
-            
 
-        </div>
+<!-- MAIN STATS -->
 
 
-        <!-- Insights -->
-
-        <div class="report-cards">
-
-            <div class="card">
-                <h3>Highest Expense</h3>
-                <h2 id="highestExpense">₹0</h2>
-            </div>
-
-            <div class="card">
-                <h3>Most Used Category</h3>
-                <h2 id="topCategory">-</h2>
-            </div>
-
-            <div class="card">
-                <h3>Financial Score</h3>
-                <h2 id="financialScore">0/100</h2>
-            </div>
-
-            <div class="card">
-                <h3>Total Transactions</h3>
-                <h2 id="reportTransactions">0</h2>
-            </div>
-
-        </div>
+<div class="report-cards">
 
 
-        <!-- Smart Suggestion -->
+<div class="card">
 
-        <div class="smart-card">
+<h3>
+Monthly Income
+</h3>
 
-            <h3>💡 Smart Suggestion</h3>
+<h2 id="reportIncome">
+₹0
+</h2>
 
-            <p id="smartSuggestion">
-                Loading...
-            </p>
-
-        </div>
+</div>
 
 
-        <a href="dashboard.html" class="back-btn">
-            ← Back To Dashboard
-        </a>
 
-    </div>
-    <script src="js/currency.js"></script>
-    <script src="js/reports.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+<div class="card">
+
+<h3>
+Monthly Expense
+</h3>
+
+<h2 id="reportExpense">
+₹0
+</h2>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Monthly Balance
+</h3>
+
+<h2 id="reportBalance">
+₹0
+</h2>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Monthly Saving
+</h3>
+
+<h2 id="totalSavings">
+₹0
+</h2>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<!-- CHARTS -->
+
+
+<div class="charts-container">
+
+
+
+<div class="chart-card">
+
+<h3>
+Expense By Category
+</h3>
+
+<canvas id="expensePieChart"></canvas>
+
+</div>
+
+
+
+
+
+<div class="chart-card">
+
+<h3>
+Monthly Expense
+</h3>
+
+<canvas id="monthlyExpenseChart"></canvas>
+
+</div>
+
+
+
+
+
+
+<div class="chart-card">
+
+<h3>
+Saving Trend
+</h3>
+
+<canvas id="savingTrendChart"></canvas>
+
+</div>
+
+
+
+
+
+
+<div class="chart-card">
+
+<h3>
+Income vs Expense
+</h3>
+
+<canvas id="incomeExpenseChart"></canvas>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<!-- INSIGHTS -->
+
+
+<div class="report-cards">
+
+
+<div class="card">
+
+<h3>
+Highest Expense
+</h3>
+
+<h2 id="highestExpense">
+₹0
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Most Used Category
+</h3>
+
+<h2 id="topCategory">
+-
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Financial Score
+</h3>
+
+<h2 id="financialScore">
+0/100
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Total Transactions
+</h3>
+
+<h2 id="reportTransactions">
+0
+</h2>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- SMART SUGGESTION -->
+
+
+<div class="smart-card">
+
+
+<h3>
+💡 Smart Suggestion
+</h3>
+
+
+<p id="smartSuggestion">
+
+Loading...
+
+</p>
+
+
+</div>
+
+
+
+
+
+
+
+<a href="dashboard.html" class="back-btn">
+
+← Back To Dashboard
+
+</a>
+
+
+
+
+</div>
+
+
+
+
+
+
+<script src="js/currency.js"></script>
+
+<script src="js/reports.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 
 </body>
 

@@ -166,3 +166,93 @@ body.light-mode{
     background:#f5f5f5;
     color:#111;
 }
+/* ================= REPORT FILTER ================= */
+
+
+.filter-box{
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:30px;
+
+    margin:30px auto;
+
+    padding:20px;
+
+    background:#ffffff;
+
+    border-radius:15px;
+
+    width:80%;
+
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
+
+}
+
+
+
+.filter-item{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+
+
+.filter-item label{
+
+    font-size:16px;
+
+    font-weight:600;
+
+    color:#333;
+
+}
+
+
+
+.filter-item select{
+
+    width:180px;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    border:1px solid #ddd;
+
+    font-size:15px;
+
+    cursor:pointer;
+
+}
+
+
+
+/* Mobile */
+
+@media(max-width:600px){
+
+
+.filter-box{
+
+    flex-direction:column;
+
+    width:90%;
+
+}
+
+
+.filter-item select{
+
+    width:250px;
+
+}
+
+
+}

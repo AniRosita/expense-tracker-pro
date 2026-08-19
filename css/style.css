@@ -181,3 +181,12 @@ button:hover{
     }
 }
 }
+.history-link{
+
+    display:block;
+    padding:12px;
+    margin:10px;
+    text-decoration:none;
+    border-radius:10px;
+
+}

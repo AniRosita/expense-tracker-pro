@@ -1,80 +1,84 @@
-const registerForm =
-document.getElementById("registerForm");
+const registerForm = document.getElementById("registerForm");
 
-if(registerForm){
+if (registerForm) {
 
-registerForm.addEventListener("submit",async(e)=>{
+    registerForm.addEventListener("submit", async (e) => {
 
-e.preventDefault();
+        e.preventDefault();
 
-const name =
-document.getElementById("name").value.trim();
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-const email =
-document.getElementById("email").value.trim();
+        if (name === "" || email === "" || password === "") {
 
-const password =
-document.getElementById("password").value.trim();
+            showToast("Please fill all fields", "error");
+            return;
 
-if(name === "" || email === "" || password === ""){
+        }
 
-showToast("Please fill all fields","error");
-return;
+        const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
-}
+        if (!gmailPattern.test(email)) {
 
-const gmailPattern =
-/^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+            showToast("Only Gmail Allowed", "error");
+            return;
 
-if(!gmailPattern.test(email)){
+        }
 
-showToast("Only Gmail Allowed","error");
-return;
+        const passwordPattern = /^\d{6}$/;
 
-}
+        if (!passwordPattern.test(password)) {
 
-const passwordPattern =
-/^\d{6}$/;
+            showToast("Password must be exactly 6 digits", "error");
+            return;
 
-if(!passwordPattern.test(password)){
+        }
 
-showToast("Password must be exactly 6 digits","error");
-return;
+        try {
 
-}
+            const response = await fetch("http://localhost:5000/register", {
 
-let users =
-JSON.parse(localStorage.getItem("users")) || [];
+                method: "POST",
 
-const existingUser =
-users.find(u => u.email === email);
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-if(existingUser){
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password
+                })
 
-alert("Email already exists");
-return;
+            });
 
-}
+            const data = await response.json();
 
-users.push({
-name,
-email,
-password
-});
+            if (data.success) {
 
-localStorage.setItem(
-"users",
-JSON.stringify(users)
-);
+                showToast("Account Created Successfully ✅", "success");
 
-alert("Account Created Successfully ✅");
+                setTimeout(() => {
 
-setTimeout(()=>{
+                    window.location.href = "index.html";
 
-window.location.href = "index.html";
+                }, 1500);
 
-},1500);
+            } else {
 
-});
+                showToast(data.message, "error");
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast("Server Error! Backend is not running.", "error");
+
+        }
+
+    });
 
 }

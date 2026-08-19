@@ -63,8 +63,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     <a href="dashboard.html">Dashboard</a>
      <a href="expense.html">Expense</a>
      <a href="reports.html">Reports</a>
+     <a href="delete.html">Delete History</a>
 
     <a href="tips.html">Tips</a>
+    <a href="delete.html">🗑 Delete History</a>
     
     <button id="logoutBtn">
 
@@ -156,6 +158,10 @@ placeholder="Income Source">
 type="number"
 id="incomeAmount"
 placeholder="Income Amount">
+
+<input
+type="date"
+id="incomeDate">
 
 <button id="addIncomeBtn">
 Add Income
@@ -391,14 +397,14 @@ Save Reminder 🔔
 
 
 
-<!-- Expense History -->
+<!-- Transaction History -->
 
 
 <div class="expense-table">
 
 
 <h2>
-Expense History
+Transaction History
 </h2>
 
 
@@ -418,68 +424,21 @@ id="searchExpense"
 placeholder="🔍 Search Expense">
 
 
+<select id="transactionFilter">
 
-<select id="filterCategory">
-
-
-<option value="All">
-All Categories
+<option value="all">
+All Transactions
 </option>
 
-
-<option value="Food">
-Food
+<option value="income">
+Income
 </option>
 
-
-<option value="Travel">
-Travel
+<option value="expense">
+Expense
 </option>
-
-
-<option value="Shopping">
-Shopping
-</option>
-
-
-<option value="Bills">
-Bills
-</option>
-
-
-<option value="Study">
-Study
-</option>
-
-
-<option value="Health">
-Health
-</option>
-
-
-<option value="Transport">
-Transport
-</option>
-
-
-<option value="Entertainment">
-Entertainment
-</option>
-
-<option value="Others">
-Others
-</option>
-
 </select>
-
-
 </div>
-
-
-
-
-
-
 
 <table>
 
@@ -488,6 +447,8 @@ Others
 
 
 <tr>
+
+<th>Type</th>
 
 <th>Name</th>
 
@@ -498,7 +459,6 @@ Others
 <th>Date</th>
 
 <th>Action</th>
-
 
 </tr>
 

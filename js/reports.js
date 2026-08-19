@@ -1,293 +1,647 @@
-const income =
-Number(localStorage.getItem("income")) || 0;
+// ================= REPORT INITIALIZATION =================
 
-const expenses =
-JSON.parse(localStorage.getItem("expenses")) || [];
+let allExpenses = [];
+let allIncome = [];
 
-// ================= TOTAL EXPENSE =================
+let pieChart = null;
+let monthlyChart = null;
+let savingChart = null;
+let incomeExpenseChart = null;
+// ================= CHART THEME COLORS =================
 
-let totalExpense = 0;
+function getChartTextColor(){
 
-expenses.forEach((expense) => {
+    return document.body.classList.contains("dark-mode")
+        ? "#ffffff"
+        : "#374151";
 
-    totalExpense += Number(expense.amount);
+}
+
+
+function getChartGridColor(){
+
+    return document.body.classList.contains("dark-mode")
+        ? "rgba(255,255,255,0.15)"
+        : "rgba(0,0,0,0.1)";
+
+}
+
+// ================= PAGE LOAD =================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    loadReportData();
 
 });
 
-const balance = income - totalExpense;
+// ================= LOAD REPORT DATA =================
 
-// ================= BASIC REPORT =================
+async function loadReportData() {
 
-document.getElementById("reportIncome").innerText =
-formatCurrency(income);
+    const email = localStorage.getItem("userEmail");
 
-document.getElementById("reportExpense").innerText =
-formatCurrency(totalExpense);
+    if (!email) {
 
-document.getElementById("reportBalance").innerText =
-formatCurrency(balance);
+        Swal.fire({
 
-document.getElementById("reportTransactions").innerText =
-expenses.length;
+            icon: "warning",
 
-document.getElementById("totalSavings").innerText =
-formatCurrency(balance);
+            title: "Login Required",
 
+            text: "Please login first."
 
-// ================= HIGHEST EXPENSE =================
+        });
 
-let highestExpense = 0;
+        window.location.href = "index.html";
 
-expenses.forEach((expense) => {
-
-    if (Number(expense.amount) > highestExpense) {
-
-        highestExpense =
-        Number(expense.amount);
+        return;
 
     }
 
-});
+    try {
 
+        // Expense
 
-document.getElementById("highestExpense").innerText =
-formatCurrency(highestExpense);
+        const expenseRes = await fetch(
 
-// ================= MOST USED CATEGORY =================
+            `http://localhost:5000/expenses/${email}`
 
-const categoryCount = {};
+        );
 
-expenses.forEach((expense) => {
+        const expenseData = await expenseRes.json();
 
-    if (categoryCount[expense.category]) {
+        if (expenseData.success) {
 
-        categoryCount[expense.category]++;
+            allExpenses = expenseData.expenses || [];
 
-    } else {
+        }
 
-        categoryCount[expense.category] = 1;
+        // Income
+
+        const incomeRes = await fetch(
+
+            `http://localhost:5000/income/${email}`
+
+        );
+
+        const incomeData = await incomeRes.json();
+
+        if (incomeData.success) {
+
+            allIncome = incomeData.income || [];
+
+        }
+
+        loadAvailableYears();
+
+        loadAvailableMonths();
+
+        generateReport();
 
     }
 
-});
+    catch (err) {
 
-let topCategory = "-";
-let maxCount = 0;
+        console.error(err);
 
-for (let category in categoryCount) {
+        Swal.fire({
 
-    if (categoryCount[category] > maxCount) {
+            icon: "error",
 
-        maxCount = categoryCount[category];
-        topCategory = category;
+            title: "Report Error",
+
+            text: "Unable to load report."
+
+        });
 
     }
 
 }
 
-document.getElementById("topCategory").innerText =
-topCategory;
+// ================= YEAR DROPDOWN =================
 
-// ================= FINANCIAL SCORE =================
+function loadAvailableYears() {
 
-let score = 100;
+    const reportYear =
 
-if (income > 0) {
+        document.getElementById("reportYear");
 
-    const expensePercent =
-    (totalExpense / income) * 100;
+    if (!reportYear) return;
 
-    score = Math.max(
-        0,
-        Math.round(100 - expensePercent)
+    const years = new Set();
+
+    allExpenses.forEach(expense => {
+
+        if (expense.date) {
+
+            years.add(
+
+                expense.date.substring(0, 4)
+
+            );
+
+        }
+
+    });
+
+    allIncome.forEach(income => {
+
+        const date =
+
+            income.date || income.created_at;
+
+        if (date) {
+
+            years.add(
+
+                date.substring(0, 4)
+
+            );
+
+        }
+
+    });
+
+    reportYear.innerHTML = "";
+
+    [...years]
+
+        .sort()
+
+        .forEach(year => {
+
+            reportYear.innerHTML +=
+
+                `<option value="${year}">${year}</option>`;
+
+        });
+
+    if (years.size > 0) {
+
+        reportYear.value =
+
+            [...years].sort().pop();
+
+    }
+
+}
+
+// ================= MONTH DROPDOWN =================
+
+function loadAvailableMonths() {
+
+    const reportYear =
+
+        document.getElementById("reportYear").value;
+
+    const reportMonth =
+
+        document.getElementById("reportMonth");
+
+    if (!reportMonth) return;
+
+    const months = new Set();
+
+    allExpenses.forEach(expense => {
+
+        if (
+
+            expense.date &&
+
+            expense.date.startsWith(reportYear)
+
+        ) {
+
+            months.add(
+
+                expense.date.substring(5, 7)
+
+            );
+
+        }
+
+    });
+
+    allIncome.forEach(income => {
+
+        const date =
+
+            income.date || income.created_at;
+
+        if (
+
+            date &&
+
+            date.startsWith(reportYear)
+
+        ) {
+
+            months.add(
+
+                date.substring(5, 7)
+
+            );
+
+        }
+
+    });
+
+    reportMonth.innerHTML = "";
+
+    [...months]
+
+        .sort()
+
+        .forEach(month => {
+
+            const monthName =
+
+                new Date(
+
+                    `${reportYear}-${month}-01`
+
+                ).toLocaleString(
+
+                    "en-US",
+
+                    {
+
+                        month: "long"
+
+                    }
+
+                );
+
+            reportMonth.innerHTML +=
+
+                `<option value="${month}">
+
+                    ${monthName}
+
+                </option>`;
+
+        });
+
+    if (months.size > 0) {
+
+        reportMonth.value =
+
+            [...months].sort().pop();
+
+    }
+
+}
+
+// ================= EVENTS =================
+
+document.addEventListener("change", function (e) {
+
+    if (e.target.id === "reportYear") {
+
+        loadAvailableMonths();
+
+        generateReport();
+
+    }
+
+    if (e.target.id === "reportMonth") {
+
+        generateReport();
+
+    }
+
+});
+// ================= GENERATE REPORT =================
+
+function generateReport() {
+
+    const year =
+        document.getElementById("reportYear").value;
+
+    const month =
+        document.getElementById("reportMonth").value;
+
+    if (!year || !month) return;
+
+    const selectedMonth =
+        `${year}-${month}`;
+
+    // ================= FILTER EXPENSE =================
+
+    const monthExpenses =
+        allExpenses.filter(expense => {
+
+            if (!expense.date) return false;
+
+            return new Date(expense.date)
+                .toISOString()
+                .substring(0, 7) === selectedMonth;
+
+        });
+
+    // ================= FILTER INCOME =================
+
+    const monthIncome =
+        allIncome.filter(income => {
+
+            const date =
+                income.date ||
+                income.created_at;
+
+            if (!date) return false;
+
+            return new Date(date)
+                .toISOString()
+                .substring(0, 7) === selectedMonth;
+
+        });
+
+    // ================= TOTALS =================
+
+    const totalExpense =
+        monthExpenses.reduce((sum, item) => {
+
+            return sum + Number(item.amount);
+
+        }, 0);
+
+    const totalIncome =
+        monthIncome.reduce((sum, item) => {
+
+            return sum + Number(item.amount);
+
+        }, 0);
+
+    const balance =
+        totalIncome - totalExpense;
+
+    // ================= UPDATE CARDS =================
+
+    document.getElementById("reportIncome").innerText =
+        formatCurrency(totalIncome);
+
+    document.getElementById("reportExpense").innerText =
+        formatCurrency(totalExpense);
+
+    document.getElementById("reportBalance").innerText =
+        formatCurrency(balance);
+
+    document.getElementById("totalSavings").innerText =
+        formatCurrency(balance);
+
+    // ================= HIGHEST EXPENSE =================
+
+    const highestExpense =
+        monthExpenses.length
+            ? Math.max(
+                ...monthExpenses.map(item =>
+                    Number(item.amount)
+                )
+            )
+            : 0;
+
+    document.getElementById("highestExpense").innerText =
+        formatCurrency(highestExpense);
+
+    // ================= TOP CATEGORY =================
+
+    const categoryCount = {};
+
+    monthExpenses.forEach(expense => {
+
+        const category =
+            expense.category || "Others";
+
+        categoryCount[category] =
+            (categoryCount[category] || 0) + 1;
+
+    });
+
+    let topCategory = "-";
+
+    let maxCount = 0;
+
+    Object.keys(categoryCount).forEach(category => {
+
+        if (categoryCount[category] > maxCount) {
+
+            maxCount =
+                categoryCount[category];
+
+            topCategory =
+                category;
+
+        }
+
+    });
+
+    document.getElementById("topCategory").innerText =
+        topCategory;
+
+    // ================= TRANSACTIONS =================
+
+    document.getElementById("reportTransactions").innerText =
+        monthExpenses.length;
+
+    // ================= FINANCIAL SCORE =================
+
+    let score = 100;
+
+    if (totalIncome > 0) {
+
+        score = Math.max(
+
+            0,
+
+            Math.round(
+
+                100 -
+
+                ((totalExpense / totalIncome) * 100)
+
+            )
+
+        );
+
+    }
+
+    document.getElementById("financialScore").innerText =
+        score + "/100";
+
+    // ================= SMART SUGGESTION =================
+
+    const suggestion =
+        document.getElementById("smartSuggestion");
+
+    if (score >= 80) {
+
+        suggestion.innerText =
+            "Excellent saving habit 🏆";
+
+    }
+
+    else if (score >= 60) {
+
+        suggestion.innerText =
+            "Good financial control 👍";
+
+    }
+
+    else if (score >= 40) {
+
+        suggestion.innerText =
+            "Reduce unnecessary expenses ⚠️";
+
+    }
+
+    else {
+
+        suggestion.innerText =
+            "High spending detected 🚨";
+
+    }
+
+    // ================= LOAD CHARTS =================
+
+    loadExpensePieChart(
+        monthExpenses
+    );
+
+    loadMonthlyExpenseChart(
+        totalExpense
+    );
+
+    loadSavingTrendChart();
+
+    loadIncomeExpenseChart(
+        totalIncome,
+        totalExpense
     );
 
 }
+// ================= EXPENSE DISTRIBUTION CHART =================
 
-document.getElementById("financialScore").innerText =
-score + "/100";
+function loadExpensePieChart(monthExpenses) {
 
-// ================= SMART SUGGESTION =================
+    const canvas =
+        document.getElementById("expensePieChart");
 
-let suggestion =
-"Excellent Saving Habit 🏆";
+    if (!canvas) return;
 
-if (score < 80) {
+    if (pieChart) {
+        pieChart.destroy();
+    }
 
-    suggestion =
-    "Reduce unnecessary shopping and food expenses.";
+    const categoryTotal = {};
 
-}
+    monthExpenses.forEach(expense => {
 
-if (score < 60) {
+        const category =
+            expense.category || "Others";
 
-    suggestion =
-    "Create a monthly budget and track every expense.";
+        categoryTotal[category] =
+            (categoryTotal[category] || 0) +
+            Number(expense.amount);
 
-}
+    });
 
-if (score < 40) {
+    const labels =
+        Object.keys(categoryTotal);
 
-    suggestion =
-    "High spending detected. Focus on savings immediately.";
+    const values =
+        Object.values(categoryTotal);
 
-}
+    // No Expense
 
-document.getElementById("smartSuggestion").innerText =
-suggestion;
+    if (labels.length === 0) {
 
-// ================= PIE CHART =================
+        pieChart = new Chart(canvas, {
 
-const categoryTotals = {};
+            type: "doughnut",
 
-expenses.forEach((expense) => {
+            data: {
 
-    const category =
-    expense.category || "Others";
+                labels: ["No Expense"],
 
-    if (categoryTotals[category]) {
+                datasets: [{
 
-        categoryTotals[category] +=
-        Number(expense.amount);
+                    data: [1],
 
-    } else {
+                    backgroundColor: [
 
-        categoryTotals[category] =
-        Number(expense.amount);
+                        "#6b7280"
+
+                    ],
+
+                    borderWidth: 0
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: "72%",
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            color:
+                                getChartTextColor()
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+        return;
 
     }
 
-});
-
-const pieLabels =
-Object.keys(categoryTotals);
-
-const pieData =
-Object.values(categoryTotals);
-
-const pieCanvas =
-document.getElementById("expensePieChart");
-
-if (pieCanvas) {
-
-    new Chart(pieCanvas, {
+    pieChart = new Chart(canvas, {
 
         type: "doughnut",
 
         data: {
 
-            labels: pieLabels,
+            labels: labels,
 
             datasets: [{
 
-                data: pieData,
+                data: values,
 
                 backgroundColor: [
 
-                    "#a855f7",
-                    "#22c55e",
-                    "#3b82f6",
-                    "#f59e0b",
-                    "#ef4444",
-                    "#14b8a6",
-                    "#ec4899"
+                    "#6366F1",
+                    "#22C55E",
+                    "#F59E0B",
+                    "#EF4444",
+                    "#06B6D4",
+                    "#EC4899",
+                    "#8B5CF6",
+                    "#14B8A6"
 
-                ]
+                ],
 
-            }]
+                borderWidth: 2,
 
-        },
+                borderColor: "#111827",
 
-        options: {
-
-            responsive: true,
-
-            plugins: {
-
-                legend: {
-
-                    labels: {
-
-                        color: "white"
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    });
-
-}
-
-// ================= MONTHLY CHART =================
-
-const monthlyExpense = {};
-
-expenses.forEach((expense) => {
-
-    if (!expense.date) return;
-
-    const date = new Date(expense.date);
-
-const month =
-date.toLocaleString("en-US",{
-month:"short",
-year:"numeric"
-});
-
-    if (monthlyExpense[month]) {
-
-        monthlyExpense[month] +=
-        Number(expense.amount);
-
-    } else {
-
-        monthlyExpense[month] =
-        Number(expense.amount);
-
-    }
-
-});
-
-const monthLabels =
-Object.keys(monthlyExpense);
-
-const monthAmounts =
-Object.values(monthlyExpense).map(amount =>
-    Number(
-        convertCurrency(
-            amount,
-            getUserCurrency()
-        )
-    )
-);
-
-const monthlyCanvas =
-document.getElementById("monthlyExpenseChart");
-
-if (monthlyCanvas) {
-
-    new Chart(monthlyCanvas, {
-
-        type: "bar",
-
-        data: {
-
-            labels: monthLabels,
-
-            datasets: [{
-
-                label: "Monthly Expense",
-
-                data: monthAmounts,
-
-                backgroundColor:
-                "#a855f7",
-
-                borderRadius: 8
+                hoverOffset: 20
 
             }]
 
@@ -297,27 +651,15 @@ if (monthlyCanvas) {
 
             responsive: true,
 
-            scales: {
+            maintainAspectRatio: false,
 
-                x: {
+            cutout: "68%",
 
-                    ticks: {
+            animation: {
 
-                        color: "white"
+                animateRotate: true,
 
-                    }
-
-                },
-
-                y: {
-
-                    ticks: {
-
-                        color: "white"
-
-                    }
-
-                }
+                duration: 1200
 
             },
 
@@ -325,9 +667,60 @@ if (monthlyCanvas) {
 
                 legend: {
 
+                    position: "bottom",
+
                     labels: {
 
-                        color: "white"
+                        color:
+                            getChartTextColor(),
+
+                        font: {
+
+                            size: 12,
+
+                            weight: "bold"
+
+                        },
+
+                        padding: 15
+
+                    }
+
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label: function(context) {
+
+                            const total =
+                                context.dataset.data.reduce(
+                                    (a, b) => a + b,
+                                    0
+                                );
+
+                            const value =
+                                context.raw;
+
+                            const percent =
+                                (
+                                    value /
+                                    total *
+                                    100
+                                ).toFixed(1);
+
+                            return (
+                                context.label +
+                                " : ₹" +
+                                Number(value)
+                                .toLocaleString() +
+                                " (" +
+                                percent +
+                                "%)"
+                            );
+
+                        }
 
                     }
 
@@ -338,226 +731,1116 @@ if (monthlyCanvas) {
         }
 
     });
+
 }
-    // ================= SAVING TREND CHART =================
+// ================= THIS MONTH EXPENSE CHART =================
+
+function loadMonthlyExpenseChart(totalExpense) {
+
+    const canvas = document.getElementById("monthlyExpenseChart");
+
+    if (!canvas) return;
 
 
-// ================= SAVING TREND CHART =================
-
-
-const monthlySaving = {};
-
-
-expenses.forEach((expense)=>{
-
-    if(!expense.date) return;
-
-
-    const date = new Date(expense.date);
-
-let month =
-date.toLocaleString("en-US",{
-month:"short",
-year:"numeric"
-});
-
-
-    if(monthlySaving[month]){
-
-        monthlySaving[month] += Number(expense.amount);
-
+    if (monthlyChart) {
+        monthlyChart.destroy();
     }
-    else{
 
-        monthlySaving[month] = Number(expense.amount);
+
+    const monthSelect = document.getElementById("reportMonth");
+
+    let monthName = "Month";
+
+
+    if (monthSelect && monthSelect.selectedIndex >= 0) {
+
+        monthName =
+        monthSelect.options[monthSelect.selectedIndex].text;
 
     }
 
-});
 
 
-let savingLabels = Object.keys(monthlySaving);
+    const ctx = canvas.getContext("2d");
 
 
-let savingData = [];
 
-let totalSpent = 0;
-
-
-savingLabels.forEach((month)=>{
-
-
-    totalSpent += monthlySaving[month];
-
-
-    let saving = income - totalSpent;
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            350
+        );
 
 
-    savingData.push(
+    gradient.addColorStop(
+        0,
+        "#8B5CF6"
+    );
 
-        Number(
-            convertCurrency(
-                saving,
-                getUserCurrency()
+
+    gradient.addColorStop(
+        1,
+        "#6366F1"
+    );
+
+
+
+    monthlyChart = new Chart(ctx, {
+
+
+        type:"bar",
+
+
+        data:{
+
+
+            labels:[monthName],
+
+
+            datasets:[{
+
+                label:"This Month Expense",
+
+                data:[totalExpense],
+
+
+                backgroundColor:gradient,
+
+
+                borderRadius:15,
+
+
+                borderSkipped:false,
+
+
+                barThickness:70
+
+            }]
+
+        },
+
+
+        options:{
+
+
+            responsive:true,
+
+
+            maintainAspectRatio:false,
+
+
+            animation:{
+
+                duration:1500,
+
+                easing:"easeOutQuart"
+
+            },
+
+
+            plugins:{
+
+
+                legend:{
+
+                    display:false
+
+                },
+
+
+                tooltip:{
+
+
+                    callbacks:{
+
+
+                        label:function(context){
+
+
+                            return "Expense : ₹" +
+
+                            Number(context.raw)
+                            .toLocaleString();
+
+
+                        }
+
+                    }
+
+                }
+
+            },
+
+
+            scales:{
+
+
+                x:{
+
+
+                    grid:{
+
+                        display:false
+
+                    },
+
+
+                    ticks:{
+
+
+                        color:getChartTextColor(),
+
+
+                        font:{
+
+                            size:13,
+
+                            weight:"bold"
+
+                        }
+
+                    }
+
+                },
+
+
+
+                y:{
+
+
+                    beginAtZero:true,
+
+
+                    suggestedMax:
+
+                    totalExpense > 0
+
+                    ?
+
+                    totalExpense * 1.25
+
+                    :
+
+                    1000,
+
+
+
+                    grid:{
+
+
+                        color:getChartGridColor()
+
+                    },
+
+
+
+                    ticks:{
+
+
+                        color:getChartTextColor(),
+
+
+
+                        callback:function(value){
+
+
+
+                            if(value >= 10000000){
+
+                                return "₹" +
+
+                                (value / 10000000)
+                                .toFixed(1)
+
+                                + "Cr";
+
+                            }
+
+
+
+                            else if(value >= 100000){
+
+
+                                return "₹" +
+
+                                (value / 100000)
+                                .toFixed(1)
+
+                                + "L";
+
+                            }
+
+
+
+                            else if(value >= 1000){
+
+
+                                return "₹" +
+
+                                (value / 1000)
+                                .toFixed(1)
+
+                                + "K";
+
+                            }
+
+
+
+                            return "₹" + value;
+
+
+                        }
+
+                    }
+
+
+                }
+
+
+            }
+
+
+        }
+
+
+    });
+
+
+}   
+// ================= LAST 3 MONTH SAVING TREND =================
+
+function loadSavingTrendChart() {
+
+
+    const canvas =
+        document.getElementById("savingTrendChart");
+
+
+    if (!canvas) return;
+
+
+
+    if (savingChart) {
+
+        savingChart.destroy();
+
+    }
+
+
+
+    const monthData = {};
+
+
+
+    // ================= INCOME =================
+
+    allIncome.forEach(income => {
+
+
+        const date =
+            income.date || income.created_at;
+
+
+        if (!date) return;
+
+
+
+        const month =
+            date.substring(0,7);
+
+
+
+        if (!monthData[month]) {
+
+
+            monthData[month] = {
+
+                income:0,
+
+                expense:0
+
+            };
+
+
+        }
+
+
+
+        monthData[month].income +=
+            Number(income.amount || 0);
+
+
+
+    });
+
+
+
+
+    // ================= EXPENSE =================
+
+    allExpenses.forEach(expense => {
+
+
+        if(!expense.date) return;
+
+
+
+        const month =
+            expense.date.substring(0,7);
+
+
+
+        if (!monthData[month]) {
+
+
+            monthData[month] = {
+
+                income:0,
+
+                expense:0
+
+            };
+
+
+        }
+
+
+
+        monthData[month].expense +=
+            Number(expense.amount || 0);
+
+
+
+    });
+
+
+
+
+    // ================= LAST 3 MONTHS =================
+
+
+    const months =
+
+        Object.keys(monthData)
+
+        .sort()
+
+        .slice(-3);
+
+
+
+    console.log(
+        "ALL SAVING DATA:",
+        monthData
+    );
+
+
+    console.log(
+        "SHOWING MONTHS:",
+        months
+    );
+
+
+
+    const labels = [];
+
+    const values = [];
+
+
+
+
+    months.forEach(month => {
+
+
+
+        const saving =
+
+            Number(monthData[month].income)
+
+            -
+
+            Number(monthData[month].expense);
+
+
+
+        labels.push(
+
+
+            new Date(month + "-01")
+
+            .toLocaleString(
+
+                "en-US",
+
+                {
+
+                    month:"short"
+
+                }
+
             )
-        )
+
+
+        );
+
+
+
+        values.push(saving);
+
+
+
+    });
+
+
+
+    console.log(
+        "FINAL LABELS:",
+        labels
+    );
+
+
+    console.log(
+        "FINAL VALUES:",
+        values
+    );
+
+
+
+
+    if(values.length === 0){
+
+
+        labels.push("No Data");
+
+        values.push(0);
+
+
+    }
+
+
+
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+
+
+    const gradient =
+
+        ctx.createLinearGradient(
+
+            0,
+
+            0,
+
+            0,
+
+            350
+
+        );
+
+
+
+
+    gradient.addColorStop(
+
+        0,
+
+        "rgba(34,197,94,0.45)"
 
     );
 
 
-});
-// Create Saving Trend Chart
+    gradient.addColorStop(
 
-const savingCanvas =
-document.getElementById("savingTrendChart");
+        1,
 
-if(savingCanvas){
+        "rgba(34,197,94,0)"
 
-    new Chart(savingCanvas,{
+    );
 
-        type:"bar",
+
+
+
+    const maxValue =
+
+        Math.max(...values);
+
+
+
+
+
+    savingChart = new Chart(ctx,{
+
+
+
+        type:"line",
+
+
+
 
         data:{
 
-            labels:savingLabels,
+
+
+            labels:labels,
+
+
 
             datasets:[{
 
-                label:"Monthly Savings",
 
-                data:savingData,
+                label:"Monthly Saving",
 
-                borderColor:"#22c55e",
 
-                backgroundColor:"rgba(34,197,94,0.2)",
+
+                data:values,
+
+
+
+                borderColor:"#22C55E",
+
+
+
+                backgroundColor:gradient,
+
+
 
                 fill:true,
 
-                tension:0.4
+
+
+                tension:0.4,
+
+
+
+                pointRadius:7,
+
+
+
+                pointHoverRadius:10,
+
+
+
+                pointBackgroundColor:"#22C55E",
+
+
+
+                pointBorderColor:"#ffffff",
+
+
+
+                pointBorderWidth:3
+
+
 
             }]
 
+
+
         },
+
+
+
 
         options:{
 
+
+
             responsive:true,
 
-            plugins:{
 
-                legend:{
 
-                    labels:{
+            maintainAspectRatio:false,
 
-                        color:"white"
 
-                    }
 
-                }
+            animation:{
+
+
+                duration:1500
+
 
             },
 
-            scales:{
 
-                x:{
 
-                    ticks:{
+            plugins:{
 
-                        color:"white"
 
-                    }
+
+                legend:{
+
+
+                    display:false
+
 
                 },
 
-                y:{
 
-                    ticks:{
 
-                        color:"white"
+                tooltip:{
+
+
+
+                    callbacks:{
+
+
+
+                        label:function(context){
+
+
+                            return (
+
+                                " Saving : ₹" +
+
+                                Number(context.raw)
+
+                                .toLocaleString()
+
+                            );
+
+
+                        }
+
+
 
                     }
 
+
+
                 }
+
+
+
+            },
+
+
+
+
+            scales:{
+
+
+
+                x:{
+
+
+
+                    grid:{
+
+
+                        display:false
+
+
+                    },
+
+
+
+                    ticks:{
+
+
+                        color:getChartTextColor(),
+
+
+
+                        font:{
+
+
+                            weight:"bold"
+
+
+                        }
+
+
+                    }
+
+
+
+                },
+    y:{
+
+    beginAtZero:true,
+
+    suggestedMax:
+
+        maxValue > 0
+
+        ?
+
+        Math.ceil(maxValue / 1000) * 1000 + 2000
+
+        :
+
+        5000,
+
+
+    grid:{
+
+        color:getChartGridColor()
+
+    },
+
+
+    ticks:{
+
+        color:getChartTextColor(),
+
+        callback:function(value){
+
+            if(value >= 10000000){
+
+                return "₹" +
+                (value/10000000).toFixed(1) +
+                "Cr";
 
             }
 
+            else if(value >= 100000){
+
+                return "₹" +
+                (value/100000).toFixed(1) +
+                "L";
+
+            }
+
+            else if(value >= 1000){
+
+                return "₹" +
+                (value/1000).toFixed(1) +
+                "K";
+
+            }
+
+            return "₹" + value;
+
+        }
+
+    }
+
+}
+            }
         }
 
     });
 
+
+
 }
-// ================= INCOME VS EXPENSE CHART =================
+// ================= INCOME VS EXPENSE HORIZONTAL BAR =================
 
-const incomeExpenseCanvas =
-document.getElementById("incomeExpenseChart");
+function loadIncomeExpenseChart(
+    totalIncome,
+    totalExpense
+){
 
-if(incomeExpenseCanvas){
+    const canvas =
+        document.getElementById(
+            "incomeExpenseChart"
+        );
 
-    new Chart(incomeExpenseCanvas,{
+
+    if(!canvas) return;
+
+
+
+    if(incomeExpenseChart){
+
+        incomeExpenseChart.destroy();
+
+    }
+
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+
+    const values = [
+
+        totalIncome,
+
+        totalExpense
+
+    ];
+
+
+
+    const maxValue =
+        Math.max(...values);
+
+
+
+    incomeExpenseChart =
+    new Chart(ctx,{
+
 
         type:"bar",
 
+
         data:{
 
-            labels:["Income","Expense"],
+
+            labels:[
+
+                "Income",
+
+                "Expense"
+
+            ],
+
+
 
             datasets:[{
 
-                data:[
-                    income,
-                    totalExpense
-                ],
+
+                label:"Amount",
+
+
+
+                data:values,
+
+
 
                 backgroundColor:[
-                    "#22c55e",
-                    "#ef4444"
+
+                    "rgba(34,197,94,0.75)",
+
+                    "rgba(239,68,68,0.75)"
+
                 ],
 
-                borderRadius:10
+
+
+                borderRadius:18,
+
+
+
+                borderSkipped:false,
+
+
+
+                barThickness:38
+
+
 
             }]
 
+
         },
+
+
 
         options:{
 
+
+            indexAxis:"y",
+
+
+
             responsive:true,
 
-            plugins:{
 
-                legend:{
-                    display:false
-                }
+
+            maintainAspectRatio:false,
+
+
+
+            animation:{
+
+
+                duration:1400,
+
+
+                easing:"easeOutQuart"
+
 
             },
 
-            scales:{
 
-                x:{
-                    ticks:{
-                        color:"white"
-                    }
+
+            plugins:{
+
+
+
+                legend:{
+
+
+                    display:false
+
+
                 },
 
-                y:{
-                    ticks:{
-                        color:"white"
+
+
+                tooltip:{
+
+
+                    backgroundColor:
+                    getChartTextColor(),
+
+
+
+                    titleColor:
+                    getChartGridColor(),
+
+
+
+                    bodyColor:
+                    getChartGridColor(),
+
+
+
+                    callbacks:{
+
+
+                        label:function(context){
+
+
+                            return (
+
+                            " ₹"+
+
+                            Number(context.raw)
+
+                            .toLocaleString()
+
+                            );
+
+
+                        }
+
+
                     }
+
+
                 }
+
+
+
+            },
+
+
+
+            scales:{
+
+
+
+                x:{
+
+
+                    beginAtZero:true,
+
+
+
+                    suggestedMax:
+
+                    maxValue > 0
+
+                    ?
+
+                    maxValue * 1.25
+
+                    :
+
+                    1000,
+
+
+
+                    grid:{
+
+
+                        color:
+                        getChartGridColor()
+
+
+                    },
+
+
+
+                    ticks:{
+
+
+                        color:
+                        getChartTextColor(),
+
+
+
+                        callback:function(value){
+
+
+                            return "₹"+
+                            Number(value)
+
+                            .toLocaleString();
+
+
+                        }
+
+
+                    }
+
+
+
+                },
+
+
+
+                y:{
+
+
+
+                    grid:{
+
+
+                        display:false
+
+
+                    },
+
+
+
+                    ticks:{
+
+
+                        color:
+                        getChartTextColor(),
+
+
+
+                        font:{
+
+
+                            size:14,
+
+                            weight:"bold"
+
+
+                        }
+
+
+
+                    }
+
+
+
+                }
+
+
 
             }
 
+
+
         }
+
+
 
     });
 
 }
-// LOAD SAVED THEME
 
-if(localStorage.getItem("theme") === "light"){
-
-    document.body.classList.add("light-mode");
-
-}
-
-    
