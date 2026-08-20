@@ -1,536 +1,501 @@
 // ======================================================
-// ============== SMART EXPENSE REMINDER ================
+// =============== SMART EXPENSE REMINDER ===============
 // ======================================================
 
-document.addEventListener("DOMContentLoaded", function () {
+const saveReminderBtn =
+    document.getElementById("saveReminderBtn");
 
-    const saveReminderBtn =
-        document.getElementById("saveReminderBtn");
+const reminderPopup =
+    document.getElementById("reminderPopup");
 
-    const reminderPopup =
-        document.getElementById("reminderPopup");
+const reminderMessage =
+    document.getElementById("reminderMessage");
 
-    const reminderMessage =
-        document.getElementById("reminderMessage");
+const acceptReminderBtn =
+    document.getElementById("acceptReminderBtn");
 
-    const acceptReminderBtn =
-        document.getElementById("acceptReminderBtn");
+const skipReminderBtn =
+    document.getElementById("skipReminderBtn");
 
-    const skipReminderBtn =
-        document.getElementById("skipReminderBtn");
+let currentReminder = null;
 
-    let currentReminder = null;
 
+// ======================================================
+// ================= SAVE REMINDER =======================
+// ======================================================
 
-    // ==================================================
-    // ============== GET REMINDERS =====================
-    // ==================================================
+if (saveReminderBtn) {
 
-    function getReminders() {
+    saveReminderBtn.addEventListener("click", () => {
 
-        try {
+        const name =
+            document.getElementById("reminderName")?.value.trim();
 
-            const saved =
-                localStorage.getItem("expenseReminders");
+        const amount =
+            document.getElementById("reminderAmount")?.value;
 
-            if (!saved) {
-                return [];
-            }
+        const category =
+            document.getElementById("reminderCategory")?.value ||
+            "Others";
 
-            const reminders =
-                JSON.parse(saved);
+        const type =
+            document.getElementById("reminderType")?.value ||
+            "daily";
 
-            return Array.isArray(reminders)
-                ? reminders
-                : [];
+        const time =
+            document.getElementById("reminderTime")?.value;
 
-        } catch (error) {
-
-            console.error(
-                "Reminder Load Error:",
-                error
-            );
-
-            return [];
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ============== SAVE REMINDERS ====================
-    // ==================================================
-
-    function saveReminders(reminders) {
-
-        try {
-
-            localStorage.setItem(
-                "expenseReminders",
-                JSON.stringify(reminders)
-            );
-
-            return true;
-
-        } catch (error) {
-
-            console.error(
-                "Reminder Save Error:",
-                error
-            );
-
-            return false;
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ============== SAVE REMINDER =====================
-    // ==================================================
-
-    if (saveReminderBtn) {
-
-        saveReminderBtn.addEventListener(
-            "click",
-            function () {
-
-                const nameInput =
-                    document.getElementById(
-                        "reminderName"
-                    );
-
-                const amountInput =
-                    document.getElementById(
-                        "reminderAmount"
-                    );
-
-                const categoryInput =
-                    document.getElementById(
-                        "reminderCategory"
-                    );
-
-                const typeInput =
-                    document.getElementById(
-                        "reminderType"
-                    );
-
-                const timeInput =
-                    document.getElementById(
-                        "reminderTime"
-                    );
-
-
-                const name =
-                    nameInput
-                        ? nameInput.value.trim()
-                        : "";
-
-                const amount =
-                    amountInput
-                        ? Number(
-                            amountInput.value
-                        )
-                        : 0;
-
-                const category =
-                    categoryInput
-                        ? categoryInput.value
-                        : "Others";
-
-                const type =
-                    typeInput
-                        ? typeInput.value
-                        : "daily";
-
-                const time =
-                    timeInput
-                        ? timeInput.value
-                        : "";
-
-
-                // ==========================================
-                // VALIDATION
-                // ==========================================
-
-                if (
-                    name === "" ||
-                    amount <= 0 ||
-                    time === ""
-                ) {
-
-                    alert(
-                        "Please fill all reminder details correctly."
-                    );
-
-                    return;
-
-                }
-
-
-                // ==========================================
-                // CREATE REMINDER
-                // ==========================================
-
-                const reminder = {
-
-                    id:
-                        Date.now(),
-
-                    name:
-                        name,
-
-                    amount:
-                        amount,
-
-                    category:
-                        category || "Others",
-
-                    type:
-                        type,
-
-                    time:
-                        time,
-
-                    lastAdded:
-                        ""
-
-                };
-
-
-                // ==========================================
-                // GET OLD REMINDERS
-                // ==========================================
-
-                const reminders =
-                    getReminders();
-
-
-                // ==========================================
-                // ADD NEW REMINDER
-                // ==========================================
-
-                reminders.push(
-                    reminder
-                );
-
-
-                // ==========================================
-                // SAVE
-                // ==========================================
-
-                const saved =
-                    saveReminders(
-                        reminders
-                    );
-
-
-                if (!saved) {
-
-                    alert(
-                        "Unable to save reminder."
-                    );
-
-                    return;
-
-                }
-
-
-                // ==========================================
-                // SUCCESS
-                // ==========================================
-
-                alert(
-                    "Reminder Saved Successfully 🔔"
-                );
-
-
-                // ==========================================
-                // CLEAR FORM
-                // ==========================================
-
-                if (nameInput) {
-
-                    nameInput.value = "";
-
-                }
-
-                if (amountInput) {
-
-                    amountInput.value = "";
-
-                }
-
-                if (timeInput) {
-
-                    timeInput.value = "";
-
-                }
-
-
-                console.log(
-                    "Reminder Saved:",
-                    reminder
-                );
-
-                console.log(
-                    "All Reminders:",
-                    getReminders()
-                );
-
-            }
-        );
-
-    } else {
-
-        console.error(
-            "saveReminderBtn not found"
-        );
-
-    }
-
-
-    // ==================================================
-    // ============== NOTIFICATION PERMISSION ===========
-    // ==================================================
-
-    if (
-        "Notification" in window
-    ) {
 
         if (
-            Notification.permission ===
-            "default"
+            !name ||
+            !amount ||
+            !time
         ) {
 
-            Notification.requestPermission()
-                .then(
-                    permission => {
-
-                        console.log(
-                            "Notification Permission:",
-                            permission
-                        );
-
-                    }
-                )
-                .catch(
-                    error => {
-
-                        console.error(
-                            "Notification Permission Error:",
-                            error
-                        );
-
-                    }
-                );
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ============== SHOW REMINDER =====================
-    // ==================================================
-
-    function showReminder(reminder) {
-
-        currentReminder =
-            reminder;
-
-
-        if (reminderMessage) {
-
-            reminderMessage.innerHTML =
-                `
-                Did you spend
-                ₹${Number(reminder.amount).toFixed(2)}
-                for
-                <strong>${reminder.name}</strong>?
-                `;
-
-        }
-
-
-        if (reminderPopup) {
-
-            reminderPopup.style.display =
-                "block";
-
-        }
-
-
-        // ==============================================
-        // BROWSER NOTIFICATION
-        // ==============================================
-
-        if (
-            "Notification" in window &&
-            Notification.permission ===
-            "granted"
-        ) {
-
-            try {
-
-                new Notification(
-                    "Expense Reminder 🔔",
-                    {
-
-                        body:
-                            `Add ₹${reminder.amount} ${reminder.name} expense?`
-
-                    }
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Notification Error:",
-                    error
-                );
-
-            }
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ============== CHECK REMINDER ====================
-    // ==================================================
-
-    function checkReminder() {
-
-        const reminders =
-            getReminders();
-
-        if (
-            reminders.length === 0
-        ) {
+            alert("Please fill reminder details");
 
             return;
 
         }
 
 
-        const now =
-            new Date();
+        if (Number(amount) <= 0) {
+
+            alert("Please enter a valid amount");
+
+            return;
+
+        }
 
 
-        const currentTime =
-            String(
-                now.getHours()
-            ).padStart(2, "0")
-            +
-            ":"
-            +
-            String(
-                now.getMinutes()
-            ).padStart(2, "0");
+        const reminder = {
+
+            id: Date.now(),
+
+            name: name,
+
+            amount: Number(amount),
+
+            category: category,
+
+            type: type,
+
+            time: time,
+
+            lastAdded: ""
+
+        };
 
 
-        const today =
-            now.getFullYear()
-            +
-            "-"
-            +
-            String(
-                now.getMonth() + 1
-            ).padStart(2, "0")
-            +
-            "-"
-            +
-            String(
-                now.getDate()
-            ).padStart(2, "0");
+        let reminders =
+            JSON.parse(
+                localStorage.getItem(
+                    "expenseReminders"
+                )
+            ) || [];
 
 
-        reminders.forEach(
-            reminder => {
+        reminders.push(reminder);
 
-                if (
-                    reminder.time ===
-                    currentTime
-                    &&
-                    reminder.lastAdded !==
-                    today
-                ) {
 
-                    showReminder(
-                        reminder
-                    );
+        localStorage.setItem(
+            "expenseReminders",
+            JSON.stringify(reminders)
+        );
 
-                }
+
+        alert(
+            "Reminder Saved Successfully 🔔"
+        );
+
+
+        const nameInput =
+            document.getElementById("reminderName");
+
+        const amountInput =
+            document.getElementById("reminderAmount");
+
+
+        if (nameInput) {
+
+            nameInput.value = "";
+
+        }
+
+
+        if (amountInput) {
+
+            amountInput.value = "";
+
+        }
+
+    });
+
+}
+
+
+// ======================================================
+// ================= NOTIFICATION ========================
+// ======================================================
+
+if ("Notification" in window) {
+
+    if (
+        Notification.permission === "default"
+    ) {
+
+        Notification.requestPermission();
+
+    }
+
+}
+
+
+// ======================================================
+// ================= CHECK REMINDER =====================
+// ======================================================
+
+function checkReminder() {
+
+    let reminders =
+        JSON.parse(
+            localStorage.getItem(
+                "expenseReminders"
+            )
+        ) || [];
+
+
+    const now = new Date();
+
+
+    const currentTime =
+
+        String(
+            now.getHours()
+        ).padStart(2, "0")
+
+        +
+
+        ":" +
+
+        String(
+            now.getMinutes()
+        ).padStart(2, "0");
+
+
+    const today =
+
+        now.getFullYear() +
+        "-" +
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0") +
+        "-" +
+        String(
+            now.getDate()
+        ).padStart(2, "0");
+
+
+    reminders.forEach(
+        reminder => {
+
+            if (
+                currentTime === reminder.time &&
+                reminder.lastAdded !== today
+            ) {
+
+                showReminder(reminder);
 
             }
-        );
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// ================= SHOW REMINDER ======================
+// ======================================================
+
+function showReminder(reminder) {
+
+    currentReminder = reminder;
+
+
+    if (reminderMessage) {
+
+        reminderMessage.innerHTML =
+
+            `
+            Did you spend
+            ₹${Number(reminder.amount).toFixed(2)}
+            for
+            <b>${reminder.name}</b>?
+            `;
 
     }
 
 
-    // ==================================================
-    // ============== ACCEPT REMINDER ===================
-    // ==================================================
+    if (reminderPopup) {
 
-    if (acceptReminderBtn) {
+        reminderPopup.style.display =
+            "block";
 
-        acceptReminderBtn.addEventListener(
-            "click",
-            async function () {
-
-                if (!currentReminder) {
-
-                    return;
-
-                }
+    }
 
 
-                // ==========================================
-                // ADD EXPENSE
-                // ==========================================
+    if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+    ) {
 
-                if (
-                    typeof addReminderExpense ===
-                    "function"
-                ) {
+        try {
 
-                    try {
+            new Notification(
+                "Expense Reminder 🔔",
+                {
 
-                        await addReminderExpense(
-                            currentReminder
-                        );
-
-                    } catch (error) {
-
-                        console.error(
-                            "Reminder Expense Error:",
-                            error
-                        );
-
-                    }
-
-                } else {
-
-                    console.warn(
-                        "addReminderExpense() not found"
-                    );
+                    body:
+                        `Add ₹${reminder.amount} ${reminder.name} expense?`
 
                 }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Notification Error:",
+                error
+            );
+
+        }
+
+    }
+
+}
 
 
-                // ==========================================
-                // UPDATE REMINDER
-                // ==========================================
+// ======================================================
+// ============ ADD REMINDER EXPENSE TO API =============
+// ======================================================
+
+async function addReminderExpense(reminder) {
+
+    const email =
+        localStorage.getItem("userEmail");
+
+
+    if (!email) {
+
+        alert(
+            "User email not found. Please login again."
+        );
+
+        return false;
+
+    }
+
+
+    // Current date
+
+    const now = new Date();
+
+
+    const year =
+        now.getFullYear();
+
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2, "0");
+
+
+    const date =
+        `${year}-${month}-${day}`;
+
+
+    try {
+
+        console.log(
+            "Adding reminder expense:",
+            {
+                email,
+                name: reminder.name,
+                amount: reminder.amount,
+                category: reminder.category,
+                date
+            }
+        );
+
+
+        // IMPORTANT:
+        // Your server.js uses POST /expenses
+
+        const response =
+            await fetch(
+                "/expenses",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            email:
+                                email,
+
+                            name:
+                                reminder.name,
+
+                            amount:
+                                Number(
+                                    reminder.amount
+                                ),
+
+                            category:
+                                reminder.category ||
+                                "Others",
+
+                            date:
+                                date
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Reminder Expense API Response:",
+            data
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                data.message ||
+                `Server Error (${response.status})`
+
+            );
+
+        }
+
+
+        if (!data.success) {
+
+            throw new Error(
+
+                data.message ||
+                "Unable to add reminder expense"
+
+            );
+
+        }
+
+
+        console.log(
+            "Reminder expense added successfully ✅"
+        );
+
+
+        return true;
+
+
+    } catch (error) {
+
+        console.error(
+            "Reminder Expense Error:",
+            error
+        );
+
+
+        alert(
+            "Reminder expense could not be added.\n\n" +
+            error.message
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+// ======================================================
+// ================= ACCEPT REMINDER ====================
+// ======================================================
+
+if (acceptReminderBtn) {
+
+    acceptReminderBtn.addEventListener(
+        "click",
+        async () => {
+
+            if (!currentReminder) {
+
+                return;
+
+            }
+
+
+            // Disable button while saving
+
+            acceptReminderBtn.disabled =
+                true;
+
+
+            acceptReminderBtn.innerText =
+                "Adding...";
+
+
+            // ============================================
+            // ADD TO MYSQL
+            // ============================================
+
+            const added =
+                await addReminderExpense(
+                    currentReminder
+                );
+
+
+            // ============================================
+            // IF SUCCESS
+            // ============================================
+
+            if (added) {
 
                 let reminders =
-                    getReminders();
+                    JSON.parse(
+                        localStorage.getItem(
+                            "expenseReminders"
+                        )
+                    ) || [];
 
 
                 const today =
+
                     new Date()
                         .toISOString()
                         .split("T")[0];
@@ -541,10 +506,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         item => {
 
                             if (
-                                Number(item.id) ===
-                                Number(
-                                    currentReminder.id
-                                )
+                                item.id ===
+                                currentReminder.id
                             ) {
 
                                 item.lastAdded =
@@ -558,9 +521,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     );
 
 
-                // ==========================================
+                // ========================================
                 // ONE TIME REMINDER
-                // ==========================================
+                // ========================================
 
                 if (
                     currentReminder.type ===
@@ -570,23 +533,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     reminders =
                         reminders.filter(
                             item =>
-                                Number(item.id) !==
-                                Number(
-                                    currentReminder.id
-                                )
+                                item.id !==
+                                currentReminder.id
                         );
 
                 }
 
 
-                saveReminders(
-                    reminders
+                localStorage.setItem(
+                    "expenseReminders",
+                    JSON.stringify(
+                        reminders
+                    )
                 );
 
 
-                // ==========================================
+                // ========================================
                 // CLOSE POPUP
-                // ==========================================
+                // ========================================
 
                 if (reminderPopup) {
 
@@ -594,63 +558,117 @@ document.addEventListener("DOMContentLoaded", function () {
                         "none";
 
                 }
-
-
-                currentReminder =
-                    null;
 
 
                 alert(
-                    "Reminder completed ✅"
+                    "Expense Added Successfully ✅"
                 );
 
-            }
-        );
 
-    }
+                // ========================================
+                // REFRESH DASHBOARD
+                // ========================================
 
+                if (
+                    typeof loadExpenses ===
+                    "function"
+                ) {
 
-    // ==================================================
-    // ============== SKIP REMINDER =====================
-    // ==================================================
-
-    if (skipReminderBtn) {
-
-        skipReminderBtn.addEventListener(
-            "click",
-            function () {
-
-                if (reminderPopup) {
-
-                    reminderPopup.style.display =
-                        "none";
+                    await loadExpenses();
 
                 }
 
-                currentReminder =
-                    null;
+
+                if (
+                    typeof loadIncome ===
+                    "function"
+                ) {
+
+                    await loadIncome();
+
+                }
+
+
+                if (
+                    typeof displayTransactions ===
+                    "function"
+                ) {
+
+                    displayTransactions();
+
+                }
+
+
+                if (
+                    typeof calculateTotals ===
+                    "function"
+                ) {
+
+                    calculateTotals();
+
+                }
+
+
+                currentReminder = null;
 
             }
-        );
-
-    }
 
 
-    // ==================================================
-    // ============== AUTO CHECK ========================
-    // ==================================================
+            // ============================================
+            // ENABLE BUTTON
+            // ============================================
 
-    checkReminder();
+            acceptReminderBtn.disabled =
+                false;
 
 
-    setInterval(
-        checkReminder,
-        60000
+            acceptReminderBtn.innerText =
+                "Add Expense";
+
+        }
     );
 
+}
 
-    console.log(
-        "Smart Reminder System Ready 🔔"
+
+// ======================================================
+// ================= SKIP REMINDER ======================
+// ======================================================
+
+if (skipReminderBtn) {
+
+    skipReminderBtn.addEventListener(
+        "click",
+        () => {
+
+            if (reminderPopup) {
+
+                reminderPopup.style.display =
+                    "none";
+
+            }
+
+
+            currentReminder = null;
+
+        }
     );
 
-});
+}
+
+
+// ======================================================
+// ================= AUTO CHECK =========================
+// ======================================================
+
+setInterval(
+    checkReminder,
+    60000
+);
+
+
+// ======================================================
+// ================= FIRST CHECK ========================
+// ======================================================
+
+checkReminder();
