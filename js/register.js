@@ -7,234 +7,369 @@
 // ================= REGISTER FORM =======================
 // ======================================================
 
-const registerForm =
-    document.getElementById("registerForm");
+const registerForm = document.getElementById("registerForm");
 
 
 // ======================================================
 // ================= API BASE ============================
 // ======================================================
 
+// Railway BACKEND URL
 const API_BASE =
     "https://expense-tracker-pro-production-99eb.up.railway.app";
 
 
 // ======================================================
-// ================= FORM CHECK ==========================
+// ================= REGISTER FORM CHECK =================
 // ======================================================
 
 if (registerForm) {
 
-    registerForm.addEventListener(
-        "submit",
-        async (e) => {
+    registerForm.addEventListener("submit", async (e) => {
 
-            e.preventDefault();
+        e.preventDefault();
 
 
-            // ==================================================
-            // ================= GET VALUES ====================
-            // ==================================================
+        // ==================================================
+        // ================= GET VALUES =====================
+        // ==================================================
 
-            const name =
-                document
-                    .getElementById("name")
-                    .value
-                    .trim();
+        const nameInput =
+            document.getElementById("name");
 
+        const emailInput =
+            document.getElementById("email");
 
-            const email =
-                document
-                    .getElementById("email")
-                    .value
-                    .trim()
-                    .toLowerCase();
+        const passwordInput =
+            document.getElementById("password");
 
 
-            const password =
-                document
-                    .getElementById("password")
-                    .value
-                    .trim();
+        if (
+            !nameInput ||
+            !emailInput ||
+            !passwordInput
+        ) {
+
+            console.error(
+                "❌ Register form fields not found"
+            );
+
+            return;
+        }
 
 
-            // ==================================================
-            // ================= EMPTY CHECK ===================
-            // ==================================================
+        const name =
+            nameInput.value.trim();
 
-            if (
-                name === "" ||
-                email === "" ||
-                password === ""
-            ) {
+        const email =
+            emailInput.value
+                .trim()
+                .toLowerCase();
 
-                showToast(
-                    "Please fill all fields",
-                    "error"
+        const password =
+            passwordInput.value.trim();
+
+
+        // ==================================================
+        // ================= EMPTY CHECK ====================
+        // ==================================================
+
+        if (
+            name === "" ||
+            email === "" ||
+            password === ""
+        ) {
+
+            showToast(
+                "Please fill all fields",
+                "error"
+            );
+
+            return;
+        }
+
+
+        // ==================================================
+        // ================= GMAIL VALIDATION ===============
+        // ==================================================
+
+        const gmailPattern =
+            /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+
+        if (!gmailPattern.test(email)) {
+
+            showToast(
+                "Only Gmail Allowed",
+                "error"
+            );
+
+            return;
+        }
+
+
+        // ==================================================
+        // ================= PASSWORD VALIDATION ============
+        // ==================================================
+
+        // Exactly 6 digits
+        const passwordPattern =
+            /^\d{6}$/;
+
+
+        if (!passwordPattern.test(password)) {
+
+            showToast(
+                "Password must be exactly 6 digits",
+                "error"
+            );
+
+            return;
+        }
+
+
+        // ==================================================
+        // ================= DISABLE BUTTON =================
+        // ==================================================
+
+        const submitButton =
+            registerForm.querySelector(
+                'button[type="submit"]'
+            );
+
+
+        if (submitButton) {
+
+            submitButton.disabled = true;
+
+            submitButton.dataset.originalText =
+                submitButton.innerText;
+
+            submitButton.innerText =
+                "Creating Account...";
+        }
+
+
+        // ==================================================
+        // ================= REGISTER API ===================
+        // ==================================================
+
+        try {
+
+            const apiUrl =
+                `${API_BASE}/api/register`;
+
+
+            console.log(
+                "======================================"
+            );
+
+            console.log(
+                "Register API URL:",
+                apiUrl
+            );
+
+            console.log(
+                "Register Email:",
+                email
+            );
+
+            console.log(
+                "======================================"
+            );
+
+
+            const response =
+                await fetch(
+                    apiUrl,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                name: name,
+                                email: email,
+                                password: password
+                            })
+                    }
                 );
 
-                return;
-            }
+
+            // ==================================================
+            // ================= RESPONSE TEXT =================
+            // ==================================================
+
+            const responseText =
+                await response.text();
+
+
+            console.log(
+                "Register HTTP Status:",
+                response.status
+            );
+
+            console.log(
+                "Register Raw Response:",
+                responseText
+            );
 
 
             // ==================================================
-            // ================= GMAIL VALIDATION ==============
+            // ================= PARSE JSON ====================
             // ==================================================
 
-            const gmailPattern =
-                /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-
-
-            if (
-                !gmailPattern.test(email)
-            ) {
-
-                showToast(
-                    "Only Gmail Allowed",
-                    "error"
-                );
-
-                return;
-            }
-
-
-            // ==================================================
-            // ================= PASSWORD VALIDATION ===========
-            // ==================================================
-
-            const passwordPattern =
-                /^\d{6}$/;
-
-
-            if (
-                !passwordPattern.test(password)
-            ) {
-
-                showToast(
-                    "Password must be exactly 6 digits",
-                    "error"
-                );
-
-                return;
-            }
-
-
-            // ==================================================
-            // ================= REGISTER API ==================
-            // ==================================================
+            let data = {};
 
             try {
 
-                console.log(
-                    "Register API URL:",
-                    `${API_BASE}/api/register`
+                data =
+                    JSON.parse(responseText);
+
+            } catch (jsonError) {
+
+                console.error(
+                    "❌ Invalid JSON response:",
+                    jsonError
                 );
-
-
-                const response =
-                    await fetch(
-                        `${API_BASE}/api/register`,
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
-
-                                name:
-                                    name,
-
-                                email:
-                                    email,
-
-                                password:
-                                    password
-
-                            })
-                        }
-                    );
-
-
-                // ==================================================
-                // ================= GET RESPONSE =================
-                // ==================================================
-
-                const data =
-                    await response.json();
-
-
-                console.log(
-                    "Register Response:",
-                    data
-                );
-
-
-                // ==================================================
-                // ================= SUCCESS =======================
-                // ==================================================
-
-                if (
-                    response.ok &&
-                    data.success
-                ) {
-
-                    showToast(
-                        "Account Created Successfully ✅",
-                        "success"
-                    );
-
-
-                    setTimeout(
-                        () => {
-
-                            window.location.href =
-                                "index.html";
-
-                        },
-                        1500
-                    );
-
-
-                    return;
-                }
-
-
-                // ==================================================
-                // ================= REGISTER ERROR ===============
-                // ==================================================
 
                 showToast(
-                    data.message ||
-                    "Registration failed",
+                    `Server error (${response.status})`,
                     "error"
                 );
 
+                return;
+            }
+
+
+            console.log(
+                "Register Response:",
+                data
+            );
+
+
+            // ==================================================
+            // ================= SUCCESS =======================
+            // ==================================================
+
+            if (
+                response.ok &&
+                data.success === true
+            ) {
+
+                showToast(
+                    "Account Created Successfully ✅",
+                    "success"
+                );
+
+
+                // Clear form
+                registerForm.reset();
+
+
+                // Redirect to login
+                setTimeout(() => {
+
+                    window.location.href =
+                        "index.html";
+
+                }, 1500);
+
+
+                return;
             }
 
 
             // ==================================================
-            // ================= SERVER ERROR ===================
+            // ================= DUPLICATE EMAIL ===============
             // ==================================================
 
-            catch (error) {
-
-                console.error(
-                    "❌ Register Error:",
-                    error
-                );
-
+            if (
+                response.status === 409
+            ) {
 
                 showToast(
-                    "Unable to connect to server.",
+                    "Email already exists. Please login.",
                     "error"
                 );
+
+                return;
+            }
+
+
+            // ==================================================
+            // ================= VALIDATION ERROR ==============
+            // ==================================================
+
+            if (
+                response.status === 400
+            ) {
+
+                showToast(
+                    data.message ||
+                    "Please check your details.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // ================= SERVER ERROR ==================
+            // ==================================================
+
+            showToast(
+                data.message ||
+                "Registration failed. Please try again.",
+                "error"
+            );
+
+        }
+
+
+        // ==================================================
+        // ================= NETWORK ERROR ==================
+        // ==================================================
+
+        catch (error) {
+
+            console.error(
+                "❌ Register Network Error:",
+                error
+            );
+
+
+            showToast(
+                "Unable to connect to server.",
+                "error"
+            );
+
+        }
+
+
+        // ==================================================
+        // ================= ENABLE BUTTON ===================
+        // ==================================================
+
+        finally {
+
+            if (submitButton) {
+
+                submitButton.disabled = false;
+
+                submitButton.innerText =
+                    submitButton.dataset.originalText ||
+                    "Register";
 
             }
 
         }
-    );
+
+    });
 
 }

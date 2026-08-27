@@ -30,8 +30,7 @@ app.use(
     cors({
         origin: function (origin, callback) {
 
-            // Allow requests without Origin
-            // Example: Postman / server-to-server
+            // Allow Postman / server-to-server requests
             if (!origin) {
                 return callback(null, true);
             }
@@ -40,7 +39,7 @@ app.use(
                 return callback(null, true);
             }
 
-            console.log("❌ CORS blocked origin:", origin);
+            console.log("❌ CORS blocked:", origin);
 
             return callback(
                 new Error("Not allowed by CORS")
@@ -68,30 +67,6 @@ app.use(
 
 
 // ======================================================
-// ================= OPTIONS / PREFLIGHT =================
-// ======================================================
-
-app.options(
-    "*",
-    cors({
-        origin: allowedOrigins,
-        methods: [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "OPTIONS"
-        ],
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization"
-        ],
-        credentials: true
-    })
-);
-
-
-// ======================================================
 // ================= BODY PARSER =========================
 // ======================================================
 
@@ -114,70 +89,89 @@ app.use(
 
 
 // ======================================================
-// ================= MYSQL CONFIG ========================
+// ================= MYSQL CONNECTION ====================
 // ======================================================
 
 let db;
 
-if (process.env.MYSQL_URL) {
+try {
 
-    console.log("Using MYSQL_URL from Railway");
+    if (process.env.MYSQL_URL) {
 
-    db = mysql.createPool(
-        process.env.MYSQL_URL
+        console.log("======================================");
+        console.log("Using Railway MYSQL_URL");
+        console.log("======================================");
+
+        db = mysql.createPool({
+            uri: process.env.MYSQL_URL,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            enableKeepAlive: true,
+            keepAliveInitialDelay: 0
+        });
+
+    } else {
+
+        const dbConfig = {
+
+            host:
+                process.env.MYSQLHOST ||
+                process.env.MYSQL_HOST ||
+                "localhost",
+
+            user:
+                process.env.MYSQLUSER ||
+                process.env.MYSQL_USER ||
+                "root",
+
+            password:
+                process.env.MYSQLPASSWORD ||
+                process.env.MYSQL_PASSWORD ||
+                "Rosi@2006",
+
+            database:
+                process.env.MYSQLDATABASE ||
+                process.env.MYSQL_DATABASE ||
+                "expense_tracker",
+
+            port:
+                Number(
+                    process.env.MYSQLPORT ||
+                    process.env.MYSQL_PORT ||
+                    3306
+                ),
+
+            waitForConnections: true,
+
+            connectionLimit: 10,
+
+            queueLimit: 0,
+
+            enableKeepAlive: true,
+
+            keepAliveInitialDelay: 0
+        };
+
+
+        console.log("======================================");
+        console.log("MySQL Host:", dbConfig.host);
+        console.log("MySQL Port:", dbConfig.port);
+        console.log("MySQL Database:", dbConfig.database);
+        console.log("MySQL User:", dbConfig.user);
+        console.log("======================================");
+
+
+        db = mysql.createPool(dbConfig);
+    }
+
+} catch (error) {
+
+    console.error(
+        "❌ MySQL Pool Creation Error:",
+        error.message
     );
 
-} else {
-
-    const dbConfig = {
-
-        host:
-            process.env.MYSQLHOST ||
-            process.env.MYSQL_HOST ||
-            "localhost",
-
-        user:
-            process.env.MYSQLUSER ||
-            process.env.MYSQL_USER ||
-            "root",
-
-        password:
-            process.env.MYSQLPASSWORD ||
-            process.env.MYSQL_PASSWORD ||
-            "Rosi@2006",
-
-        database:
-            process.env.MYSQLDATABASE ||
-            process.env.MYSQL_DATABASE ||
-            "expense_tracker",
-
-        port:
-            Number(
-                process.env.MYSQLPORT ||
-                process.env.MYSQL_PORT ||
-                3306
-            )
-    };
-
-    console.log("MySQL Host:", dbConfig.host);
-    console.log("MySQL Port:", dbConfig.port);
-    console.log("MySQL Database:", dbConfig.database);
-
-    db = mysql.createPool({
-
-        ...dbConfig,
-
-        waitForConnections: true,
-
-        connectionLimit: 10,
-
-        queueLimit: 0,
-
-        enableKeepAlive: true,
-
-        keepAliveInitialDelay: 0
-
-    });
 }
 
 
@@ -185,37 +179,35 @@ if (process.env.MYSQL_URL) {
 // ================= TEST MYSQL ==========================
 // ======================================================
 
-db.query(
-    "SELECT 1 AS test",
-    (err) => {
+if (db) {
 
-        if (err) {
+    db.query(
+        "SELECT DATABASE() AS database_name",
+        (err, result) => {
 
-            console.error(
-                "❌ MySQL Connection Failed"
+            if (err) {
+
+                console.error(
+                    "❌ MySQL Connection Failed:",
+                    err.message
+                );
+
+                return;
+            }
+
+
+            console.log("======================================");
+            console.log("MySQL Connected ✅");
+            console.log(
+                "Database:",
+                result[0]?.database_name
             );
+            console.log("======================================");
 
-            console.error(
-                err.message
-            );
-
-            return;
         }
+    );
 
-        console.log(
-            "======================================"
-        );
-
-        console.log(
-            "MySQL Connected ✅"
-        );
-
-        console.log(
-            "======================================"
-        );
-
-    }
-);
+}
 
 
 // ======================================================
@@ -288,6 +280,23 @@ app.get(
     "/api/status",
     (req, res) => {
 
+        if (!db) {
+
+            return res.status(500).json({
+
+                success: false,
+
+                server: "running",
+
+                mysql: "disconnected",
+
+                message: "MySQL pool is not available"
+
+            });
+
+        }
+
+
         db.query(
             "SELECT DATABASE() AS database_name",
             (err, result) => {
@@ -303,11 +312,9 @@ app.get(
 
                         success: false,
 
-                        server:
-                            "running",
+                        server: "running",
 
-                        mysql:
-                            "disconnected",
+                        mysql: "disconnected",
 
                         error:
                             err.message
@@ -316,18 +323,17 @@ app.get(
 
                 }
 
-                res.json({
+
+                return res.json({
 
                     success: true,
 
-                    server:
-                        "running",
+                    server: "running",
 
-                    mysql:
-                        "connected",
+                    mysql: "connected",
 
                     database:
-                        result[0].database_name,
+                        result[0]?.database_name,
 
                     message:
                         "Expense Tracker API is working ✅"
@@ -366,12 +372,13 @@ app.get(
 
                 }
 
-                res.json({
+
+                return res.json({
 
                     success: true,
 
                     database:
-                        result[0].database_name
+                        result[0]?.database_name
 
                 });
 
@@ -402,10 +409,7 @@ function loginUser(req, res) {
         .trim();
 
 
-    if (
-        !email ||
-        !password
-    ) {
+    if (!email || !password) {
 
         return res.status(400).json({
 
@@ -444,10 +448,7 @@ function loginUser(req, res) {
             if (err) {
 
                 console.error(
-                    "❌ LOGIN DATABASE ERROR:"
-                );
-
-                console.error(
+                    "❌ LOGIN DATABASE ERROR:",
                     err.message
                 );
 
@@ -571,11 +572,7 @@ function registerUser(req, res) {
         ).trim();
 
 
-    if (
-        !name ||
-        !email ||
-        !password
-    ) {
+    if (!name || !email || !password) {
 
         return res.status(400).json({
 
@@ -583,6 +580,21 @@ function registerUser(req, res) {
 
             message:
                 "All fields are required"
+
+        });
+
+    }
+
+
+    // 6 digit password validation
+    if (!/^\d{6}$/.test(password)) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Password must contain exactly 6 digits"
 
         });
 
@@ -783,7 +795,9 @@ app.get(
         const email =
             decodeURIComponent(
                 req.params.email
-            );
+            )
+            .trim()
+            .toLowerCase();
 
 
         db.query(
@@ -800,7 +814,7 @@ app.get(
 
             FROM expenses
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             ORDER BY date DESC, id DESC
 
@@ -914,6 +928,11 @@ app.post(
             (err, result) => {
 
                 if (err) {
+
+                    console.error(
+                        "❌ Add Expense Error:",
+                        err.message
+                    );
 
                     return res.status(500).json({
 
@@ -1248,7 +1267,9 @@ app.get(
         const email =
             decodeURIComponent(
                 req.params.email
-            );
+            )
+            .trim()
+            .toLowerCase();
 
 
         db.query(
@@ -1263,7 +1284,7 @@ app.get(
 
             FROM income
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             ORDER BY date DESC, id DESC
 
@@ -1683,7 +1704,9 @@ app.get(
         const email =
             decodeURIComponent(
                 req.params.email
-            );
+            )
+            .trim()
+            .toLowerCase();
 
 
         db.query(
@@ -1703,7 +1726,7 @@ app.get(
 
             FROM deleted_history
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             ORDER BY deleted_at DESC, id DESC
 
@@ -1827,6 +1850,10 @@ app.post(
                     results[0];
 
 
+                // -------------------------------
+                // RESTORE EXPENSE
+                // -------------------------------
+
                 if (
                     item.type === "expense"
                 ) {
@@ -1929,6 +1956,10 @@ app.post(
                     return;
                 }
 
+
+                // -------------------------------
+                // RESTORE INCOME
+                // -------------------------------
 
                 if (
                     item.type === "income"
@@ -2060,7 +2091,8 @@ app.delete(
 
             DELETE FROM deleted_history
 
-            WHERE deleted_at < NOW() - INTERVAL 60 DAY
+            WHERE deleted_at <
+                  NOW() - INTERVAL 60 DAY
 
             `,
 
@@ -2114,7 +2146,9 @@ app.get(
         const email =
             decodeURIComponent(
                 req.params.email
-            );
+            )
+            .trim()
+            .toLowerCase();
 
 
         db.query(
@@ -2131,7 +2165,7 @@ app.get(
 
             FROM expenses
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             ORDER BY date DESC, id DESC
 
@@ -2170,7 +2204,7 @@ app.get(
 
                     FROM income
 
-                    WHERE email = ?
+                    WHERE LOWER(email) = ?
 
                     ORDER BY date DESC, id DESC
 
@@ -2328,11 +2362,8 @@ app.post(
                     email,
 
                     {
-                        otp:
-                            otp,
-
-                        expiresAt:
-                            expiresAt
+                        otp,
+                        expiresAt
                     }
 
                 );
@@ -2424,7 +2455,7 @@ app.post(
 
 
                     console.log(
-                        "OTP sent successfully to:",
+                        "✅ OTP sent successfully:",
                         email
                     );
 
@@ -2446,9 +2477,7 @@ app.post(
                     );
 
 
-                    resetOTPs.delete(
-                        email
-                    );
+                    resetOTPs.delete(email);
 
 
                     return res.status(500).json({
@@ -2488,17 +2517,13 @@ app.post(
             .trim()
             .toLowerCase();
 
-
         const otp =
             String(
                 req.body.otp || ""
             ).trim();
 
 
-        if (
-            !email ||
-            !otp
-        ) {
+        if (!email || !otp) {
 
             return res.status(400).json({
 
@@ -2535,9 +2560,7 @@ app.post(
             resetData.expiresAt
         ) {
 
-            resetOTPs.delete(
-                email
-            );
+            resetOTPs.delete(email);
 
             return res.status(400).json({
 
@@ -2595,12 +2618,10 @@ app.post(
             .trim()
             .toLowerCase();
 
-
         const otp =
             String(
                 req.body.otp || ""
             ).trim();
-
 
         const newPassword =
             String(
@@ -2665,9 +2686,7 @@ app.post(
             resetData.expiresAt
         ) {
 
-            resetOTPs.delete(
-                email
-            );
+            resetOTPs.delete(email);
 
             return res.status(400).json({
 
@@ -2756,9 +2775,7 @@ app.post(
                 }
 
 
-                resetOTPs.delete(
-                    email
-                );
+                resetOTPs.delete(email);
 
 
                 return res.json({
@@ -2865,7 +2882,6 @@ app.listen(
 
         console.log(
             "======================================"
-
         );
 
     }
