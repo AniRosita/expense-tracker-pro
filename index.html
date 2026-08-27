@@ -10,42 +10,26 @@
 
     <title>Expense Tracker Pro</title>
 
-
-    <!-- ======================================================
-         FAVICON
-    ======================================================= -->
-
+    <!-- FAVICON -->
     <link
         rel="icon"
         type="image/png"
         href="assets/profile.png"
     >
 
-
-    <!-- ======================================================
-         CSS
-    ======================================================= -->
-
+    <!-- CSS -->
     <link
         rel="stylesheet"
         href="css/style.css"
     >
 
-
-    <!-- ======================================================
-         GOOGLE FONT
-    ======================================================= -->
-
+    <!-- GOOGLE FONT -->
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
     >
 
-
-    <!-- ======================================================
-         FONT AWESOME
-    ======================================================= -->
-
+    <!-- FONT AWESOME -->
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -56,11 +40,7 @@
 
 <body>
 
-
-    <!-- ======================================================
-         BACKGROUND
-    ======================================================= -->
-
+    <!-- BACKGROUND -->
     <div class="background">
 
         <div class="glow glow1"></div>
@@ -70,21 +50,12 @@
     </div>
 
 
-
-    <!-- ======================================================
-         LOGIN CONTAINER
-    ======================================================= -->
-
+    <!-- LOGIN CONTAINER -->
     <div class="login-container">
-
 
         <div class="login-card">
 
-
-            <!-- ==================================================
-                 LOGO
-            =================================================== -->
-
+            <!-- LOGO -->
             <div class="logo">
 
                 <i class="fas fa-wallet"></i>
@@ -92,32 +63,20 @@
             </div>
 
 
-            <!-- ==================================================
-                 TITLE
-            =================================================== -->
-
+            <!-- TITLE -->
             <h1>
                 Expense Tracker Pro
             </h1>
-
 
             <p>
                 Track Expenses Smartly
             </p>
 
 
-
-            <!-- ==================================================
-                 LOGIN FORM
-            =================================================== -->
-
+            <!-- LOGIN FORM -->
             <form id="loginForm">
 
-
-                <!-- ==================================================
-                     EMAIL
-                =================================================== -->
-
+                <!-- EMAIL -->
                 <div class="input-box">
 
                     <i class="fas fa-envelope"></i>
@@ -134,11 +93,7 @@
                 </div>
 
 
-
-                <!-- ==================================================
-                     PASSWORD
-                =================================================== -->
-
+                <!-- PASSWORD -->
                 <div class="input-box">
 
                     <i class="fas fa-lock"></i>
@@ -159,11 +114,7 @@
                 </div>
 
 
-
-                <!-- ==================================================
-                     FORGOT PASSWORD
-                =================================================== -->
-
+                <!-- FORGOT PASSWORD -->
                 <div class="forgot-password">
 
                     <a
@@ -176,11 +127,7 @@
                 </div>
 
 
-
-                <!-- ==================================================
-                     LOGIN BUTTON
-                =================================================== -->
-
+                <!-- LOGIN BUTTON -->
                 <button
                     type="submit"
                     id="loginBtn"
@@ -192,23 +139,14 @@
 
                 </button>
 
-
             </form>
 
 
-
-            <!-- ==================================================
-                 MESSAGE
-            =================================================== -->
-
+            <!-- MESSAGE -->
             <div id="message"></div>
 
 
-
-            <!-- ==================================================
-                 LOGIN INFORMATION
-            =================================================== -->
-
+            <!-- LOGIN INFO -->
             <div class="login-info">
 
                 <small>
@@ -223,11 +161,7 @@
             </div>
 
 
-
-            <!-- ==================================================
-                 REGISTER
-            =================================================== -->
-
+            <!-- REGISTER -->
             <p
                 style="
                     margin-top:15px;
@@ -243,69 +177,23 @@
 
             </p>
 
-
         </div>
 
     </div>
 
 
-
-    <!-- ======================================================
-         SCRIPTS
-    ======================================================= -->
-
-    <!-- Toast -->
+    <!-- TOAST -->
     <script src="js/toast.js"></script>
 
 
-    <!-- SweetAlert2 -->
+    <!-- SWEETALERT -->
     <script
         src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
     </script>
 
 
-    <!-- Authentication -->
+    <!-- ONLY AUTH SCRIPT -->
     <script src="js/auth.js"></script>
-
-
-
-    <!-- ======================================================
-         FORGOT PASSWORD CLICK
-    ======================================================= -->
-
-    <script>
-
-        const forgotPasswordLink =
-            document.getElementById("forgotPasswordLink");
-
-
-        if (forgotPasswordLink) {
-
-            forgotPasswordLink.addEventListener(
-                "click",
-                function (e) {
-
-                    e.preventDefault();
-
-                    if (typeof forgotPassword === "function") {
-
-                        forgotPassword();
-
-                    } else {
-
-                        console.error(
-                            "forgotPassword() function not found"
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-
-    </script>
-
 
 </body>
 
