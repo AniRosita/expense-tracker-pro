@@ -1093,3 +1093,130 @@ body.light-mode #menuBtn{
 #importExpenseBtn{
     margin-top:10px;
 }
+/* ================= SIDEBAR MENU FIX ================= */
+
+.side-menu{
+    position:fixed;
+    top:0;
+    left:-250px;
+
+    width:250px;
+    height:100vh;
+
+    background:#111827;
+
+    padding:25px 20px;
+
+    transition:left .3s ease;
+
+    z-index:1000;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+/* Sidebar Open */
+.side-menu.active{
+    left:0;
+}
+
+/* Sidebar Links */
+.side-menu a{
+    display:block;
+
+    width:100%;
+
+    color:white;
+    text-decoration:none;
+
+    margin:8px 0;
+
+    padding:12px 15px;
+
+    border-radius:10px;
+
+    transition:.3s;
+
+    font-size:15px;
+}
+
+/* Hover */
+.side-menu a:hover{
+    background:#a855f7;
+    transform:translateX(5px);
+}
+
+/* Delete History */
+.side-menu a[href="delete.html"]{
+    background:#334155;
+}
+
+.side-menu a[href="delete.html"]:hover{
+    background:#ef4444;
+    color:white;
+}
+
+/* Theme Button */
+#themeBtn{
+    width:100%;
+    padding:12px 15px;
+
+    margin-top:15px;
+    margin-bottom:10px;
+
+    background:#334155;
+    color:white;
+
+    border:none;
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:15px;
+}
+
+/* Logout */
+#logoutBtn{
+    width:100%;
+    padding:12px 15px;
+
+    margin-top:10px;
+
+    background:#ef4444;
+    color:white;
+
+    border:none;
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:15px;
+}
+
+/* Sidebar scrollbar */
+.side-menu::-webkit-scrollbar{
+    width:5px;
+}
+
+.side-menu::-webkit-scrollbar-thumb{
+    background:#a855f7;
+    border-radius:10px;
+}
+
+/* Light Mode */
+body.light-mode .side-menu{
+    background:#eaeaea;
+}
+
+body.light-mode .side-menu a{
+    color:#111;
+}
+
+body.light-mode .side-menu a[href="delete.html"]{
+    background:#d1d5db;
+}
+
+body.light-mode .side-menu a[href="delete.html"]:hover{
+    background:#ef4444;
+    color:white;
+}
