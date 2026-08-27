@@ -5,11 +5,9 @@
 const express = require("express");
 const mysql = require("mysql2");
 const path = require("path");
-const cors = require("cors");
 const nodemailer = require("nodemailer");
 
 const app = express();
-
 
 // ======================================================
 // ================= PORT ================================
@@ -17,148 +15,89 @@ const app = express();
 
 const PORT = Number(process.env.PORT) || 5000;
 
-
 // ======================================================
 // ================= CORS ================================
 // ======================================================
 
 // Frontend Railway URL
-const FRONTEND_URL =
-    "https://expense-tracker-pro-production-98cf.up.railway.app";
-
-// Backend Railway URL
-const BACKEND_URL =
-    "https://expense-tracker-pro-production-99eb.up.railway.app";
-
-
-// Allowed origins
 const allowedOrigins = [
-    FRONTEND_URL,
-    BACKEND_URL,
-    "http://localhost:5000",
-    "http://127.0.0.1:5000"
+    "https://expense-tracker-pro-production-98cf.up.railway.app"
 ];
 
-
-// Check origin
-function isAllowedOrigin(origin) {
-
-    if (!origin) {
-        return true;
-    }
-
-    // Exact allowed origins
-    if (allowedOrigins.includes(origin)) {
-        return true;
-    }
-
-    // Allow Railway generated domains
-    if (
-        origin.endsWith(".railway.app") ||
-        origin.endsWith(".up.railway.app")
-    ) {
-        return true;
-    }
-
-    return false;
-}
-
-
 // CORS middleware
-app.use(
-    cors({
+app.use((req, res, next) => {
 
-        origin: function (origin, callback) {
+    const origin = req.headers.origin;
 
-            if (isAllowedOrigin(origin)) {
+    // Allow requests without Origin
+    if (!origin) {
+        return next();
+    }
 
-                console.log(
-                    "✅ CORS Allowed:",
-                    origin || "No Origin"
-                );
+    // Allow registered frontend
+    if (allowedOrigins.includes(origin)) {
 
-                callback(null, true);
+        res.header(
+            "Access-Control-Allow-Origin",
+            origin
+        );
 
-            } else {
+        res.header(
+            "Vary",
+            "Origin"
+        );
 
-                console.log(
-                    "❌ CORS Blocked:",
-                    origin
-                );
+        res.header(
+            "Access-Control-Allow-Credentials",
+            "true"
+        );
 
-                callback(null, false);
+        res.header(
+            "Access-Control-Allow-Methods",
+            "GET,POST,PUT,DELETE,OPTIONS"
+        );
 
-            }
+        res.header(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Authorization"
+        );
 
-        },
+    } else {
 
-        methods: [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "OPTIONS"
-        ],
+        console.log(
+            "❌ CORS blocked:",
+            origin
+        );
 
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization"
-        ],
+    }
 
-        credentials: true,
+    // IMPORTANT:
+    // Express 5 compatible OPTIONS handling
+    if (req.method === "OPTIONS") {
 
-        optionsSuccessStatus: 204
+        if (allowedOrigins.includes(origin)) {
 
-    })
-);
+            return res.sendStatus(204);
 
+        }
 
-// Explicit OPTIONS handler
-app.options(
-    "*",
-    cors({
-        origin: function (origin, callback) {
+        return res.sendStatus(403);
+    }
 
-            if (isAllowedOrigin(origin)) {
-                callback(null, true);
-            } else {
-                callback(null, false);
-            }
-
-        },
-
-        methods: [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "OPTIONS"
-        ],
-
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization"
-        ],
-
-        credentials: true
-    })
-);
-
+    next();
+});
 
 // ======================================================
 // ================= BODY PARSER =========================
 // ======================================================
 
-app.use(
-    express.json()
-);
+app.use(express.json());
 
 app.use(
     express.urlencoded({
         extended: true
     })
 );
-
 
 // ======================================================
 // ================= STATIC FILES ========================
@@ -168,7 +107,6 @@ app.use(
     express.static(__dirname)
 );
 
-
 // ======================================================
 // ================= MYSQL CONNECTION ====================
 // ======================================================
@@ -177,72 +115,55 @@ let db;
 
 try {
 
-    const dbHost =
-        process.env.MYSQLHOST ||
-        process.env.MYSQL_HOST;
+    const dbConfig = {
 
-    const dbUser =
-        process.env.MYSQLUSER ||
-        process.env.MYSQL_USER;
+        host:
+            process.env.MYSQLHOST ||
+            process.env.MYSQL_HOST ||
+            "localhost",
 
-    const dbPassword =
-        process.env.MYSQLPASSWORD ||
-        process.env.MYSQL_PASSWORD;
+        user:
+            process.env.MYSQLUSER ||
+            process.env.MYSQL_USER ||
+            "root",
 
-    const dbName =
-        process.env.MYSQLDATABASE ||
-        process.env.MYSQL_DATABASE;
+        password:
+            process.env.MYSQLPASSWORD ||
+            process.env.MYSQL_PASSWORD ||
+            "Rosi@2006",
 
-    const dbPort =
-        Number(
-            process.env.MYSQLPORT ||
-            process.env.MYSQL_PORT ||
-            3306
-        );
+        database:
+            process.env.MYSQLDATABASE ||
+            process.env.MYSQL_DATABASE ||
+            "expense_tracker",
 
+        port:
+            Number(
+                process.env.MYSQLPORT ||
+                process.env.MYSQL_PORT ||
+                3306
+            ),
+
+        waitForConnections: true,
+
+        connectionLimit: 10,
+
+        queueLimit: 0,
+
+        enableKeepAlive: true,
+
+        keepAliveInitialDelay: 0
+    };
 
     console.log("======================================");
     console.log("MYSQL CONFIG");
-    console.log("Host:", dbHost);
-    console.log("Port:", dbPort);
-    console.log("Database:", dbName);
-    console.log("User:", dbUser);
+    console.log("Host:", dbConfig.host);
+    console.log("Port:", dbConfig.port);
+    console.log("Database:", dbConfig.database);
+    console.log("User:", dbConfig.user);
     console.log("======================================");
 
-
-    if (!dbHost || !dbUser || !dbName) {
-
-        console.error(
-            "❌ Railway MySQL variables are missing"
-        );
-
-    } else {
-
-        db = mysql.createPool({
-
-            host: dbHost,
-
-            port: dbPort,
-
-            user: dbUser,
-
-            password: dbPassword,
-
-            database: dbName,
-
-            waitForConnections: true,
-
-            connectionLimit: 10,
-
-            queueLimit: 0,
-
-            enableKeepAlive: true,
-
-            keepAliveInitialDelay: 0
-
-        });
-
-    }
+    db = mysql.createPool(dbConfig);
 
 } catch (error) {
 
@@ -252,7 +173,6 @@ try {
     );
 
 }
-
 
 // ======================================================
 // ================= TEST MYSQL ==========================
@@ -288,7 +208,6 @@ if (db) {
 
 }
 
-
 // ======================================================
 // ================= EMAIL CONFIG ========================
 // ======================================================
@@ -310,13 +229,11 @@ const transporter =
 
     });
 
-
 // ======================================================
 // ================= OTP STORAGE =========================
 // ======================================================
 
 const resetOTPs = new Map();
-
 
 // ======================================================
 // ================= GENERATE OTP ========================
@@ -331,6 +248,47 @@ function generateOTP() {
 
 }
 
+// ======================================================
+// ================= DATABASE CHECK ======================
+// ======================================================
+
+function checkDatabase(req, res, next) {
+
+    if (!db) {
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "MySQL connection is not available"
+
+        });
+
+    }
+
+    next();
+}
+
+app.use(
+    "/api",
+    checkDatabase
+);
+
+app.use(
+    "/expenses",
+    checkDatabase
+);
+
+app.use(
+    "/income",
+    checkDatabase
+);
+
+app.use(
+    "/trash",
+    checkDatabase
+);
 
 // ======================================================
 // ================= HOME ROUTE ==========================
@@ -350,7 +308,6 @@ app.get(
     }
 );
 
-
 // ======================================================
 // ================= STATUS API ==========================
 // ======================================================
@@ -359,34 +316,11 @@ app.get(
     "/api/status",
     (req, res) => {
 
-        if (!db) {
-
-            return res.status(500).json({
-
-                success: false,
-
-                server: "running",
-
-                mysql: "disconnected",
-
-                message:
-                    "MySQL pool is not available"
-
-            });
-
-        }
-
-
         db.query(
             "SELECT DATABASE() AS database_name",
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Status DB Error:",
-                        err.message
-                    );
 
                     return res.status(500).json({
 
@@ -402,7 +336,6 @@ app.get(
                     });
 
                 }
-
 
                 return res.json({
 
@@ -426,7 +359,6 @@ app.get(
     }
 );
 
-
 // ======================================================
 // ================= TEST DATABASE =======================
 // ======================================================
@@ -434,20 +366,6 @@ app.get(
 app.get(
     "/api/test-db",
     (req, res) => {
-
-        if (!db) {
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Database connection unavailable"
-
-            });
-
-        }
-
 
         db.query(
             "SELECT DATABASE() AS database_name",
@@ -466,7 +384,6 @@ app.get(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -482,55 +399,174 @@ app.get(
     }
 );
 
-
 // ======================================================
-// ================= DATABASE CHECK ======================
+// ================= REGISTER ============================
 // ======================================================
 
-function databaseRequired(req, res, next) {
+function registerUser(req, res) {
 
-    if (!db) {
+    const name =
+        String(
+            req.body.name || ""
+        )
+        .trim();
 
-        return res.status(500).json({
+    const email =
+        String(
+            req.body.email || ""
+        )
+        .trim()
+        .toLowerCase();
+
+    const password =
+        String(
+            req.body.password || ""
+        )
+        .trim();
+
+    console.log("======================================");
+    console.log("REGISTER REQUEST");
+    console.log("Name:", name);
+    console.log("Email:", email);
+    console.log("======================================");
+
+    if (!name || !email || !password) {
+
+        return res.status(400).json({
 
             success: false,
 
             message:
-                "Database connection unavailable"
+                "All fields are required"
 
         });
 
     }
 
-    next();
+    // Gmail validation
+    if (
+        !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)
+    ) {
 
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Only Gmail addresses are allowed"
+
+        });
+
+    }
+
+    // 6 digit password
+    if (
+        !/^\d{6}$/.test(password)
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Password must contain exactly 6 digits"
+
+        });
+
+    }
+
+    const sql = `
+        INSERT INTO users
+        (
+            name,
+            email,
+            password
+        )
+        VALUES (?, ?, ?)
+    `;
+
+    db.query(
+        sql,
+        [
+            name,
+            email,
+            password
+        ],
+        (err, result) => {
+
+            if (err) {
+
+                console.error(
+                    "❌ REGISTER DATABASE ERROR:",
+                    err.message
+                );
+
+                if (
+                    err.code === "ER_DUP_ENTRY"
+                ) {
+
+                    return res.status(409).json({
+
+                        success: false,
+
+                        message:
+                            "Email already exists"
+
+                    });
+
+                }
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Database error",
+
+                    error:
+                        err.message
+
+                });
+
+            }
+
+            console.log(
+                "✅ User registered:",
+                email
+            );
+
+            return res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Registration successful",
+
+                userId:
+                    result.insertId
+
+            });
+
+        }
+    );
 }
 
+// ======================================================
+// ================= REGISTER ROUTES =====================
+// ======================================================
 
-// Apply database check to API routes
-app.use(
-    "/api/login",
-    databaseRequired
-);
-
-app.use(
+app.post(
     "/api/register",
-    databaseRequired
+    registerUser
 );
 
-app.use(
-    "/api/user",
-    databaseRequired
+app.post(
+    "/register",
+    registerUser
 );
-
-app.use(
-    "/api/data",
-    databaseRequired
-);
-
 
 // ======================================================
-// ================= LOGIN FUNCTION ======================
+// ================= LOGIN ===============================
 // ======================================================
 
 function loginUser(req, res) {
@@ -548,6 +584,10 @@ function loginUser(req, res) {
         )
         .trim();
 
+    console.log("======================================");
+    console.log("LOGIN REQUEST");
+    console.log("Email:", email);
+    console.log("======================================");
 
     if (!email || !password) {
 
@@ -562,26 +602,17 @@ function loginUser(req, res) {
 
     }
 
-
-    const sql = `
-
+    db.query(
+        `
         SELECT
             id,
             name,
             email,
             password
-
         FROM users
-
         WHERE LOWER(email) = ?
-
         LIMIT 1
-
-    `;
-
-
-    db.query(
-        sql,
+        `,
         [email],
         (err, results) => {
 
@@ -606,7 +637,6 @@ function loginUser(req, res) {
 
             }
 
-
             if (
                 !results ||
                 results.length === 0
@@ -623,10 +653,8 @@ function loginUser(req, res) {
 
             }
 
-
             const user =
                 results[0];
-
 
             if (
                 String(user.password) !==
@@ -643,7 +671,6 @@ function loginUser(req, res) {
                 });
 
             }
-
 
             return res.json({
 
@@ -669,9 +696,7 @@ function loginUser(req, res) {
 
         }
     );
-
 }
-
 
 // ======================================================
 // ================= LOGIN ROUTES ========================
@@ -686,185 +711,6 @@ app.post(
     "/login",
     loginUser
 );
-
-
-// ======================================================
-// ================= REGISTER FUNCTION ===================
-// ======================================================
-
-function registerUser(req, res) {
-
-    const name =
-        String(
-            req.body.name || ""
-        ).trim();
-
-    const email =
-        String(
-            req.body.email || ""
-        )
-        .trim()
-        .toLowerCase();
-
-    const password =
-        String(
-            req.body.password || ""
-        ).trim();
-
-
-    console.log("======================================");
-    console.log("REGISTER REQUEST");
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("======================================");
-
-
-    if (!name || !email || !password) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "All fields are required"
-
-        });
-
-    }
-
-
-    // Gmail validation
-    if (
-        !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)
-    ) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "Only Gmail addresses are allowed"
-
-        });
-
-    }
-
-
-    // 6 digit password
-    if (!/^\d{6}$/.test(password)) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "Password must contain exactly 6 digits"
-
-        });
-
-    }
-
-
-    const sql = `
-
-        INSERT INTO users
-        (
-            name,
-            email,
-            password
-        )
-
-        VALUES (?, ?, ?)
-
-    `;
-
-
-    db.query(
-        sql,
-        [
-            name,
-            email,
-            password
-        ],
-        (err, result) => {
-
-            if (err) {
-
-                console.error(
-                    "❌ REGISTER DATABASE ERROR:",
-                    err.message
-                );
-
-
-                if (
-                    err.code === "ER_DUP_ENTRY"
-                ) {
-
-                    return res.status(409).json({
-
-                        success: false,
-
-                        message:
-                            "Email already exists"
-
-                    });
-
-                }
-
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    message:
-                        "Database error",
-
-                    error:
-                        err.message
-
-                });
-
-            }
-
-
-            console.log(
-                "✅ Registration successful:",
-                email
-            );
-
-
-            return res.status(201).json({
-
-                success: true,
-
-                message:
-                    "Registration successful",
-
-                userId:
-                    result.insertId
-
-            });
-
-        }
-    );
-
-}
-
-
-// ======================================================
-// ================= REGISTER ROUTES =====================
-// ======================================================
-
-app.post(
-    "/api/register",
-    registerUser
-);
-
-app.post(
-    "/register",
-    registerUser
-);
-
 
 // ======================================================
 // ================= GET USER ============================
@@ -881,26 +727,17 @@ app.get(
             .trim()
             .toLowerCase();
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 name,
                 email
-
             FROM users
-
             WHERE LOWER(email) = ?
-
             LIMIT 1
-
             `,
-
             [email],
-
             (err, results) => {
 
                 if (err) {
@@ -919,7 +756,6 @@ app.get(
 
                 }
 
-
                 if (
                     results.length === 0
                 ) {
@@ -935,7 +771,6 @@ app.get(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -946,12 +781,10 @@ app.get(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= GET EXPENSES ========================
@@ -968,11 +801,8 @@ app.get(
             .trim()
             .toLowerCase();
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
@@ -980,17 +810,11 @@ app.get(
                 amount,
                 category,
                 date
-
             FROM expenses
-
             WHERE LOWER(email) = ?
-
             ORDER BY date DESC, id DESC
-
             `,
-
             [email],
-
             (err, results) => {
 
                 if (err) {
@@ -1014,7 +838,6 @@ app.get(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1025,12 +848,10 @@ app.get(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= ADD EXPENSE =========================
@@ -1047,7 +868,6 @@ app.post(
             category,
             date
         } = req.body;
-
 
         if (
             !email ||
@@ -1068,11 +888,8 @@ app.post(
 
         }
 
-
         db.query(
-
             `
-
             INSERT INTO expenses
             (
                 email,
@@ -1081,11 +898,8 @@ app.post(
                 category,
                 date
             )
-
             VALUES (?, ?, ?, ?, ?)
-
             `,
-
             [
                 email,
                 name,
@@ -1093,7 +907,6 @@ app.post(
                 category,
                 date
             ],
-
             (err, result) => {
 
                 if (err) {
@@ -1117,7 +930,6 @@ app.post(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1131,12 +943,10 @@ app.post(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= UPDATE EXPENSE ======================
@@ -1156,7 +966,6 @@ app.put(
             date
         } = req.body;
 
-
         if (
             !name ||
             amount === undefined ||
@@ -1175,23 +984,16 @@ app.put(
 
         }
 
-
         db.query(
-
             `
-
             UPDATE expenses
-
             SET
                 name = ?,
                 amount = ?,
                 category = ?,
                 date = ?
-
             WHERE id = ?
-
             `,
-
             [
                 name,
                 amount,
@@ -1199,7 +1001,6 @@ app.put(
                 date,
                 id
             ],
-
             (err, result) => {
 
                 if (err) {
@@ -1218,7 +1019,6 @@ app.put(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1232,16 +1032,13 @@ app.put(
                 });
 
             }
-
         );
 
     }
 );
 
-
 // ======================================================
 // ================= DELETE EXPENSE ======================
-// ================= SAVE TO HISTORY =====================
 // ======================================================
 
 app.delete(
@@ -1251,11 +1048,8 @@ app.delete(
         const id =
             req.params.id;
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
@@ -1263,17 +1057,11 @@ app.delete(
                 amount,
                 category,
                 date
-
             FROM expenses
-
             WHERE id = ?
-
             LIMIT 1
-
             `,
-
             [id],
-
             (selectErr, results) => {
 
                 if (selectErr) {
@@ -1292,7 +1080,6 @@ app.delete(
 
                 }
 
-
                 if (
                     results.length === 0
                 ) {
@@ -1308,15 +1095,11 @@ app.delete(
 
                 }
 
-
                 const expense =
                     results[0];
 
-
                 db.query(
-
                     `
-
                     INSERT INTO deleted_history
                     (
                         email,
@@ -1327,11 +1110,8 @@ app.delete(
                         category,
                         date
                     )
-
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-
                     `,
-
                     [
                         expense.email,
                         expense.id,
@@ -1341,15 +1121,9 @@ app.delete(
                         expense.category,
                         expense.date
                     ],
-
                     (historyErr) => {
 
                         if (historyErr) {
-
-                            console.error(
-                                "❌ History Insert Error:",
-                                historyErr.message
-                            );
 
                             return res.status(500).json({
 
@@ -1365,16 +1139,12 @@ app.delete(
 
                         }
 
-
                         db.query(
-
                             `
                             DELETE FROM expenses
                             WHERE id = ?
                             `,
-
                             [id],
-
                             (deleteErr, result) => {
 
                                 if (deleteErr) {
@@ -1393,7 +1163,6 @@ app.delete(
 
                                 }
 
-
                                 return res.json({
 
                                     success: true,
@@ -1407,20 +1176,16 @@ app.delete(
                                 });
 
                             }
-
                         );
 
                     }
-
                 );
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= GET INCOME ==========================
@@ -1437,27 +1202,18 @@ app.get(
             .trim()
             .toLowerCase();
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
                 amount,
                 date
-
             FROM income
-
             WHERE LOWER(email) = ?
-
             ORDER BY date DESC, id DESC
-
             `,
-
             [email],
-
             (err, results) => {
 
                 if (err) {
@@ -1476,7 +1232,6 @@ app.get(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1487,12 +1242,10 @@ app.get(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= ADD INCOME ==========================
@@ -1507,7 +1260,6 @@ app.post(
             amount,
             date
         } = req.body;
-
 
         if (
             !email ||
@@ -1526,28 +1278,21 @@ app.post(
 
         }
 
-
         db.query(
-
             `
-
             INSERT INTO income
             (
                 email,
                 amount,
                 date
             )
-
             VALUES (?, ?, ?)
-
             `,
-
             [
                 email,
                 amount,
                 date
             ],
-
             (err, result) => {
 
                 if (err) {
@@ -1566,7 +1311,6 @@ app.post(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1580,12 +1324,10 @@ app.post(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= UPDATE INCOME =======================
@@ -1603,7 +1345,6 @@ app.put(
             date
         } = req.body;
 
-
         if (
             amount === undefined ||
             !date
@@ -1620,27 +1361,19 @@ app.put(
 
         }
 
-
         db.query(
-
             `
-
             UPDATE income
-
             SET
                 amount = ?,
                 date = ?
-
             WHERE id = ?
-
             `,
-
             [
                 amount,
                 date,
                 id
             ],
-
             (err, result) => {
 
                 if (err) {
@@ -1659,7 +1392,6 @@ app.put(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1673,16 +1405,13 @@ app.put(
                 });
 
             }
-
         );
 
     }
 );
 
-
 // ======================================================
 // ================= DELETE INCOME =======================
-// ================= SAVE TO HISTORY =====================
 // ======================================================
 
 app.delete(
@@ -1692,27 +1421,18 @@ app.delete(
         const id =
             req.params.id;
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
                 amount,
                 date
-
             FROM income
-
             WHERE id = ?
-
             LIMIT 1
-
             `,
-
             [id],
-
             (selectErr, results) => {
 
                 if (selectErr) {
@@ -1731,7 +1451,6 @@ app.delete(
 
                 }
 
-
                 if (
                     results.length === 0
                 ) {
@@ -1747,15 +1466,11 @@ app.delete(
 
                 }
 
-
                 const income =
                     results[0];
 
-
                 db.query(
-
                     `
-
                     INSERT INTO deleted_history
                     (
                         email,
@@ -1766,11 +1481,8 @@ app.delete(
                         category,
                         date
                     )
-
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-
                     `,
-
                     [
                         income.email,
                         income.id,
@@ -1780,7 +1492,6 @@ app.delete(
                         null,
                         income.date
                     ],
-
                     (historyErr) => {
 
                         if (historyErr) {
@@ -1799,19 +1510,12 @@ app.delete(
 
                         }
 
-
                         db.query(
-
                             `
-
                             DELETE FROM income
-
                             WHERE id = ?
-
                             `,
-
                             [id],
-
                             (deleteErr, result) => {
 
                                 if (deleteErr) {
@@ -1830,7 +1534,6 @@ app.delete(
 
                                 }
 
-
                                 return res.json({
 
                                     success: true,
@@ -1844,20 +1547,16 @@ app.delete(
                                 });
 
                             }
-
                         );
 
                     }
-
                 );
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= GET DELETE HISTORY =================
@@ -1874,11 +1573,8 @@ app.get(
             .trim()
             .toLowerCase();
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
@@ -1889,17 +1585,11 @@ app.get(
                 category,
                 date,
                 deleted_at
-
             FROM deleted_history
-
             WHERE LOWER(email) = ?
-
             ORDER BY deleted_at DESC, id DESC
-
             `,
-
             [email],
-
             (err, results) => {
 
                 if (err) {
@@ -1923,7 +1613,6 @@ app.get(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -1934,12 +1623,10 @@ app.get(
                 });
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= RESTORE TRASH =======================
@@ -1952,11 +1639,8 @@ app.post(
         const id =
             req.params.id;
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
@@ -1966,17 +1650,11 @@ app.post(
                 amount,
                 category,
                 date
-
             FROM deleted_history
-
             WHERE id = ?
-
             LIMIT 1
-
             `,
-
             [id],
-
             (selectErr, results) => {
 
                 if (selectErr) {
@@ -1995,7 +1673,6 @@ app.post(
 
                 }
 
-
                 if (
                     results.length === 0
                 ) {
@@ -2011,20 +1688,19 @@ app.post(
 
                 }
 
-
                 const item =
                     results[0];
 
-
+                // -----------------------------
                 // RESTORE EXPENSE
+                // -----------------------------
+
                 if (
                     item.type === "expense"
                 ) {
 
                     db.query(
-
                         `
-
                         INSERT INTO expenses
                         (
                             email,
@@ -2033,11 +1709,8 @@ app.post(
                             category,
                             date
                         )
-
                         VALUES (?, ?, ?, ?, ?)
-
                         `,
-
                         [
                             item.email,
                             item.name,
@@ -2045,7 +1718,6 @@ app.post(
                             item.category,
                             item.date
                         ],
-
                         (insertErr, insertResult) => {
 
                             if (insertErr) {
@@ -2064,19 +1736,12 @@ app.post(
 
                             }
 
-
                             db.query(
-
                                 `
-
                                 DELETE FROM deleted_history
-
                                 WHERE id = ?
-
                                 `,
-
                                 [id],
-
                                 (deleteErr) => {
 
                                     if (deleteErr) {
@@ -2095,7 +1760,6 @@ app.post(
 
                                     }
 
-
                                     return res.json({
 
                                         success: true,
@@ -2109,43 +1773,37 @@ app.post(
                                     });
 
                                 }
-
                             );
 
                         }
-
                     );
 
                     return;
                 }
 
-
+                // -----------------------------
                 // RESTORE INCOME
+                // -----------------------------
+
                 if (
                     item.type === "income"
                 ) {
 
                     db.query(
-
                         `
-
                         INSERT INTO income
                         (
                             email,
                             amount,
                             date
                         )
-
                         VALUES (?, ?, ?)
-
                         `,
-
                         [
                             item.email,
                             item.amount,
                             item.date
                         ],
-
                         (insertErr, insertResult) => {
 
                             if (insertErr) {
@@ -2164,19 +1822,12 @@ app.post(
 
                             }
 
-
                             db.query(
-
                                 `
-
                                 DELETE FROM deleted_history
-
                                 WHERE id = ?
-
                                 `,
-
                                 [id],
-
                                 (deleteErr) => {
 
                                     if (deleteErr) {
@@ -2195,7 +1846,6 @@ app.post(
 
                                     }
 
-
                                     return res.json({
 
                                         success: true,
@@ -2209,16 +1859,13 @@ app.post(
                                     });
 
                                 }
-
                             );
 
                         }
-
                     );
 
                     return;
                 }
-
 
                 return res.status(400).json({
 
@@ -2230,15 +1877,13 @@ app.post(
                 });
 
             }
-
         );
 
     }
 );
 
-
 // ======================================================
-// ================= AUTO CLEAN OLD HISTORY =============
+// ================= CLEAN HISTORY =======================
 // ======================================================
 
 app.delete(
@@ -2246,16 +1891,11 @@ app.delete(
     (req, res) => {
 
         db.query(
-
             `
-
             DELETE FROM deleted_history
-
             WHERE deleted_at <
-                  NOW() - INTERVAL 60 DAY
-
+            NOW() - INTERVAL 60 DAY
             `,
-
             (err, result) => {
 
                 if (err) {
@@ -2274,7 +1914,6 @@ app.delete(
 
                 }
 
-
                 return res.json({
 
                     success: true,
@@ -2288,15 +1927,13 @@ app.delete(
                 });
 
             }
-
         );
 
     }
 );
 
-
 // ======================================================
-// ================= GET ALL USER DATA ==================
+// ================= ALL USER DATA =======================
 // ======================================================
 
 app.get(
@@ -2310,11 +1947,8 @@ app.get(
             .trim()
             .toLowerCase();
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 email,
@@ -2322,17 +1956,11 @@ app.get(
                 amount,
                 category,
                 date
-
             FROM expenses
-
             WHERE LOWER(email) = ?
-
             ORDER BY date DESC, id DESC
-
             `,
-
             [email],
-
             (expenseErr, expenses) => {
 
                 if (expenseErr) {
@@ -2351,27 +1979,18 @@ app.get(
 
                 }
 
-
                 db.query(
-
                     `
-
                     SELECT
                         id,
                         email,
                         amount,
                         date
-
                     FROM income
-
                     WHERE LOWER(email) = ?
-
                     ORDER BY date DESC, id DESC
-
                     `,
-
                     [email],
-
                     (incomeErr, income) => {
 
                         if (incomeErr) {
@@ -2390,7 +2009,6 @@ app.get(
 
                         }
 
-
                         return res.json({
 
                             success: true,
@@ -2404,16 +2022,13 @@ app.get(
                         });
 
                     }
-
                 );
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= FORGOT PASSWORD ====================
@@ -2430,7 +2045,6 @@ app.post(
             .trim()
             .toLowerCase();
 
-
         if (!email) {
 
             return res.status(400).json({
@@ -2444,34 +2058,20 @@ app.post(
 
         }
 
-
         db.query(
-
             `
-
             SELECT
                 id,
                 name,
                 email
-
             FROM users
-
             WHERE LOWER(email) = ?
-
             LIMIT 1
-
             `,
-
             [email],
-
             async (err, results) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Forgot Password DB Error:",
-                        err.message
-                    );
 
                     return res.status(500).json({
 
@@ -2486,7 +2086,6 @@ app.post(
                     });
 
                 }
-
 
                 if (
                     results.length === 0
@@ -2503,7 +2102,6 @@ app.post(
 
                 }
 
-
                 const user =
                     results[0];
 
@@ -2514,18 +2112,13 @@ app.post(
                     Date.now() +
                     10 * 60 * 1000;
 
-
                 resetOTPs.set(
-
                     email,
-
                     {
                         otp,
                         expiresAt
                     }
-
                 );
-
 
                 try {
 
@@ -2540,7 +2133,6 @@ app.post(
 
                     }
 
-
                     await transporter.sendMail({
 
                         from:
@@ -2553,70 +2145,58 @@ app.post(
                             "Expense Tracker Pro - Password Reset OTP",
 
                         html: `
+                        <div style="
+                            font-family:Arial;
+                            max-width:500px;
+                            margin:auto;
+                            padding:25px;
+                            background:#f5f5f5;
+                            border-radius:15px;
+                        ">
+
+                            <h2>
+                                Expense Tracker Pro
+                            </h2>
+
+                            <p>
+                                Hello ${user.name},
+                            </p>
+
+                            <p>
+                                Your password reset OTP is:
+                            </p>
 
                             <div style="
-                                font-family: Arial;
-                                max-width: 500px;
-                                margin: auto;
-                                padding: 25px;
-                                background: #f5f5f5;
-                                border-radius: 15px;
+                                font-size:32px;
+                                font-weight:bold;
+                                letter-spacing:8px;
+                                text-align:center;
+                                background:white;
+                                padding:15px;
+                                border-radius:10px;
                             ">
-
-                                <h2>
-                                    Expense Tracker Pro
-                                </h2>
-
-                                <p>
-                                    Hello ${user.name},
-                                </p>
-
-                                <p>
-                                    Your password reset OTP is:
-                                </p>
-
-                                <div style="
-                                    font-size: 32px;
-                                    font-weight: bold;
-                                    letter-spacing: 8px;
-                                    text-align: center;
-                                    background: white;
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                ">
-
-                                    ${otp}
-
-                                </div>
-
-                                <p>
-                                    This OTP is valid for
-                                    <strong>10 minutes</strong>.
-                                </p>
-
-                                <p>
-                                    If you did not request this,
-                                    please ignore this email.
-                                </p>
-
-                                <hr>
-
-                                <p>
-                                    Expense Tracker Pro
-                                </p>
-
+                                ${otp}
                             </div>
 
+                            <p>
+                                This OTP is valid for
+                                <strong>10 minutes</strong>.
+                            </p>
+
+                            <p>
+                                If you did not request this,
+                                please ignore this email.
+                            </p>
+
+                        </div>
                         `
 
                     });
 
-
                     console.log(
-                        "✅ OTP sent successfully:",
+                        "✅ OTP sent:",
                         email
                     );
-
 
                     return res.json({
 
@@ -2636,7 +2216,6 @@ app.post(
 
                     resetOTPs.delete(email);
 
-
                     return res.status(500).json({
 
                         success: false,
@@ -2652,12 +2231,10 @@ app.post(
                 }
 
             }
-
         );
 
     }
 );
-
 
 // ======================================================
 // ================= VERIFY OTP ==========================
@@ -2679,7 +2256,6 @@ app.post(
                 req.body.otp || ""
             ).trim();
 
-
         if (!email || !otp) {
 
             return res.status(400).json({
@@ -2693,10 +2269,8 @@ app.post(
 
         }
 
-
         const resetData =
             resetOTPs.get(email);
-
 
         if (!resetData) {
 
@@ -2710,7 +2284,6 @@ app.post(
             });
 
         }
-
 
         if (
             Date.now() >
@@ -2730,7 +2303,6 @@ app.post(
 
         }
 
-
         if (
             resetData.otp !== otp
         ) {
@@ -2746,7 +2318,6 @@ app.post(
 
         }
 
-
         return res.json({
 
             success: true,
@@ -2758,7 +2329,6 @@ app.post(
 
     }
 );
-
 
 // ======================================================
 // ================= RESET PASSWORD ======================
@@ -2785,7 +2355,6 @@ app.post(
                 req.body.newPassword || ""
             ).trim();
 
-
         if (
             !email ||
             !otp ||
@@ -2803,7 +2372,6 @@ app.post(
 
         }
 
-
         if (
             !/^\d{6}$/.test(newPassword)
         ) {
@@ -2819,10 +2387,8 @@ app.post(
 
         }
 
-
         const resetData =
             resetOTPs.get(email);
-
 
         if (!resetData) {
 
@@ -2836,7 +2402,6 @@ app.post(
             });
 
         }
-
 
         if (
             Date.now() >
@@ -2856,7 +2421,6 @@ app.post(
 
         }
 
-
         if (
             resetData.otp !== otp
         ) {
@@ -2872,34 +2436,20 @@ app.post(
 
         }
 
-
         db.query(
-
             `
-
             UPDATE users
-
             SET password = ?
-
             WHERE LOWER(email) = ?
-
             LIMIT 1
-
             `,
-
             [
                 newPassword,
                 email
             ],
-
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Reset Password DB Error:",
-                        err.message
-                    );
 
                     return res.status(500).json({
 
@@ -2914,7 +2464,6 @@ app.post(
                     });
 
                 }
-
 
                 if (
                     result.affectedRows === 0
@@ -2931,9 +2480,7 @@ app.post(
 
                 }
 
-
                 resetOTPs.delete(email);
-
 
                 return res.json({
 
@@ -2945,16 +2492,18 @@ app.post(
                 });
 
             }
-
         );
 
     }
 );
 
-
 // ======================================================
 // ================= API 404 HANDLER ====================
 // ======================================================
+
+// IMPORTANT:
+// Do NOT use app.use("*", ...)
+// Express 5 rejects "*" routes.
 
 app.use(
     (req, res) => {
@@ -2964,7 +2513,6 @@ app.use(
             req.method,
             req.originalUrl
         );
-
 
         return res.status(404).json({
 
@@ -2981,7 +2529,6 @@ app.use(
     }
 );
 
-
 // ======================================================
 // ================= ERROR HANDLER =======================
 // ======================================================
@@ -2993,7 +2540,6 @@ app.use(
             "❌ SERVER ERROR:",
             err.message
         );
-
 
         return res.status(500).json({
 
@@ -3009,7 +2555,6 @@ app.use(
 
     }
 );
-
 
 // ======================================================
 // ================= START SERVER ========================
@@ -3035,16 +2580,6 @@ app.listen(
         console.log(
             "Server running on port:",
             PORT
-        );
-
-        console.log(
-            "Frontend:",
-            FRONTEND_URL
-        );
-
-        console.log(
-            "Backend:",
-            BACKEND_URL
         );
 
         console.log(
