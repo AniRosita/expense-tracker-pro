@@ -22,9 +22,59 @@ const PORT = Number(process.env.PORT) || 5000;
 // ================= CORS ================================
 // ======================================================
 
+const allowedOrigins = [
+    "https://expense-tracker-pro-production-98cf.up.railway.app"
+];
+
 app.use(
     cors({
-        origin: true,
+        origin: function (origin, callback) {
+
+            // Allow requests without Origin
+            // Example: Postman / server-to-server
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            console.log("❌ CORS blocked origin:", origin);
+
+            return callback(
+                new Error("Not allowed by CORS")
+            );
+        },
+
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS"
+        ],
+
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ],
+
+        credentials: true,
+
+        optionsSuccessStatus: 204
+    })
+);
+
+
+// ======================================================
+// ================= OPTIONS / PREFLIGHT =================
+// ======================================================
+
+app.options(
+    "*",
+    cors({
+        origin: allowedOrigins,
         methods: [
             "GET",
             "POST",
@@ -35,7 +85,8 @@ app.use(
         allowedHeaders: [
             "Content-Type",
             "Authorization"
-        ]
+        ],
+        credentials: true
     })
 );
 
@@ -108,20 +159,9 @@ if (process.env.MYSQL_URL) {
             )
     };
 
-    console.log(
-        "MySQL Host:",
-        dbConfig.host
-    );
-
-    console.log(
-        "MySQL Port:",
-        dbConfig.port
-    );
-
-    console.log(
-        "MySQL Database:",
-        dbConfig.database
-    );
+    console.log("MySQL Host:", dbConfig.host);
+    console.log("MySQL Port:", dbConfig.port);
+    console.log("MySQL Database:", dbConfig.database);
 
     db = mysql.createPool({
 
@@ -1787,10 +1827,6 @@ app.post(
                     results[0];
 
 
-                // ==========================================
-                // RESTORE EXPENSE
-                // ==========================================
-
                 if (
                     item.type === "expense"
                 ) {
@@ -1893,10 +1929,6 @@ app.post(
                     return;
                 }
 
-
-                // ==========================================
-                // RESTORE INCOME
-                // ==========================================
 
                 if (
                     item.type === "income"
@@ -2785,7 +2817,7 @@ app.use(
 
         console.error(
             "❌ SERVER ERROR:",
-            err
+            err.message
         );
 
 
@@ -2833,6 +2865,7 @@ app.listen(
 
         console.log(
             "======================================"
+
         );
 
     }

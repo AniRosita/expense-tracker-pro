@@ -12,6 +12,14 @@ const registerForm =
 
 
 // ======================================================
+// ================= API BASE ============================
+// ======================================================
+
+const API_BASE =
+    "https://expense-tracker-pro-production-99eb.up.railway.app";
+
+
+// ======================================================
 // ================= FORM CHECK ==========================
 // ======================================================
 
@@ -39,7 +47,8 @@ if (registerForm) {
                 document
                     .getElementById("email")
                     .value
-                    .trim();
+                    .trim()
+                    .toLowerCase();
 
 
             const password =
@@ -65,7 +74,6 @@ if (registerForm) {
                 );
 
                 return;
-
             }
 
 
@@ -87,7 +95,6 @@ if (registerForm) {
                 );
 
                 return;
-
             }
 
 
@@ -109,16 +116,7 @@ if (registerForm) {
                 );
 
                 return;
-
             }
-
-
-            // ==================================================
-            // ================= RAILWAY API ===================
-            // ==================================================
-
-            const API_BASE =
-    "https://expense-tracker-pro-production-99eb.up.railway.app";
 
 
             // ==================================================
@@ -127,46 +125,37 @@ if (registerForm) {
 
             try {
 
+                console.log(
+                    "Register API URL:",
+                    `${API_BASE}/api/register`
+                );
+
+
                 const response =
                     await fetch(
-                        `${API_BASE}/register`,
+                        `${API_BASE}/api/register`,
                         {
-
                             method: "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
 
                             body: JSON.stringify({
 
-                                name: name,
+                                name:
+                                    name,
 
-                                email: email,
+                                email:
+                                    email,
 
-                                password: password
+                                password:
+                                    password
 
                             })
-
                         }
                     );
-
-
-                // ==================================================
-                // ================= RESPONSE CHECK ===============
-                // ==================================================
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Server Error: " +
-                        response.status
-                    );
-
-                }
 
 
                 // ==================================================
@@ -177,11 +166,20 @@ if (registerForm) {
                     await response.json();
 
 
+                console.log(
+                    "Register Response:",
+                    data
+                );
+
+
                 // ==================================================
                 // ================= SUCCESS =======================
                 // ==================================================
 
-                if (data.success) {
+                if (
+                    response.ok &&
+                    data.success
+                ) {
 
                     showToast(
                         "Account Created Successfully ✅",
@@ -199,6 +197,8 @@ if (registerForm) {
                         1500
                     );
 
+
+                    return;
                 }
 
 
@@ -206,15 +206,11 @@ if (registerForm) {
                 // ================= REGISTER ERROR ===============
                 // ==================================================
 
-                else {
-
-                    showToast(
-                        data.message ||
-                        "Registration failed",
-                        "error"
-                    );
-
-                }
+                showToast(
+                    data.message ||
+                    "Registration failed",
+                    "error"
+                );
 
             }
 
@@ -226,7 +222,7 @@ if (registerForm) {
             catch (error) {
 
                 console.error(
-                    "Register Error:",
+                    "❌ Register Error:",
                     error
                 );
 
