@@ -1,106 +1,228 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
 
-```
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>Expense Tracker Pro</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
+    <title>Expense Tracker Pro</title>
 
-<link rel="icon" type="image/png" href="assets/profile.png">
+    <link rel="icon"
+        type="image/png"
+        href="assets/profile.png">
 
-<link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet"
+        href="css/style.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
-<link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-```
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 </head>
 
+
 <body>
 
-```
-<div class="background">
-    <div class="glow glow1"></div>
-    <div class="glow glow2"></div>
-</div>
 
-<div class="login-container">
+    <!-- ======================================================
+         BACKGROUND
+    ======================================================= -->
 
-    <div class="login-card">
+    <div class="background">
 
-        <div class="logo">
-            <i class="fas fa-wallet"></i>
-        </div>
+        <div class="glow glow1"></div>
 
-        <h1>Expense Tracker Pro</h1>
-
-        <p>Track Expenses Smartly</p>
-
-        <form id="loginForm">
-
-            <div class="input-box">
-
-                <i class="fas fa-envelope"></i>
-
-                <input
-                    type="email"
-                    id="email"
-                    placeholder="Enter Gmail Address"
-                    required>
-
-            </div>
-
-            <div class="input-box">
-
-                <i class="fas fa-lock"></i>
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Enter 6 Digit Password"
-                    maxlength="6"
-                    required>
-
-            </div>
-
-            <button type="submit">
-                Login
-            </button>
-
-        </form>
-
-        <div id="message"></div>
-
-        <div class="login-info">
-
-            <small>
-                Gmail only accepted <br>
-                Password must contain exactly 6 digits
-            </small>
-
-        </div>
-
-        <p style="margin-top:15px; text-align:center;">
-            Don't have an account?
-            <a href="register.html">Create Account</a>
-        </p>
+        <div class="glow glow2"></div>
 
     </div>
 
-</div>
 
-<script src="js/toast.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/auth.js"></script>
-```
+
+    <!-- ======================================================
+         LOGIN CONTAINER
+    ======================================================= -->
+
+    <div class="login-container">
+
+
+        <div class="login-card">
+
+
+            <!-- ==================================================
+                 LOGO
+            =================================================== -->
+
+            <div class="logo">
+
+                <i class="fas fa-wallet"></i>
+
+            </div>
+
+
+            <!-- ==================================================
+                 TITLE
+            =================================================== -->
+
+            <h1>
+                Expense Tracker Pro
+            </h1>
+
+
+            <p>
+                Track Expenses Smartly
+            </p>
+
+
+
+            <!-- ==================================================
+                 LOGIN FORM
+            =================================================== -->
+
+            <form id="loginForm">
+
+
+                <!-- EMAIL -->
+
+                <div class="input-box">
+
+                    <i class="fas fa-envelope"></i>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Enter Gmail Address"
+                        autocomplete="email"
+                        required>
+
+                </div>
+
+
+
+                <!-- PASSWORD -->
+
+                <div class="input-box">
+
+                    <i class="fas fa-lock"></i>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter 6 Digit Password"
+                        maxlength="6"
+                        inputmode="numeric"
+                        autocomplete="current-password"
+                        required>
+
+                </div>
+
+
+
+                <!-- ==================================================
+                     FORGOT PASSWORD
+                =================================================== -->
+
+                <div class="forgot-password">
+
+                    <a
+                        href="forgot-password.html"
+                        id="forgotPasswordLink">
+
+                        Forgot Password?
+
+                    </a>
+
+                </div>
+
+
+
+                <!-- ==================================================
+                     LOGIN BUTTON
+                =================================================== -->
+
+                <button
+                    type="submit"
+                    id="loginBtn">
+
+                    <i class="fas fa-right-to-bracket"></i>
+
+                    Login
+
+                </button>
+
+
+            </form>
+
+
+
+            <!-- ==================================================
+                 MESSAGE
+            =================================================== -->
+
+            <div id="message"></div>
+
+
+
+            <!-- ==================================================
+                 LOGIN INFORMATION
+            =================================================== -->
+
+            <div class="login-info">
+
+                <small>
+
+                    Gmail only accepted
+                    <br>
+
+                    Password must contain exactly 6 digits
+
+                </small>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 REGISTER
+            =================================================== -->
+
+            <p
+                style="
+                    margin-top:15px;
+                    text-align:center;
+                ">
+
+                Don't have an account?
+
+                <a href="register.html">
+
+                    Create Account
+
+                </a>
+
+            </p>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ======================================================
+         SCRIPTS
+    ======================================================= -->
+
+    <script src="js/toast.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="js/auth.js"></script>
+
 
 </body>
 

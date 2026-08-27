@@ -2,88 +2,53 @@
 // ================= DASHBOARD ===========================
 // ======================================================
 
-
 // ======================================================
 // ================= LOGIN CHECK =========================
 // ======================================================
 
 if (!localStorage.getItem("userEmail")) {
-
     window.location.href = "index.html";
-
 }
-
 
 // ======================================================
 // ================= API BASE ============================
 // ======================================================
 
-// Same Railway service + localhost compatible
 const API_BASE = "";
-
 
 // ======================================================
 // ================= DOM ELEMENTS ========================
 // ======================================================
 
-const menuBtn =
-    document.getElementById("menuBtn");
+const menuBtn = document.getElementById("menuBtn");
+const sideMenu = document.querySelector(".side-menu");
 
-const sideMenu =
-    document.querySelector(".side-menu");
+const themeBtn = document.getElementById("themeBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-const themeBtn =
-    document.getElementById("themeBtn");
+const addIncomeBtn = document.getElementById("addIncomeBtn");
+const addExpenseBtn = document.getElementById("addExpenseBtn");
 
-const logoutBtn =
-    document.getElementById("logoutBtn");
+const expenseList = document.getElementById("expenseList");
 
-const addIncomeBtn =
-    document.getElementById("addIncomeBtn");
+const totalExpense = document.getElementById("totalExpense");
+const totalIncome = document.getElementById("totalIncome");
+const totalBalance = document.getElementById("totalBalance");
 
-const addExpenseBtn =
-    document.getElementById("addExpenseBtn");
-
-const expenseList =
-    document.getElementById("expenseList");
-
-const totalExpense =
-    document.getElementById("totalExpense");
-
-const totalIncome =
-    document.getElementById("totalIncome");
-
-const totalBalance =
-    document.getElementById("totalBalance");
-
-const searchExpense =
-    document.getElementById("searchExpense");
-
-const filterType =
-    document.getElementById("transactionFilter");
-
+const searchExpense = document.getElementById("searchExpense");
+const filterType = document.getElementById("transactionFilter");
 
 // ======================================================
-// ================= EDIT EXPENSE ELEMENTS ==============
+// ================= EDIT EXPENSE ========================
 // ======================================================
 
-const editPopup =
-    document.getElementById("editPopup");
+const editPopup = document.getElementById("editPopup");
+const editIndex = document.getElementById("editIndex");
 
-const editIndex =
-    document.getElementById("editIndex");
-
-const editName =
-    document.getElementById("editName");
-
-const editAmount =
-    document.getElementById("editAmount");
-
-const editCategory =
-    document.getElementById("editCategory");
-
-const editDate =
-    document.getElementById("editDate");
+const editName = document.getElementById("editName");
+const editAmount = document.getElementById("editAmount");
+const editCategory = document.getElementById("editCategory");
+const editDate = document.getElementById("editDate");
 
 const updateExpenseBtn =
     document.getElementById("updateExpenseBtn");
@@ -91,9 +56,8 @@ const updateExpenseBtn =
 const closeEditBtn =
     document.getElementById("closeEditBtn");
 
-
 // ======================================================
-// ================= EDIT INCOME ELEMENTS ===============
+// ================= EDIT INCOME =========================
 // ======================================================
 
 const editIncomePopup =
@@ -117,9 +81,8 @@ const updateIncomeBtn =
 const closeIncomeEditBtn =
     document.getElementById("closeIncomeEditBtn");
 
-
 // ======================================================
-// ================= CUSTOM CATEGORY =====================
+// ================= CATEGORY ============================
 // ======================================================
 
 const expenseCategory =
@@ -128,9 +91,8 @@ const expenseCategory =
 const customCategory =
     document.getElementById("customCategory");
 
-
 // ======================================================
-// ================= IMPORT ELEMENTS ====================
+// ================= IMPORT ==============================
 // ======================================================
 
 const importExpenseBtn =
@@ -139,7 +101,6 @@ const importExpenseBtn =
 const expenseFileInput =
     document.getElementById("expenseFileInput");
 
-
 // ======================================================
 // ================= DATA ================================
 // ======================================================
@@ -147,7 +108,6 @@ const expenseFileInput =
 let expenses = [];
 
 window.allIncome = [];
-
 
 // ======================================================
 // ================= SIDEBAR =============================
@@ -162,7 +122,6 @@ if (menuBtn && sideMenu) {
     });
 
 }
-
 
 // ======================================================
 // ================= THEME ===============================
@@ -185,68 +144,46 @@ function loadSavedTheme() {
 
 }
 
-
 function updateThemeButton() {
 
-    if (!themeBtn) {
-
-        return;
-
-    }
+    if (!themeBtn) return;
 
     if (
-        document.body.classList.contains(
-            "light-mode"
-        )
+        document.body.classList.contains("light-mode")
     ) {
 
-        themeBtn.innerHTML =
-            "🌙 Dark Mode";
+        themeBtn.innerHTML = "🌙 Dark Mode";
 
     } else {
 
-        themeBtn.innerHTML =
-            "☀️ Light Mode";
+        themeBtn.innerHTML = "☀️ Light Mode";
 
     }
 
 }
 
-
 loadSavedTheme();
-
 updateThemeButton();
-
 
 if (themeBtn) {
 
-    themeBtn.addEventListener(
-        "click",
-        () => {
+    themeBtn.addEventListener("click", () => {
 
-            document.body.classList.toggle(
-                "light-mode"
-            );
+        document.body.classList.toggle("light-mode");
 
-            const isLight =
-                document.body.classList.contains(
-                    "light-mode"
-                );
+        const isLight =
+            document.body.classList.contains("light-mode");
 
-            localStorage.setItem(
-                "theme",
-                isLight
-                    ? "light"
-                    : "dark"
-            );
+        localStorage.setItem(
+            "theme",
+            isLight ? "light" : "dark"
+        );
 
-            updateThemeButton();
+        updateThemeButton();
 
-        }
-    );
+    });
 
 }
-
 
 // ======================================================
 // ================= LOGOUT ==============================
@@ -254,26 +191,16 @@ if (themeBtn) {
 
 if (logoutBtn) {
 
-    logoutBtn.addEventListener(
-        "click",
-        () => {
+    logoutBtn.addEventListener("click", () => {
 
-            localStorage.removeItem(
-                "userEmail"
-            );
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userName");
 
-            localStorage.removeItem(
-                "userName"
-            );
+        window.location.href = "index.html";
 
-            window.location.href =
-                "index.html";
-
-        }
-    );
+    });
 
 }
-
 
 // ======================================================
 // ================= CATEGORY ============================
@@ -281,40 +208,28 @@ if (logoutBtn) {
 
 if (expenseCategory) {
 
-    expenseCategory.addEventListener(
-        "change",
-        function () {
+    expenseCategory.addEventListener("change", function () {
 
-            if (
-                this.value === "Others"
-            ) {
+        if (this.value === "Others") {
 
-                if (customCategory) {
+            if (customCategory) {
+                customCategory.style.display = "block";
+            }
 
-                    customCategory.style.display =
-                        "block";
+        } else {
 
-                }
+            if (customCategory) {
 
-            } else {
-
-                if (customCategory) {
-
-                    customCategory.style.display =
-                        "none";
-
-                    customCategory.value =
-                        "";
-
-                }
+                customCategory.style.display = "none";
+                customCategory.value = "";
 
             }
 
         }
-    );
+
+    });
 
 }
-
 
 // ======================================================
 // ================= LOAD EXPENSES =======================
@@ -323,15 +238,9 @@ if (expenseCategory) {
 async function loadExpenses() {
 
     const email =
-        localStorage.getItem(
-            "userEmail"
-        );
+        localStorage.getItem("userEmail");
 
-    if (!email) {
-
-        return;
-
-    }
+    if (!email) return;
 
     try {
 
@@ -357,9 +266,7 @@ async function loadExpenses() {
         if (data.success) {
 
             expenses =
-                Array.isArray(
-                    data.expenses
-                )
+                Array.isArray(data.expenses)
                     ? data.expenses
                     : [];
 
@@ -392,7 +299,6 @@ async function loadExpenses() {
 
 }
 
-
 // ======================================================
 // ================= LOAD INCOME =========================
 // ======================================================
@@ -400,15 +306,9 @@ async function loadExpenses() {
 async function loadIncome() {
 
     const email =
-        localStorage.getItem(
-            "userEmail"
-        );
+        localStorage.getItem("userEmail");
 
-    if (!email) {
-
-        return;
-
-    }
+    if (!email) return;
 
     try {
 
@@ -434,9 +334,7 @@ async function loadIncome() {
         if (data.success) {
 
             window.allIncome =
-                Array.isArray(
-                    data.income
-                )
+                Array.isArray(data.income)
                     ? data.income
                     : [];
 
@@ -464,211 +362,146 @@ async function loadIncome() {
 
 }
 
-
 // ======================================================
 // ================= ADD INCOME ==========================
 // ======================================================
 
 if (addIncomeBtn) {
 
-    addIncomeBtn.addEventListener(
-        "click",
-        async () => {
-
-            const incomeNameInput =
-                document.getElementById(
-                    "incomeName"
-                );
-
-            const incomeAmountInput =
-                document.getElementById(
-                    "incomeAmount"
-                );
-
-            const incomeDateInput =
-                document.getElementById(
-                    "incomeDate"
-                );
-
-
-            const source =
-                incomeNameInput
-                    ? incomeNameInput.value.trim()
-                    : "";
-
-
-            const amount =
-                incomeAmountInput
-                    ? incomeAmountInput.value
-                    : "";
-
-
-            const date =
-                incomeDateInput
-                    ? incomeDateInput.value
-                    : "";
-
-
-            if (
-                source === "" ||
-                amount === "" ||
-                date === ""
-            ) {
-
-                alert(
-                    "Please fill all income fields"
-                );
-
-                return;
-
-            }
-
-
-            if (
-                Number(amount) <= 0
-            ) {
-
-                alert(
-                    "Please enter a valid income amount"
-                );
-
-                return;
-
-            }
-
-
-            const email =
-                localStorage.getItem(
-                    "userEmail"
-                );
-
-
-            if (!email) {
-
-                alert(
-                    "User email not found. Please login again."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                // IMPORTANT:
-                // server.js uses POST /income
-
-                const response =
-                    await fetch(
-                        API_BASE +
-                        "/income",
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    email:
-                                        email,
-
-                                    amount:
-                                        Number(amount),
-
-                                    date:
-                                        date
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                console.log(
-                    "Add Income Response:",
-                    data
-                );
-
-
-                if (
-                    data.success
-                ) {
-
-                    alert(
-                        "Income Added Successfully ✅"
-                    );
-
-
-                    if (incomeNameInput) {
-
-                        incomeNameInput.value =
-                            "";
-
-                    }
-
-                    if (incomeAmountInput) {
-
-                        incomeAmountInput.value =
-                            "";
-
-                    }
-
-                    if (incomeDateInput) {
-
-                        incomeDateInput.value =
-                            "";
-
-                    }
-
-
-                    await loadIncome();
-
-                    await loadExpenses();
-
-                    displayTransactions();
-
-                    calculateTotals();
-
-                } else {
-
-                    alert(
-                        data.message ||
-                        "Unable to add income"
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Add Income Error:",
-                    error
-                );
-
-                alert(
-                    "Server Error. Please try again."
-                );
-
-            }
+    addIncomeBtn.addEventListener("click", async () => {
+
+        const incomeNameInput =
+            document.getElementById("incomeName");
+
+        const incomeAmountInput =
+            document.getElementById("incomeAmount");
+
+        const incomeDateInput =
+            document.getElementById("incomeDate");
+
+        const source =
+            incomeNameInput
+                ? incomeNameInput.value.trim()
+                : "";
+
+        const amount =
+            incomeAmountInput
+                ? incomeAmountInput.value
+                : "";
+
+        const date =
+            incomeDateInput
+                ? incomeDateInput.value
+                : "";
+
+        if (
+            source === "" ||
+            amount === "" ||
+            date === ""
+        ) {
+
+            alert("Please fill all income fields");
+            return;
 
         }
-    );
+
+        if (Number(amount) <= 0) {
+
+            alert("Please enter a valid income amount");
+            return;
+
+        }
+
+        const email =
+            localStorage.getItem("userEmail");
+
+        if (!email) {
+
+            alert(
+                "User email not found. Please login again."
+            );
+
+            return;
+
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    API_BASE + "/income",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            email: email,
+                            amount: Number(amount),
+                            date: date
+
+                        })
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            console.log(
+                "Add Income Response:",
+                data
+            );
+
+            if (data.success) {
+
+                alert(
+                    "Income Added Successfully ✅"
+                );
+
+                if (incomeNameInput)
+                    incomeNameInput.value = "";
+
+                if (incomeAmountInput)
+                    incomeAmountInput.value = "";
+
+                if (incomeDateInput)
+                    incomeDateInput.value = "";
+
+                await loadIncome();
+                await loadExpenses();
+
+                displayTransactions();
+                calculateTotals();
+
+            } else {
+
+                alert(
+                    data.message ||
+                    "Unable to add income"
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Add Income Error:",
+                error
+            );
+
+            alert(
+                "Server Error. Please try again."
+            );
+
+        }
+
+    });
 
 }
-
 
 // ======================================================
 // ================= ADD EXPENSE =========================
@@ -676,579 +509,421 @@ if (addIncomeBtn) {
 
 if (addExpenseBtn) {
 
-    addExpenseBtn.addEventListener(
-        "click",
-        async () => {
+    addExpenseBtn.addEventListener("click", async () => {
 
-            const nameInput =
-                document.getElementById(
-                    "expenseName"
-                );
+        const nameInput =
+            document.getElementById("expenseName");
 
-            const amountInput =
-                document.getElementById(
-                    "expenseAmount"
-                );
+        const amountInput =
+            document.getElementById("expenseAmount");
 
-            const categorySelect =
-                document.getElementById(
-                    "expenseCategory"
-                );
+        const categorySelect =
+            document.getElementById("expenseCategory");
 
-            const customCategoryInput =
-                document.getElementById(
-                    "customCategory"
-                );
+        const customCategoryInput =
+            document.getElementById("customCategory");
 
-            const dateInput =
-                document.getElementById(
-                    "expenseDate"
-                );
+        const dateInput =
+            document.getElementById("expenseDate");
 
+        const name =
+            nameInput
+                ? nameInput.value.trim()
+                : "";
 
-            const name =
-                nameInput
-                    ? nameInput.value.trim()
+        const amount =
+            amountInput
+                ? amountInput.value
+                : "";
+
+        let category =
+            categorySelect
+                ? categorySelect.value
+                : "";
+
+        const date =
+            dateInput
+                ? dateInput.value
+                : "";
+
+        if (category === "Others") {
+
+            category =
+                customCategoryInput
+                    ? customCategoryInput.value.trim()
                     : "";
 
-
-            const amount =
-                amountInput
-                    ? amountInput.value
-                    : "";
-
-
-            let category =
-                categorySelect
-                    ? categorySelect.value
-                    : "";
-
-
-            const date =
-                dateInput
-                    ? dateInput.value
-                    : "";
-
-
-            if (
-                category === "Others"
-            ) {
-
-                category =
-                    customCategoryInput
-                        ? customCategoryInput.value.trim()
-                        : "";
-
-
-                if (
-                    category === ""
-                ) {
-
-                    alert(
-                        "Please enter custom category"
-                    );
-
-                    return;
-
-                }
-
-            }
-
-
-            if (
-                name === "" ||
-                amount === "" ||
-                date === ""
-            ) {
+            if (category === "") {
 
                 alert(
-                    "Please fill all expense fields"
+                    "Please enter custom category"
                 );
 
                 return;
-
-            }
-
-
-            if (
-                Number(amount) <= 0
-            ) {
-
-                alert(
-                    "Please enter a valid expense amount"
-                );
-
-                return;
-
-            }
-
-
-            const email =
-                localStorage.getItem(
-                    "userEmail"
-                );
-
-
-            if (!email) {
-
-                alert(
-                    "User email not found. Please login again."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                // IMPORTANT:
-                // server.js uses POST /expenses
-
-                const response =
-                    await fetch(
-                        API_BASE +
-                        "/expenses",
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    email:
-                                        email,
-
-                                    name:
-                                        name,
-
-                                    amount:
-                                        Number(amount),
-
-                                    category:
-                                        category,
-
-                                    date:
-                                        date
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                console.log(
-                    "Add Expense Response:",
-                    data
-                );
-
-
-                if (
-                    data.success
-                ) {
-
-                    alert(
-                        "Expense Added Successfully ✅"
-                    );
-
-
-                    if (nameInput) {
-
-                        nameInput.value =
-                            "";
-
-                    }
-
-
-                    if (amountInput) {
-
-                        amountInput.value =
-                            "";
-
-                    }
-
-
-                    if (dateInput) {
-
-                        dateInput.value =
-                            "";
-
-                    }
-
-
-                    if (customCategoryInput) {
-
-                        customCategoryInput.value =
-                            "";
-
-                        customCategoryInput.style.display =
-                            "none";
-
-                    }
-
-
-                    await loadExpenses();
-
-                    await loadIncome();
-
-                    displayTransactions();
-
-                    calculateTotals();
-
-                } else {
-
-                    alert(
-                        data.message ||
-                        "Unable to add expense"
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Add Expense Error:",
-                    error
-                );
-
-                alert(
-                    "Server Error. Please try again."
-                );
 
             }
 
         }
-    );
+
+        if (
+            name === "" ||
+            amount === "" ||
+            date === ""
+        ) {
+
+            alert(
+                "Please fill all expense fields"
+            );
+
+            return;
+
+        }
+
+        if (Number(amount) <= 0) {
+
+            alert(
+                "Please enter a valid expense amount"
+            );
+
+            return;
+
+        }
+
+        const email =
+            localStorage.getItem("userEmail");
+
+        if (!email) {
+
+            alert(
+                "User email not found. Please login again."
+            );
+
+            return;
+
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    API_BASE + "/expenses",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            email: email,
+                            name: name,
+                            amount: Number(amount),
+                            category: category,
+                            date: date
+
+                        })
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            console.log(
+                "Add Expense Response:",
+                data
+            );
+
+            if (data.success) {
+
+                alert(
+                    "Expense Added Successfully ✅"
+                );
+
+                if (nameInput)
+                    nameInput.value = "";
+
+                if (amountInput)
+                    amountInput.value = "";
+
+                if (dateInput)
+                    dateInput.value = "";
+
+                if (customCategoryInput) {
+
+                    customCategoryInput.value = "";
+                    customCategoryInput.style.display =
+                        "none";
+
+                }
+
+                await loadExpenses();
+                await loadIncome();
+
+                displayTransactions();
+                calculateTotals();
+
+            } else {
+
+                alert(
+                    data.message ||
+                    "Unable to add expense"
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Add Expense Error:",
+                error
+            );
+
+            alert(
+                "Server Error. Please try again."
+            );
+
+        }
+
+    });
 
 }
-
-
 // ======================================================
-// ================= DISPLAY TRANSACTIONS ================
+// ================= DISPLAY TRANSACTIONS =================
 // ======================================================
 
 function displayTransactions() {
 
-    if (!expenseList) {
+    if (!expenseList) return;
 
-        return;
-
-    }
-
-
-    expenseList.innerHTML =
-        "";
-
+    expenseList.innerHTML = "";
 
     const searchText =
         searchExpense
-            ? searchExpense.value
-                .toLowerCase()
-                .trim()
+            ? searchExpense.value.toLowerCase().trim()
             : "";
-
 
     const selectedType =
         filterType
             ? filterType.value.toLowerCase()
             : "all";
 
-
     let transactions = [];
-
 
     // ==================================================
     // EXPENSES
     // ==================================================
 
-    expenses.forEach(
-        item => {
+    expenses.forEach(item => {
 
-            transactions.push({
+        transactions.push({
 
-                type:
-                    "Expense",
+            type: "Expense",
 
-                id:
-                    item.id,
+            id: item.id,
 
-                name:
-                    item.name,
+            name: item.name,
 
-                amount:
-                    Number(
-                        item.amount
-                    ) || 0,
+            amount:
+                Number(item.amount) || 0,
 
-                category:
-                    item.category ||
-                    "Others",
+            category:
+                item.category || "Others",
 
-                date:
-                    item.date
+            date: item.date
 
-            });
+        });
 
-        }
-    );
-
+    });
 
     // ==================================================
     // INCOME
     // ==================================================
 
-    if (
-        Array.isArray(
-            window.allIncome
-        )
-    ) {
+    if (Array.isArray(window.allIncome)) {
 
-        window.allIncome.forEach(
-            item => {
+        window.allIncome.forEach(item => {
 
-                transactions.push({
+            transactions.push({
 
-                    type:
-                        "Income",
+                type: "Income",
 
-                    id:
-                        item.id,
+                id: item.id,
 
-                    // Current database does not
-                    // contain source column.
+                name: "Income",
 
-                    name:
-                        "Income",
+                amount:
+                    Number(item.amount) || 0,
 
-                    amount:
-                        Number(
-                            item.amount
-                        ) || 0,
+                category: "Income",
 
-                    category:
-                        "Income",
+                date: item.date
 
-                    date:
-                        item.date
+            });
 
-                });
-
-            }
-        );
+        });
 
     }
-
 
     // ==================================================
     // SORT BY DATE
     // ==================================================
 
-    transactions.sort(
-        (a, b) => {
+    transactions.sort((a, b) => {
 
-            return (
-                new Date(b.date) -
-                new Date(a.date)
-            );
+        return (
+            new Date(b.date) -
+            new Date(a.date)
+        );
 
-        }
-    );
-
+    });
 
     // ==================================================
     // DISPLAY
     // ==================================================
 
-    transactions.forEach(
-        transaction => {
+    transactions.forEach(transaction => {
 
-            const transactionType =
-                transaction.type
-                    .toLowerCase();
+        const transactionType =
+            transaction.type.toLowerCase();
 
+        const matchSearch =
 
-            const matchSearch =
+            String(transaction.name || "")
+                .toLowerCase()
+                .includes(searchText)
 
-                String(
-                    transaction.name ||
-                    ""
-                )
-                    .toLowerCase()
-                    .includes(
-                        searchText
-                    )
+            ||
 
-                ||
+            String(transaction.category || "")
+                .toLowerCase()
+                .includes(searchText);
 
-                String(
-                    transaction.category ||
-                    ""
-                )
-                    .toLowerCase()
-                    .includes(
-                        searchText
-                    );
+        const matchType =
 
+            selectedType === "all"
 
-            const matchType =
+            ||
 
-                selectedType ===
-                    "all"
+            transactionType === selectedType;
 
-                ||
+        if (!matchSearch || !matchType) {
+            return;
+        }
 
-                transactionType ===
-                    selectedType;
+        // ==================================================
+        // AMOUNT
+        // ==================================================
 
+        let amountDisplay;
 
-            if (
-                !matchSearch ||
-                !matchType
-            ) {
+        if (transaction.type === "Income") {
 
-                return;
-
-            }
-
-
-            let amountDisplay;
-
-
-            if (
-                transaction.type ===
-                "Income"
-            ) {
-
-                amountDisplay =
-                    "+" +
-                    formatCurrency(
-                        transaction.amount
-                    );
-
-            } else {
-
-                amountDisplay =
-                    "-" +
-                    formatCurrency(
-                        transaction.amount
-                    );
-
-            }
-
-
-            let actionButtons =
-                "";
-
-
-            // ==================================================
-            // EXPENSE BUTTONS
-            // ==================================================
-
-            if (
-                transaction.type ===
-                "Expense"
-            ) {
-
-                actionButtons = `
-
-                    <button
-                        class="edit-btn"
-                        onclick="editExpenseById(${transaction.id})">
-
-                        Edit
-
-                    </button>
-
-                    <button
-                        class="delete-btn"
-                        onclick="deleteExpenseById(${transaction.id})">
-
-                        Delete
-
-                    </button>
-
-                `;
-
-            }
-
-
-            // ==================================================
-            // INCOME BUTTON
-            // ==================================================
-
-            if (
-                transaction.type ===
-                "Income"
-            ) {
-
-                actionButtons = `
-
-                    <button
-                        class="edit-btn"
-                        onclick="editIncomeById(${transaction.id})">
-
-                        Edit
-
-                    </button>
-
-                `;
-
-            }
-
-
-            const row =
-                document.createElement(
-                    "tr"
+            amountDisplay =
+                "+" +
+                formatCurrency(
+                    transaction.amount
                 );
 
+        } else {
 
-            row.innerHTML = `
+            amountDisplay =
+                "-" +
+                formatCurrency(
+                    transaction.amount
+                );
 
-                <td>
-                    ${transaction.type}
-                </td>
+        }
 
-                <td>
-                    ${transaction.name}
-                </td>
+        // ==================================================
+        // ACTION BUTTONS
+        // ==================================================
 
-                <td>
-                    ${amountDisplay}
-                </td>
+        let actionButtons = "";
 
-                <td>
-                    ${transaction.category}
-                </td>
+        // EXPENSE → EDIT + DELETE
 
-                <td>
-                    ${transaction.date || "-"}
-                </td>
+        if (transaction.type === "Expense") {
 
-                <td>
-                    ${actionButtons}
-                </td>
+            actionButtons = `
+
+                <button
+                    class="edit-btn"
+                    onclick="editExpenseById(${transaction.id})">
+                    Edit
+                </button>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteExpenseById(${transaction.id})">
+                    Delete
+                </button>
 
             `;
 
+        }
 
-            expenseList.appendChild(
-                row
-            );
+        // INCOME → EDIT + DELETE
+
+        if (transaction.type === "Income") {
+
+            actionButtons = `
+
+                <button
+                    class="edit-btn"
+                    onclick="editIncomeById(${transaction.id})">
+                    Edit
+                </button>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteIncomeById(${transaction.id})">
+                    Delete
+                </button>
+
+            `;
 
         }
-    );
+
+        // ==================================================
+        // CREATE ROW
+        // ==================================================
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>
+                ${transaction.type}
+            </td>
+
+            <td>
+                ${transaction.name}
+            </td>
+
+            <td>
+                ${amountDisplay}
+            </td>
+
+            <td>
+                ${transaction.category}
+            </td>
+
+            <td>
+                ${transaction.date || "-"}
+            </td>
+
+            <td>
+                ${actionButtons}
+            </td>
+
+        `;
+
+        expenseList.appendChild(row);
+
+    });
 
 }
 
@@ -1302,17 +977,13 @@ function editExpenseById(id) {
                 Number(id)
         );
 
-
     if (!expenseItem) {
 
-        alert(
-            "Expense not found"
-        );
+        alert("Expense not found");
 
         return;
 
     }
-
 
     if (editIndex) {
 
@@ -1321,14 +992,12 @@ function editExpenseById(id) {
 
     }
 
-
     if (editName) {
 
         editName.value =
             expenseItem.name || "";
 
     }
-
 
     if (editAmount) {
 
@@ -1337,7 +1006,6 @@ function editExpenseById(id) {
 
     }
 
-
     if (editCategory) {
 
         editCategory.value =
@@ -1345,14 +1013,12 @@ function editExpenseById(id) {
 
     }
 
-
     if (editDate) {
 
         editDate.value =
             expenseItem.date || "";
 
     }
-
 
     if (editPopup) {
 
@@ -1363,6 +1029,8 @@ function editExpenseById(id) {
 
 }
 
+
+// IMPORTANT: HTML onclick needs this
 
 window.editExpenseById =
     editExpenseById;
@@ -1406,32 +1074,25 @@ if (updateExpenseBtn) {
                     ? editIndex.value
                     : "";
 
-
             const name =
                 editName
                     ? editName.value.trim()
                     : "";
 
-
             const amount =
                 editAmount
-                    ? Number(
-                        editAmount.value
-                    )
+                    ? Number(editAmount.value)
                     : 0;
-
 
             const category =
                 editCategory
                     ? editCategory.value.trim()
                     : "";
 
-
             const date =
                 editDate
                     ? editDate.value
                     : "";
-
 
             if (
                 !id ||
@@ -1449,11 +1110,7 @@ if (updateExpenseBtn) {
 
             }
 
-
             try {
-
-                // server.js:
-                // PUT /expenses/:id
 
                 const response =
                     await fetch(
@@ -1462,8 +1119,7 @@ if (updateExpenseBtn) {
                         id,
                         {
 
-                            method:
-                                "PUT",
+                            method: "PUT",
 
                             headers: {
 
@@ -1492,19 +1148,14 @@ if (updateExpenseBtn) {
                         }
                     );
 
-
                 const data =
                     await response.json();
 
-
-                if (
-                    data.success
-                ) {
+                if (data.success) {
 
                     alert(
                         "Expense Updated Successfully ✅"
                     );
-
 
                     if (editPopup) {
 
@@ -1513,13 +1164,10 @@ if (updateExpenseBtn) {
 
                     }
 
-
                     await loadExpenses();
-
                     await loadIncome();
 
                     displayTransactions();
-
                     calculateTotals();
 
                 } else {
@@ -1560,7 +1208,8 @@ async function deleteExpenseById(id) {
     const expenseItem =
         expenses.find(
             item =>
-                Number(item.id) === Number(id)
+                Number(item.id) ===
+                Number(id)
         );
 
     if (!expenseItem) {
@@ -1571,21 +1220,26 @@ async function deleteExpenseById(id) {
 
     }
 
-
-    // ================= CONFIRM DELETE =================
+    // ==================================================
+    // CONFIRM
+    // ==================================================
 
     const confirmDelete =
         confirm(
+
             "Are you sure you want to delete this expense?\n\n" +
+
             expenseItem.name +
             " - " +
             formatCurrency(
                 Number(expenseItem.amount)
             ) +
-            "\n\n" +
-            "This record will be kept in Delete History for 60 days."
-        );
 
+            "\n\n" +
+
+            "This record will be kept in Delete History for 60 days."
+
+        );
 
     if (!confirmDelete) {
 
@@ -1593,6 +1247,9 @@ async function deleteExpenseById(id) {
 
     }
 
+    // ==================================================
+    // DELETE API
+    // ==================================================
 
     try {
 
@@ -1602,47 +1259,46 @@ async function deleteExpenseById(id) {
                 "/expenses/" +
                 id,
                 {
+
                     method: "DELETE",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     }
+
                 }
             );
 
-
         const data =
             await response.json();
-
 
         console.log(
             "Delete Expense Response:",
             data
         );
 
-
         if (data.success) {
 
             alert(
+
                 "Expense moved to Delete History 🗑️\n\n" +
+
                 "You can restore it within 60 days."
+
             );
 
-
-            // ================= RELOAD DATA =================
+            // Reload database data
 
             await loadExpenses();
-
             await loadIncome();
 
-
-            // ================= REFRESH DASHBOARD =================
+            // Refresh dashboard
 
             displayTransactions();
-
             calculateTotals();
-
 
         } else {
 
@@ -1653,14 +1309,12 @@ async function deleteExpenseById(id) {
 
         }
 
-
     } catch (error) {
 
         console.error(
             "Delete Expense Error:",
             error
         );
-
 
         alert(
             "Server Error. Please try again."
@@ -1671,11 +1325,129 @@ async function deleteExpenseById(id) {
 }
 
 
-// ================= MAKE FUNCTION GLOBAL =================
+// IMPORTANT: HTML onclick needs this
 
 window.deleteExpenseById =
     deleteExpenseById;
+
+
 // ======================================================
+// ================= DELETE INCOME =======================
+// ======================================================
+
+async function deleteIncomeById(id) {
+
+    const incomeItem =
+        window.allIncome.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+    if (!incomeItem) {
+
+        alert("Income not found");
+
+        return;
+
+    }
+
+    // ==================================================
+    // CONFIRM
+    // ==================================================
+
+    const confirmDelete =
+        confirm(
+
+            "Are you sure you want to delete this income?\n\n" +
+
+            formatCurrency(
+                Number(incomeItem.amount)
+            )
+
+        );
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+    // ==================================================
+    // DELETE API
+    // ==================================================
+
+    try {
+
+        const response =
+            await fetch(
+                API_BASE +
+                "/income/" +
+                id,
+                {
+
+                    method: "DELETE",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    }
+
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(
+            "Delete Income Response:",
+            data
+        );
+
+        if (data.success) {
+
+            alert(
+                "Income deleted successfully 🗑️"
+            );
+
+            await loadIncome();
+            await loadExpenses();
+
+            displayTransactions();
+            calculateTotals();
+
+        } else {
+
+            alert(
+                data.message ||
+                "Income Delete Failed"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Delete Income Error:",
+            error
+        );
+
+        alert(
+            "Server Error. Please try again."
+        );
+
+    }
+
+}
+
+
+// IMPORTANT: HTML onclick needs this
+
+window.deleteIncomeById =
+    deleteIncomeById;
+    // ======================================================
 // ================= EDIT INCOME =========================
 // ======================================================
 
@@ -1688,17 +1460,13 @@ function editIncomeById(id) {
                 Number(id)
         );
 
-
     if (!incomeItem) {
 
-        alert(
-            "Income not found"
-        );
+        alert("Income not found");
 
         return;
 
     }
-
 
     if (editIncomeId) {
 
@@ -1707,15 +1475,12 @@ function editIncomeById(id) {
 
     }
 
-
-    // Current database has no source field.
     if (editIncomeSource) {
 
         editIncomeSource.value =
             "Income";
 
     }
-
 
     if (editIncomeAmount) {
 
@@ -1724,14 +1489,12 @@ function editIncomeById(id) {
 
     }
 
-
     if (editIncomeDate) {
 
         editIncomeDate.value =
             incomeItem.date || "";
 
     }
-
 
     if (editIncomePopup) {
 
@@ -1742,6 +1505,8 @@ function editIncomeById(id) {
 
 }
 
+
+// IMPORTANT: HTML onclick needs this
 
 window.editIncomeById =
     editIncomeById;
@@ -1785,7 +1550,6 @@ if (updateIncomeBtn) {
                     ? editIncomeId.value
                     : "";
 
-
             const amount =
                 editIncomeAmount
                     ? Number(
@@ -1793,12 +1557,10 @@ if (updateIncomeBtn) {
                     )
                     : 0;
 
-
             const date =
                 editIncomeDate
                     ? editIncomeDate.value
                     : "";
-
 
             if (
                 !id ||
@@ -1814,11 +1576,7 @@ if (updateIncomeBtn) {
 
             }
 
-
             try {
-
-                // server.js:
-                // PUT /income/:id
 
                 const response =
                     await fetch(
@@ -1827,8 +1585,7 @@ if (updateIncomeBtn) {
                         id,
                         {
 
-                            method:
-                                "PUT",
+                            method: "PUT",
 
                             headers: {
 
@@ -1851,19 +1608,19 @@ if (updateIncomeBtn) {
                         }
                     );
 
-
                 const data =
                     await response.json();
 
+                console.log(
+                    "Update Income Response:",
+                    data
+                );
 
-                if (
-                    data.success
-                ) {
+                if (data.success) {
 
                     alert(
                         "Income Updated Successfully ✅"
                     );
-
 
                     if (editIncomePopup) {
 
@@ -1872,13 +1629,10 @@ if (updateIncomeBtn) {
 
                     }
 
-
                     await loadIncome();
-
                     await loadExpenses();
 
                     displayTransactions();
-
                     calculateTotals();
 
                 } else {
@@ -1893,7 +1647,7 @@ if (updateIncomeBtn) {
             } catch (error) {
 
                 console.error(
-                    "Income Update Error:",
+                    "Update Income Error:",
                     error
                 );
 
@@ -1919,10 +1673,8 @@ function calculateTotals() {
     const today =
         new Date();
 
-
     const currentMonth =
         today.getMonth();
-
 
     const currentYear =
         today.getFullYear();
@@ -1937,17 +1689,18 @@ function calculateTotals() {
             (total, item) => {
 
                 const itemDate =
-                    new Date(
-                        item.date
-                    );
-
+                    new Date(item.date);
 
                 if (
+
                     !isNaN(itemDate) &&
+
                     itemDate.getMonth() ===
                         currentMonth &&
+
                     itemDate.getFullYear() ===
                         currentYear
+
                 ) {
 
                     return (
@@ -1960,7 +1713,6 @@ function calculateTotals() {
                     );
 
                 }
-
 
                 return total;
 
@@ -1978,17 +1730,18 @@ function calculateTotals() {
             (total, item) => {
 
                 const itemDate =
-                    new Date(
-                        item.date
-                    );
-
+                    new Date(item.date);
 
                 if (
+
                     !isNaN(itemDate) &&
+
                     itemDate.getMonth() ===
                         currentMonth &&
+
                     itemDate.getFullYear() ===
                         currentYear
+
                 ) {
 
                     return (
@@ -2001,7 +1754,6 @@ function calculateTotals() {
                     );
 
                 }
-
 
                 return total;
 
@@ -2032,7 +1784,6 @@ function calculateTotals() {
 
     }
 
-
     if (totalIncome) {
 
         totalIncome.textContent =
@@ -2041,7 +1792,6 @@ function calculateTotals() {
             );
 
     }
-
 
     if (totalBalance) {
 
@@ -2053,9 +1803,14 @@ function calculateTotals() {
     }
 
 
+    // ==================================================
+    // CONSOLE
+    // ==================================================
+
     console.log(
         "Current Month Totals:",
         {
+
             income:
                 incomeTotal,
 
@@ -2064,6 +1819,7 @@ function calculateTotals() {
 
             balance:
                 balance
+
         }
     );
 
@@ -2079,27 +1835,30 @@ function formatCurrency(amount) {
     const value =
         Number(amount) || 0;
 
-
-    return "₹" +
+    return (
+        "₹" +
         value.toLocaleString(
             "en-IN",
             {
+
                 minimumFractionDigits:
                     2,
 
                 maximumFractionDigits:
                     2
+
             }
-        );
+        )
+    );
 
 }
 
 
+// IMPORTANT: Other functions can use this
+
 window.formatCurrency =
     formatCurrency;
-
-
-// ======================================================
+    // ======================================================
 // ================= EXCEL IMPORT ========================
 // ======================================================
 
@@ -2120,6 +1879,10 @@ if (
 }
 
 
+// ======================================================
+// ================= FILE CHANGE =========================
+// ======================================================
+
 if (expenseFileInput) {
 
     expenseFileInput.addEventListener(
@@ -2129,15 +1892,17 @@ if (expenseFileInput) {
             const file =
                 this.files[0];
 
-
             if (!file) {
 
                 return;
 
             }
 
-
             try {
+
+                // ==================================================
+                // CHECK XLSX LIBRARY
+                // ==================================================
 
                 if (
                     typeof XLSX ===
@@ -2153,6 +1918,10 @@ if (expenseFileInput) {
                 }
 
 
+                // ==================================================
+                // READ FILE
+                // ==================================================
+
                 const data =
                     await file.arrayBuffer();
 
@@ -2161,8 +1930,7 @@ if (expenseFileInput) {
                     XLSX.read(
                         data,
                         {
-                            type:
-                                "array"
+                            type: "array"
                         }
                     );
 
@@ -2181,11 +1949,14 @@ if (expenseFileInput) {
                     XLSX.utils.sheet_to_json(
                         worksheet,
                         {
-                            defval:
-                                ""
+                            defval: ""
                         }
                     );
 
+
+                // ==================================================
+                // EMPTY FILE
+                // ==================================================
 
                 if (
                     importedData.length ===
@@ -2210,6 +1981,21 @@ if (expenseFileInput) {
                         "userEmail"
                     );
 
+
+                if (!email) {
+
+                    alert(
+                        "User email not found. Please login again."
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================================
+                // IMPORT EACH ROW
+                // ==================================================
 
                 for (
                     const row
@@ -2241,7 +2027,9 @@ if (expenseFileInput) {
                         row.date;
 
 
-                    // Excel date conversion
+                    // ==================================================
+                    // EXCEL DATE CONVERSION
+                    // ==================================================
 
                     if (
                         typeof date ===
@@ -2274,6 +2062,10 @@ if (expenseFileInput) {
                     }
 
 
+                    // ==================================================
+                    // VALIDATION
+                    // ==================================================
+
                     if (
                         !name ||
                         amount <= 0 ||
@@ -2285,10 +2077,11 @@ if (expenseFileInput) {
                     }
 
 
-                    try {
+                    // ==================================================
+                    // SEND TO SERVER
+                    // ==================================================
 
-                        // server.js:
-                        // POST /expenses
+                    try {
 
                         const response =
                             await fetch(
@@ -2348,9 +2141,8 @@ if (expenseFileInput) {
 
                         }
 
-                    } catch (
-                        rowError
-                    ) {
+
+                    } catch (rowError) {
 
                         console.error(
                             "Import Row Error:",
@@ -2362,6 +2154,10 @@ if (expenseFileInput) {
                 }
 
 
+                // ==================================================
+                // REFRESH DASHBOARD
+                // ==================================================
+
                 await loadExpenses();
 
                 await loadIncome();
@@ -2371,9 +2167,15 @@ if (expenseFileInput) {
                 calculateTotals();
 
 
+                // ==================================================
+                // SUCCESS MESSAGE
+                // ==================================================
+
                 alert(
+
                     importedCount +
                     " expense(s) imported successfully ✅"
+
                 );
 
 
@@ -2384,6 +2186,7 @@ if (expenseFileInput) {
                     error
                 );
 
+
                 alert(
                     "Unable to import the file."
                 );
@@ -2391,8 +2194,9 @@ if (expenseFileInput) {
             }
 
 
-            this.value =
-                "";
+            // Reset file input
+
+            this.value = "";
 
         }
     );
@@ -2413,12 +2217,22 @@ async function initializeDashboard() {
         );
 
 
+        // Load expenses
+
         await loadExpenses();
+
+
+        // Load income
 
         await loadIncome();
 
 
+        // Display transactions
+
         displayTransactions();
+
+
+        // Calculate totals
 
         calculateTotals();
 
@@ -2451,4 +2265,36 @@ document.addEventListener(
         initializeDashboard();
 
     }
+);
+
+
+// ======================================================
+// ================= FINAL GLOBAL FUNCTIONS ==============
+// ======================================================
+
+// Make sure HTML onclick buttons
+// can access these functions.
+
+window.editExpenseById =
+    editExpenseById;
+
+window.deleteExpenseById =
+    deleteExpenseById;
+
+window.editIncomeById =
+    editIncomeById;
+
+window.deleteIncomeById =
+    deleteIncomeById;
+
+window.formatCurrency =
+    formatCurrency;
+
+
+// ======================================================
+// ================= DASHBOARD COMPLETE ==================
+// ======================================================
+
+console.log(
+    "Dashboard JS Loaded Successfully ✅"
 );

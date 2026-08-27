@@ -425,3 +425,175 @@ if (loginForm) {
     );
 
 }
+// ======================================================
+// ================= FORGOT PASSWORD ====================
+// ======================================================
+
+async function forgotPassword() {
+
+    const { value: email } = await Swal.fire({
+
+        title: "Forgot Password?",
+
+        input: "email",
+
+        inputLabel: "Enter your registered Gmail",
+
+        inputPlaceholder: "example@gmail.com",
+
+        showCancelButton: true,
+
+        confirmButtonText: "Send OTP",
+
+        confirmButtonColor: "#4f46e5",
+
+        inputValidator: (value) => {
+
+            if (!value) {
+
+                return "Please enter your email";
+
+            }
+
+            const gmailPattern =
+                /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+            if (!gmailPattern.test(value)) {
+
+                return "Please enter a valid Gmail address";
+
+            }
+
+        }
+
+    });
+
+
+    if (!email) {
+
+        return;
+
+    }
+
+
+    try {
+
+        Swal.fire({
+
+            title: "Sending OTP...",
+
+            text: "Please wait",
+
+            allowOutsideClick: false,
+
+            didOpen: () => {
+
+                Swal.showLoading();
+
+            }
+
+        });
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/forgot-password`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+                            email: email.trim().toLowerCase()
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        Swal.close();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.message ||
+                "Unable to send OTP"
+            );
+
+        }
+
+
+        await Swal.fire({
+
+            title: "OTP Sent! 📧",
+
+            text:
+                "OTP has been sent to your Gmail.",
+
+            icon: "success",
+
+            confirmButtonText: "Enter OTP",
+
+            confirmButtonColor: "#4f46e5"
+
+        });
+
+
+        // Store email temporarily
+        sessionStorage.setItem(
+            "resetEmail",
+            email.trim().toLowerCase()
+        );
+
+
+        // Go to reset password page
+        window.location.href =
+            "reset-password.html";
+
+
+    } catch (error) {
+
+        console.error(
+            "Forgot Password Error:",
+            error
+        );
+
+
+        Swal.fire({
+
+            title:
+                "Forgot Password Failed!",
+
+            text:
+                error.message ||
+                "Unable to send OTP",
+
+            icon:
+                "error",
+
+            confirmButtonColor:
+                "#4f46e5"
+
+        });
+
+    }
+
+}

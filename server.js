@@ -1,11 +1,12 @@
 // ======================================================
-// ================= EXPENSE TRACKER SERVER ==============
+// ============== EXPENSE TRACKER SERVER ================
 // ======================================================
 
 const express = require("express");
 const mysql = require("mysql2");
 const path = require("path");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 const app = express();
 
@@ -22,12 +23,7 @@ const PORT = process.env.PORT || 5000;
 // ======================================================
 
 app.use(cors({
-    origin: [
-        "https://expense-tracker-pro-production-9a0b.up.railway.app",
-        "https://expense-tracker-pro-production-99eb.up.railway.app",
-        "http://localhost:5000",
-        "http://127.0.0.1:5000"
-    ],
+    origin: true,
     methods: [
         "GET",
         "POST",
@@ -104,105 +100,19 @@ const dbConfig = {
 // ================= MYSQL CONNECTION ====================
 // ======================================================
 
-// Use a connection pool so Railway/MySQL idle timeouts
-// do not terminate the entire Node.js process.
-
 const db = mysql.createPool({
+
     ...dbConfig,
 
     waitForConnections: true,
+
     connectionLimit: 10,
+
     queueLimit: 0,
 
     enableKeepAlive: true,
+
     keepAliveInitialDelay: 0
-});
-
-// Test MySQL connection
-db.query("SELECT 1", (err) => {
-
-    if (err) {
-
-        console.error(
-            "❌ MySQL Connection Error:",
-            err.message
-        );
-
-        return;
-    }
-
-    console.log(
-        "MySQL Connected ✅"
-    );
-
-    console.log(
-        "Database:",
-        dbConfig.database
-    );
-
-});
-
-// ======================================================
-// ================= HOME ROUTE ==========================
-// ======================================================
-
-app.get("/", (req, res) => {
-
-    res.sendFile(
-        path.join(
-            __dirname,
-            "index.html"
-        )
-    );
-
-});
-
-
-// ======================================================
-// ================= STATUS API ==========================
-// ======================================================
-
-app.get("/api/status", (req, res) => {
-
-    db.query(
-        "SELECT 1 AS test",
-        (err) => {
-
-            if (err) {
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    server: "running",
-
-                    mysql: "disconnected",
-
-                    error:
-                        err.message
-
-                });
-
-            }
-
-            res.json({
-
-                success: true,
-
-                server: "running",
-
-                mysql: "connected",
-
-                database:
-                    dbConfig.database,
-
-                message:
-                    "Expense Tracker API is working ✅"
-
-            });
-
-        }
-    );
 
 });
 
@@ -211,43 +121,194 @@ app.get("/api/status", (req, res) => {
 // ================= TEST MYSQL ==========================
 // ======================================================
 
-app.get("/api/test-db", (req, res) => {
+db.query(
+    "SELECT 1",
+    (err) => {
 
-    db.query(
-        "SELECT DATABASE() AS database_name",
-        (err, result) => {
+        if (err) {
 
-            if (err) {
+            console.error(
+                "❌ MySQL Connection Error:",
+                err.message
+            );
 
-                console.error(
-                    "Database Test Error:",
-                    err
-                );
+            return;
 
-                return res.status(500).json({
+        }
 
-                    success: false,
+        console.log(
+            "MySQL Connected ✅"
+        );
 
-                    error:
-                        err.message
+        console.log(
+            "Database:",
+            dbConfig.database
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= EMAIL CONFIG ========================
+// ======================================================
+
+const transporter =
+    nodemailer.createTransport({
+
+        service: "gmail",
+
+        auth: {
+
+            user:
+                process.env.EMAIL_USER,
+
+            pass:
+                process.env.EMAIL_PASS
+
+        }
+
+    });
+
+
+// ======================================================
+// ================= OTP STORAGE =========================
+// ======================================================
+
+// OTP temporary-aa memory-la store aagum.
+
+const resetOTPs =
+    new Map();
+
+
+// ======================================================
+// ================= GENERATE OTP ========================
+// ======================================================
+
+function generateOTP() {
+
+    return Math.floor(
+        100000 +
+        Math.random() * 900000
+    ).toString();
+
+}
+
+
+// ======================================================
+// ================= HOME ROUTE ==========================
+// ======================================================
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= STATUS API ==========================
+// ======================================================
+
+app.get(
+    "/api/status",
+    (req, res) => {
+
+        db.query(
+            "SELECT 1 AS test",
+            (err) => {
+
+                if (err) {
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        server:
+                            "running",
+
+                        mysql:
+                            "disconnected",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+                res.json({
+
+                    success: true,
+
+                    server:
+                        "running",
+
+                    mysql:
+                        "connected",
+
+                    database:
+                        dbConfig.database,
+
+                    message:
+                        "Expense Tracker API is working ✅"
 
                 });
 
             }
+        );
 
-            res.json({
+    }
+);
 
-                success: true,
 
-                database:
-                    result[0].database_name
+// ======================================================
+// ================= TEST DATABASE =======================
+// ======================================================
 
-            });
+app.get(
+    "/api/test-db",
+    (req, res) => {
 
-        }
-    );
+        db.query(
+            "SELECT DATABASE() AS database_name",
+            (err, result) => {
 
-});
+                if (err) {
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+                res.json({
+
+                    success: true,
+
+                    database:
+                        result[0].database_name
+
+                });
+
+            }
+        );
+
+    }
+);
 
 
 // ======================================================
@@ -262,7 +323,10 @@ function loginUser(req, res) {
     } = req.body;
 
 
-    if (!email || !password) {
+    if (
+        !email ||
+        !password
+    ) {
 
         return res.status(400).json({
 
@@ -389,14 +453,11 @@ function loginUser(req, res) {
 // ================= LOGIN ROUTES ========================
 // ======================================================
 
-// Main route used by auth.js
 app.post(
     "/login",
     loginUser
 );
 
-
-// Compatibility route
 app.post(
     "/api/login",
     loginUser
@@ -519,14 +580,11 @@ function registerUser(req, res) {
 // ================= REGISTER ROUTES =====================
 // ======================================================
 
-// Main route used by register.js
 app.post(
     "/register",
     registerUser
 );
 
-
-// Compatibility route
 app.post(
     "/api/register",
     registerUser
@@ -569,11 +627,6 @@ app.get(
             (err, results) => {
 
                 if (err) {
-
-                    console.error(
-                        "Get User Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -634,12 +687,6 @@ app.get(
             );
 
 
-        console.log(
-            "GET EXPENSES:",
-            email
-        );
-
-
         const sql = `
 
             SELECT
@@ -686,12 +733,6 @@ app.get(
                 }
 
 
-                console.log(
-                    "Expenses found:",
-                    results.length
-                );
-
-
                 res.json({
 
                     success: true,
@@ -709,7 +750,7 @@ app.get(
 
 
 // ======================================================
-// ================= ADD EXPENSE ========================
+// ================= ADD EXPENSE =========================
 // ======================================================
 
 app.post(
@@ -773,11 +814,6 @@ app.post(
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Add Expense Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -852,7 +888,9 @@ app.put(
         }
 
 
-        const sql = `
+        db.query(
+
+            `
 
             UPDATE expenses
 
@@ -864,11 +902,8 @@ app.put(
 
             WHERE id = ?
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [
                 name,
                 amount,
@@ -876,14 +911,10 @@ app.put(
                 date,
                 id
             ],
+
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Update Expense Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -910,6 +941,7 @@ app.put(
                 });
 
             }
+
         );
 
     }
@@ -925,10 +957,12 @@ app.delete(
     "/expenses/:id",
     (req, res) => {
 
-        const id = req.params.id;
+        const id =
+            req.params.id;
 
-        // First get the expense before deleting
+
         const selectSql = `
+
             SELECT
                 id,
                 email,
@@ -936,10 +970,15 @@ app.delete(
                 amount,
                 category,
                 date
+
             FROM expenses
+
             WHERE id = ?
+
             LIMIT 1
+
         `;
+
 
         db.query(
             selectSql,
@@ -948,35 +987,43 @@ app.delete(
 
                 if (selectErr) {
 
-                    console.error(
-                        "❌ Find Expense Before Delete Error:",
-                        selectErr
-                    );
-
                     return res.status(500).json({
+
                         success: false,
-                        message: "Unable to find expense",
-                        error: selectErr.message
+
+                        message:
+                            "Unable to find expense",
+
+                        error:
+                            selectErr.message
+
                     });
+
                 }
 
 
-                // Expense not found
-                if (results.length === 0) {
+                if (
+                    results.length === 0
+                ) {
 
                     return res.status(404).json({
+
                         success: false,
-                        message: "Expense not found"
+
+                        message:
+                            "Expense not found"
+
                     });
 
                 }
 
 
-                const expense = results[0];
+                const expense =
+                    results[0];
 
 
-                // Save deleted expense to history
                 const historySql = `
+
                     INSERT INTO deleted_history
                     (
                         email,
@@ -987,12 +1034,16 @@ app.delete(
                         category,
                         date
                     )
+
                     VALUES (?, ?, ?, ?, ?, ?, ?)
+
                 `;
 
 
                 db.query(
+
                     historySql,
+
                     [
                         expense.email,
                         expense.id,
@@ -1002,47 +1053,49 @@ app.delete(
                         expense.category,
                         expense.date
                     ],
+
                     (historyErr) => {
 
                         if (historyErr) {
 
-                            console.error(
-                                "❌ Save Expense History Error:",
-                                historyErr
-                            );
-
                             return res.status(500).json({
+
                                 success: false,
-                                message: "Unable to save deleted expense history",
-                                error: historyErr.message
+
+                                message:
+                                    "Unable to save deleted expense history",
+
+                                error:
+                                    historyErr.message
+
                             });
 
                         }
 
 
-                        // Delete original expense
-                        const deleteSql = `
+                        db.query(
+
+                            `
                             DELETE FROM expenses
                             WHERE id = ?
-                        `;
+                            `,
 
-
-                        db.query(
-                            deleteSql,
                             [id],
+
                             (deleteErr, result) => {
 
                                 if (deleteErr) {
 
-                                    console.error(
-                                        "❌ Delete Expense Error:",
-                                        deleteErr
-                                    );
-
                                     return res.status(500).json({
+
                                         success: false,
-                                        message: "Unable to delete expense",
-                                        error: deleteErr.message
+
+                                        message:
+                                            "Unable to delete expense",
+
+                                        error:
+                                            deleteErr.message
+
                                     });
 
                                 }
@@ -1061,16 +1114,21 @@ app.delete(
                                 });
 
                             }
+
                         );
 
                     }
+
                 );
 
             }
+
         );
 
     }
 );
+
+
 // ======================================================
 // ================= GET INCOME ==========================
 // ======================================================
@@ -1085,13 +1143,9 @@ app.get(
             );
 
 
-        console.log(
-            "GET INCOME:",
-            email
-        );
+        db.query(
 
-
-        const sql = `
+            `
 
             SELECT
                 id,
@@ -1105,20 +1159,13 @@ app.get(
 
             ORDER BY date DESC, id DESC
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [email],
+
             (err, results) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Get Income Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -1135,12 +1182,6 @@ app.get(
                 }
 
 
-                console.log(
-                    "Income found:",
-                    results.length
-                );
-
-
                 res.json({
 
                     success: true,
@@ -1151,6 +1192,7 @@ app.get(
                 });
 
             }
+
         );
 
     }
@@ -1190,7 +1232,9 @@ app.post(
         }
 
 
-        const sql = `
+        db.query(
+
+            `
 
             INSERT INTO income
             (
@@ -1201,24 +1245,17 @@ app.post(
 
             VALUES (?, ?, ?)
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [
                 email,
                 amount,
                 date
             ],
+
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Add Income Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -1248,6 +1285,7 @@ app.post(
                 });
 
             }
+
         );
 
     }
@@ -1289,7 +1327,9 @@ app.put(
         }
 
 
-        const sql = `
+        db.query(
+
+            `
 
             UPDATE income
 
@@ -1299,24 +1339,17 @@ app.put(
 
             WHERE id = ?
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [
                 amount,
                 date,
                 id
             ],
+
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Update Income Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -1343,6 +1376,7 @@ app.put(
                 });
 
             }
+
         );
 
     }
@@ -1358,56 +1392,73 @@ app.delete(
     "/income/:id",
     (req, res) => {
 
-        const id = req.params.id;
+        const id =
+            req.params.id;
 
-        // First get income before deleting
-        const selectSql = `
+
+        db.query(
+
+            `
+
             SELECT
                 id,
                 email,
                 amount,
                 date
-            FROM income
-            WHERE id = ?
-            LIMIT 1
-        `;
 
-        db.query(
-            selectSql,
+            FROM income
+
+            WHERE id = ?
+
+            LIMIT 1
+
+            `,
+
             [id],
+
             (selectErr, results) => {
 
                 if (selectErr) {
 
-                    console.error(
-                        "❌ Find Income Before Delete Error:",
-                        selectErr
-                    );
-
                     return res.status(500).json({
+
                         success: false,
-                        message: "Unable to find income",
-                        error: selectErr.message
+
+                        message:
+                            "Unable to find income",
+
+                        error:
+                            selectErr.message
+
                     });
+
                 }
 
 
-                // Income not found
-                if (results.length === 0) {
+                if (
+                    results.length === 0
+                ) {
 
                     return res.status(404).json({
+
                         success: false,
-                        message: "Income not found"
+
+                        message:
+                            "Income not found"
+
                     });
 
                 }
 
 
-                const income = results[0];
+                const income =
+                    results[0];
 
 
-                // Save deleted income to history
-                const historySql = `
+                db.query(
+
+                    `
+
                     INSERT INTO deleted_history
                     (
                         email,
@@ -1418,12 +1469,11 @@ app.delete(
                         category,
                         date
                     )
+
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                `;
 
+                    `,
 
-                db.query(
-                    historySql,
                     [
                         income.email,
                         income.id,
@@ -1433,47 +1483,49 @@ app.delete(
                         null,
                         income.date
                     ],
+
                     (historyErr) => {
 
                         if (historyErr) {
 
-                            console.error(
-                                "❌ Save Income History Error:",
-                                historyErr
-                            );
-
                             return res.status(500).json({
+
                                 success: false,
-                                message: "Unable to save deleted income history",
-                                error: historyErr.message
+
+                                message:
+                                    "Unable to save deleted income history",
+
+                                error:
+                                    historyErr.message
+
                             });
 
                         }
 
 
-                        // Delete original income
-                        const deleteSql = `
+                        db.query(
+
+                            `
                             DELETE FROM income
                             WHERE id = ?
-                        `;
+                            `,
 
-
-                        db.query(
-                            deleteSql,
                             [id],
+
                             (deleteErr, result) => {
 
                                 if (deleteErr) {
 
-                                    console.error(
-                                        "❌ Delete Income Error:",
-                                        deleteErr
-                                    );
-
                                     return res.status(500).json({
+
                                         success: false,
-                                        message: "Unable to delete income",
-                                        error: deleteErr.message
+
+                                        message:
+                                            "Unable to delete income",
+
+                                        error:
+                                            deleteErr.message
+
                                     });
 
                                 }
@@ -1492,10 +1544,96 @@ app.delete(
                                 });
 
                             }
+
                         );
 
                     }
+
                 );
+
+            }
+
+        );
+
+    }
+);
+
+// ======================================================
+// ================= GET DELETE HISTORY =================
+// ======================================================
+
+app.get(
+    "/trash/:email",
+    (req, res) => {
+
+        const email =
+            decodeURIComponent(
+                req.params.email
+            );
+
+        console.log(
+            "GET TRASH:",
+            email
+        );
+
+
+        const sql = `
+
+            SELECT
+                id,
+                email,
+                original_id,
+                type,
+                name,
+                amount,
+                category,
+                date,
+                deleted_at
+
+            FROM deleted_history
+
+            WHERE email = ?
+
+            ORDER BY deleted_at DESC, id DESC
+
+        `;
+
+
+        db.query(
+            sql,
+            [email],
+            (err, results) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Get Trash Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to load delete history",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    trash:
+                        results
+
+                });
 
             }
         );
@@ -1503,6 +1641,412 @@ app.delete(
     }
 );
 
+
+// ======================================================
+// ================= RESTORE TRASH =======================
+// ======================================================
+
+app.post(
+    "/trash/restore/:id",
+    (req, res) => {
+
+        const id =
+            req.params.id;
+
+
+        // First get deleted record
+        const selectSql = `
+
+            SELECT
+                id,
+                email,
+                original_id,
+                type,
+                name,
+                amount,
+                category,
+                date
+
+            FROM deleted_history
+
+            WHERE id = ?
+
+            LIMIT 1
+
+        `;
+
+
+        db.query(
+            selectSql,
+            [id],
+            (selectErr, results) => {
+
+                if (selectErr) {
+
+                    console.error(
+                        "❌ Restore Select Error:",
+                        selectErr
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to find deleted record",
+
+                        error:
+                            selectErr.message
+
+                    });
+
+                }
+
+
+                // Record not found
+                if (
+                    results.length === 0
+                ) {
+
+                    return res.status(404).json({
+
+                        success: false,
+
+                        message:
+                            "Deleted record not found"
+
+                    });
+
+                }
+
+
+                const item =
+                    results[0];
+
+
+                // ==========================================
+                // RESTORE EXPENSE
+                // ==========================================
+
+                if (
+                    item.type === "expense"
+                ) {
+
+                    const insertSql = `
+
+                        INSERT INTO expenses
+                        (
+                            email,
+                            name,
+                            amount,
+                            category,
+                            date
+                        )
+
+                        VALUES (?, ?, ?, ?, ?)
+
+                    `;
+
+
+                    db.query(
+
+                        insertSql,
+
+                        [
+                            item.email,
+                            item.name,
+                            item.amount,
+                            item.category,
+                            item.date
+                        ],
+
+                        (insertErr, insertResult) => {
+
+                            if (insertErr) {
+
+                                console.error(
+                                    "❌ Restore Expense Error:",
+                                    insertErr
+                                );
+
+                                return res.status(500).json({
+
+                                    success: false,
+
+                                    message:
+                                        "Unable to restore expense",
+
+                                    error:
+                                        insertErr.message
+
+                                });
+
+                            }
+
+
+                            // Delete from history
+                            db.query(
+
+                                `
+
+                                DELETE FROM deleted_history
+
+                                WHERE id = ?
+
+                                `,
+
+                                [id],
+
+                                (deleteErr) => {
+
+                                    if (deleteErr) {
+
+                                        console.error(
+                                            "❌ Delete History Error:",
+                                            deleteErr
+                                        );
+
+                                        return res.status(500).json({
+
+                                            success: false,
+
+                                            message:
+                                                "Expense restored but history removal failed",
+
+                                            error:
+                                                deleteErr.message
+
+                                        });
+
+                                    }
+
+
+                                    res.json({
+
+                                        success: true,
+
+                                        message:
+                                            "Expense restored successfully",
+
+                                        expenseId:
+                                            insertResult.insertId
+
+                                    });
+
+                                }
+
+                            );
+
+                        }
+
+                    );
+
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // RESTORE INCOME
+                // ==========================================
+
+                if (
+                    item.type === "income"
+                ) {
+
+                    const insertSql = `
+
+                        INSERT INTO income
+                        (
+                            email,
+                            amount,
+                            date
+                        )
+
+                        VALUES (?, ?, ?)
+
+                    `;
+
+
+                    db.query(
+
+                        insertSql,
+
+                        [
+                            item.email,
+                            item.amount,
+                            item.date
+                        ],
+
+                        (insertErr, insertResult) => {
+
+                            if (insertErr) {
+
+                                console.error(
+                                    "❌ Restore Income Error:",
+                                    insertErr
+                                );
+
+                                return res.status(500).json({
+
+                                    success: false,
+
+                                    message:
+                                        "Unable to restore income",
+
+                                    error:
+                                        insertErr.message
+
+                                });
+
+                            }
+
+
+                            // Delete from history
+                            db.query(
+
+                                `
+
+                                DELETE FROM deleted_history
+
+                                WHERE id = ?
+
+                                `,
+
+                                [id],
+
+                                (deleteErr) => {
+
+                                    if (deleteErr) {
+
+                                        console.error(
+                                            "❌ Delete History Error:",
+                                            deleteErr
+                                        );
+
+                                        return res.status(500).json({
+
+                                            success: false,
+
+                                            message:
+                                                "Income restored but history removal failed",
+
+                                            error:
+                                                deleteErr.message
+
+                                        });
+
+                                    }
+
+
+                                    res.json({
+
+                                        success: true,
+
+                                        message:
+                                            "Income restored successfully",
+
+                                        incomeId:
+                                            insertResult.insertId
+
+                                    });
+
+                                }
+
+                            );
+
+                        }
+
+                    );
+
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // UNKNOWN TYPE
+                // ==========================================
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Unknown history record type"
+
+                });
+
+            }
+
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= AUTO CLEAN OLD HISTORY =============
+// ======================================================
+
+app.delete(
+    "/trash/cleanup",
+    (req, res) => {
+
+        const sql = `
+
+            DELETE FROM deleted_history
+
+            WHERE deleted_at < NOW() - INTERVAL 60 DAY
+
+        `;
+
+
+        db.query(
+            sql,
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "❌ Trash Cleanup Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to clean old history",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Old deleted records cleaned successfully",
+
+                    deletedRows:
+                        result.affectedRows
+
+                });
+
+            }
+        );
+
+    }
+);
 
 // ======================================================
 // ================= GET ALL USER DATA ==================
@@ -1544,11 +2088,6 @@ app.get(
 
                 if (expenseErr) {
 
-                    console.error(
-                        "Data Expense Error:",
-                        expenseErr
-                    );
-
                     return res.status(500).json({
 
                         success: false,
@@ -1585,11 +2124,6 @@ app.get(
 
                         if (incomeErr) {
 
-                            console.error(
-                                "Data Income Error:",
-                                incomeErr
-                            );
-
                             return res.status(500).json({
 
                                 success: false,
@@ -1615,9 +2149,551 @@ app.get(
                         });
 
                     }
+
                 );
 
             }
+
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= FORGOT PASSWORD ====================
+// ======================================================
+
+app.post(
+    "/forgot-password",
+    (req, res) => {
+
+        const email =
+            String(
+                req.body.email || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        if (!email) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Email is required"
+
+            });
+
+        }
+
+
+        db.query(
+
+            `
+
+            SELECT
+                id,
+                name,
+                email
+
+            FROM users
+
+            WHERE email = ?
+
+            LIMIT 1
+
+            `,
+
+            [email],
+
+            async (err, results) => {
+
+                if (err) {
+
+                    console.error(
+                        "Forgot Password DB Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Database error"
+
+                    });
+
+                }
+
+
+                if (
+                    results.length === 0
+                ) {
+
+                    return res.status(404).json({
+
+                        success: false,
+
+                        message:
+                            "Email not registered"
+
+                    });
+
+                }
+
+
+                const user =
+                    results[0];
+
+
+                const otp =
+                    generateOTP();
+
+
+                const expiresAt =
+                    Date.now() +
+                    (10 * 60 * 1000);
+
+
+                resetOTPs.set(
+
+                    email,
+
+                    {
+                        otp:
+                            otp,
+
+                        expiresAt:
+                            expiresAt
+                    }
+
+                );
+
+
+                try {
+
+                    await transporter.sendMail({
+
+                        from:
+                            `"Expense Tracker Pro" <${process.env.EMAIL_USER}>`,
+
+                        to:
+                            email,
+
+                        subject:
+                            "Expense Tracker Pro - Password Reset OTP",
+
+                        html: `
+
+                            <div style="
+                                font-family: Arial;
+                                max-width: 500px;
+                                margin: auto;
+                                padding: 25px;
+                                background: #f5f5f5;
+                                border-radius: 15px;
+                            ">
+
+                                <h2>
+                                    Expense Tracker Pro
+                                </h2>
+
+                                <p>
+                                    Hello ${user.name},
+                                </p>
+
+                                <p>
+                                    Your password reset OTP is:
+                                </p>
+
+                                <div style="
+                                    font-size: 32px;
+                                    font-weight: bold;
+                                    letter-spacing: 8px;
+                                    text-align: center;
+                                    background: white;
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                ">
+
+                                    ${otp}
+
+                                </div>
+
+                                <p>
+                                    This OTP is valid for
+                                    <strong>10 minutes</strong>.
+                                </p>
+
+                                <p>
+                                    If you did not request this,
+                                    please ignore this email.
+                                </p>
+
+                                <hr>
+
+                                <p>
+                                    Expense Tracker Pro
+                                </p>
+
+                            </div>
+
+                        `
+
+                    });
+
+
+                    console.log(
+                        "OTP sent to:",
+                        email
+                    );
+
+
+                    res.json({
+
+                        success: true,
+
+                        message:
+                            "OTP sent successfully to your email"
+
+                    });
+
+
+                } catch (mailError) {
+
+                    console.error(
+                        "❌ Email Error:",
+                        mailError
+                    );
+
+
+                    resetOTPs.delete(
+                        email
+                    );
+
+
+                    res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to send OTP email"
+
+                    });
+
+                }
+
+            }
+
+        );
+
+    }
+);
+
+
+// ======================================================
+// ================= VERIFY OTP ==========================
+// ======================================================
+
+app.post(
+    "/verify-reset-otp",
+    (req, res) => {
+
+        const email =
+            String(
+                req.body.email || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        const otp =
+            String(
+                req.body.otp || ""
+            ).trim();
+
+
+        if (
+            !email ||
+            !otp
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Email and OTP are required"
+
+            });
+
+        }
+
+
+        const resetData =
+            resetOTPs.get(email);
+
+
+        if (!resetData) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "OTP not found. Please request a new OTP."
+
+            });
+
+        }
+
+
+        if (
+            Date.now() >
+            resetData.expiresAt
+        ) {
+
+            resetOTPs.delete(
+                email
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "OTP expired. Please request a new OTP."
+
+            });
+
+        }
+
+
+        if (
+            resetData.otp !== otp
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid OTP"
+
+            });
+
+        }
+
+
+        res.json({
+
+            success: true,
+
+            message:
+                "OTP verified successfully"
+
+        });
+
+    }
+);
+
+
+// ======================================================
+// ================= RESET PASSWORD ======================
+// ======================================================
+
+app.post(
+    "/reset-password",
+    (req, res) => {
+
+        const email =
+            String(
+                req.body.email || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        const otp =
+            String(
+                req.body.otp || ""
+            ).trim();
+
+
+        const newPassword =
+            String(
+                req.body.newPassword || ""
+            );
+
+
+        if (
+            !email ||
+            !otp ||
+            !newPassword
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Email, OTP and new password are required"
+
+            });
+
+        }
+
+
+        if (
+            newPassword.length < 6
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Password must contain at least 6 characters"
+
+            });
+
+        }
+
+
+        const resetData =
+            resetOTPs.get(email);
+
+
+        if (!resetData) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "OTP not found. Please request a new OTP."
+
+            });
+
+        }
+
+
+        if (
+            Date.now() >
+            resetData.expiresAt
+        ) {
+
+            resetOTPs.delete(
+                email
+            );
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "OTP expired"
+
+            });
+
+        }
+
+
+        if (
+            resetData.otp !== otp
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid OTP"
+
+            });
+
+        }
+
+
+        db.query(
+
+            `
+
+            UPDATE users
+
+            SET password = ?
+
+            WHERE email = ?
+
+            LIMIT 1
+
+            `,
+
+            [
+                newPassword,
+                email
+            ],
+
+            (err, result) => {
+
+                if (err) {
+
+                    console.error(
+                        "Reset Password DB Error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+
+                        success: false,
+
+                        message:
+                            "Unable to reset password",
+
+                        error:
+                            err.message
+
+                    });
+
+                }
+
+
+                if (
+                    result.affectedRows === 0
+                ) {
+
+                    return res.status(404).json({
+
+                        success: false,
+
+                        message:
+                            "User not found"
+
+                    });
+
+                }
+
+
+                resetOTPs.delete(
+                    email
+                );
+
+
+                res.json({
+
+                    success: true,
+
+                    message:
+                        "Password reset successfully"
+
+                });
+
+            }
+
         );
 
     }

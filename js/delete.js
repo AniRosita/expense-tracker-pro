@@ -1,6 +1,13 @@
-// ================= DELETE HISTORY / TRASH =================
+\// ================= DELETE HISTORY / TRASH =================
 
 let historyData = [];
+
+
+// ================= API BASE =================
+
+// Railway backend URL
+const API_BASE =
+    "https://expense-tracker-pro-production-99eb.up.railway.app";
 
 
 // ================= LOGIN CHECK =================
@@ -31,6 +38,7 @@ function loadTheme() {
 
 }
 
+
 // ================= LOAD TRASH FROM MYSQL =================
 
 async function loadHistory() {
@@ -39,9 +47,9 @@ async function loadHistory() {
 
         const response =
             await fetch(
-                "/trash/" +
-                encodeURIComponent(email)
+                `${API_BASE}/trash/${encodeURIComponent(email)}`
             );
+
 
         if (!response.ok) {
 
@@ -52,8 +60,10 @@ async function loadHistory() {
 
         }
 
+
         const data =
             await response.json();
+
 
         if (data.success) {
 
@@ -75,10 +85,12 @@ async function loadHistory() {
             error
         );
 
+
         const box =
             document.getElementById(
                 "historyList"
             );
+
 
         if (box) {
 
@@ -114,7 +126,9 @@ function showNoHistory() {
             "historyList"
         );
 
+
     if (!box) return;
+
 
     box.innerHTML = `
 
@@ -144,7 +158,9 @@ function showHistory() {
             "historyList"
         );
 
+
     if (!box) return;
+
 
     box.innerHTML = "";
 
@@ -155,6 +171,7 @@ function showHistory() {
         document.getElementById(
             "historyType"
         );
+
 
     const selectedType =
         typeSelect
@@ -169,6 +186,7 @@ function showHistory() {
             "dateFilter"
         );
 
+
     const selectedDate =
         dateSelect
             ? dateSelect.value
@@ -177,16 +195,17 @@ function showHistory() {
 
     // ================= FILTER DATA =================
 
-    let data =
+    const data =
         historyData.filter(item => {
+
+
+            // ================= TYPE =================
 
             const itemType =
                 String(
-                    item.transaction_type || ""
+                    item.type || ""
                 ).toLowerCase();
 
-
-            // TYPE FILTER
 
             if (
                 selectedType !== "all" &&
@@ -198,7 +217,7 @@ function showHistory() {
             }
 
 
-            // DATE FILTER
+            // ================= DATE FILTER =================
 
             if (
                 selectedDate === "all"
@@ -229,15 +248,17 @@ function showHistory() {
             const now =
                 new Date();
 
+
             const difference =
                 now - deletedDate;
+
 
             const days =
                 difference /
                 (1000 * 60 * 60 * 24);
 
 
-            // LAST 30 DAYS
+            // ================= LAST 30 DAYS =================
 
             if (
                 selectedDate === "month"
@@ -248,7 +269,7 @@ function showHistory() {
             }
 
 
-            // OLDER RECORDS
+            // ================= OLDER RECORDS =================
 
             if (
                 selectedDate === "old"
@@ -266,7 +287,9 @@ function showHistory() {
 
     // ================= NO RESULTS =================
 
-    if (data.length === 0) {
+    if (
+        data.length === 0
+    ) {
 
         showNoHistory();
 
@@ -302,14 +325,17 @@ function showHistory() {
             const now =
                 new Date();
 
+
             const difference =
                 now - deletedDate;
+
 
             const daysPassed =
                 Math.floor(
                     difference /
                     (1000 * 60 * 60 * 24)
                 );
+
 
             daysLeft =
                 Math.max(
@@ -332,7 +358,7 @@ function showHistory() {
                 : "-";
 
 
-        // ================= DELETED DATE TEXT =================
+        // ================= DELETED DATE =================
 
         const deletedDateText =
             !isNaN(
@@ -348,7 +374,7 @@ function showHistory() {
 
         const typeText =
             String(
-                item.transaction_type ||
+                item.type ||
                 "unknown"
             ).toUpperCase();
 
@@ -370,6 +396,7 @@ function showHistory() {
                 "div"
             );
 
+
         card.className =
             "history-item";
 
@@ -384,32 +411,57 @@ function showHistory() {
 
 
                 <p>
-                    <strong>Type:</strong>
+
+                    <strong>
+                        Type:
+                    </strong>
+
                     ${typeText}
+
                 </p>
 
 
                 <p>
-                    <strong>Amount:</strong>
+
+                    <strong>
+                        Amount:
+                    </strong>
+
                     ₹${amount}
+
                 </p>
 
 
                 <p>
-                    <strong>Category:</strong>
+
+                    <strong>
+                        Category:
+                    </strong>
+
                     ${item.category || "-"}
+
                 </p>
 
 
                 <p>
-                    <strong>Original Date:</strong>
+
+                    <strong>
+                        Original Date:
+                    </strong>
+
                     ${originalDate}
+
                 </p>
 
 
                 <p>
-                    <strong>Deleted On:</strong>
+
+                    <strong>
+                        Deleted On:
+                    </strong>
+
                     ${deletedDateText}
+
                 </p>
 
 
@@ -434,6 +486,7 @@ function showHistory() {
                     ♻️ Restore
 
                 </button>
+
 
             </div>
 
@@ -477,8 +530,12 @@ async function restoreItem(id) {
         });
 
 
-    if (!result.isConfirmed) {
+    if (
+        !result.isConfirmed
+    ) {
+
         return;
+
     }
 
 
@@ -486,9 +543,15 @@ async function restoreItem(id) {
 
         const response =
             await fetch(
-                "/trash/restore/" + id,
+                `${API_BASE}/trash/restore/${id}`,
                 {
-                    method: "POST"
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                        "Accept":
+                            "application/json"
+                    }
                 }
             );
 
@@ -497,7 +560,10 @@ async function restoreItem(id) {
             await response.json();
 
 
-        if (!response.ok || !data.success) {
+        if (
+            !response.ok ||
+            !data.success
+        ) {
 
             throw new Error(
                 data.message ||
@@ -525,10 +591,9 @@ async function restoreItem(id) {
         });
 
 
-        // Reload Trash
+        // Reload Delete History
 
-        loadHistory();
-
+        await loadHistory();
 
     } catch (error) {
 
@@ -544,7 +609,8 @@ async function restoreItem(id) {
                 "Restore Failed",
 
             text:
-                error.message,
+                error.message ||
+                "Unable to restore record.",
 
             icon:
                 "error"
@@ -563,6 +629,7 @@ const historyType =
         "historyType"
     );
 
+
 if (historyType) {
 
     historyType.addEventListener(
@@ -577,6 +644,7 @@ const dateFilter =
     document.getElementById(
         "dateFilter"
     );
+
 
 if (dateFilter) {
 
@@ -605,7 +673,8 @@ loadTheme();
 
 // ================= AUTO REFRESH =================
 
-// Refresh every minute so remaining days stay updated.
+// Refresh every minute
+// so remaining days stay updated.
 
 setInterval(() => {
 
@@ -619,8 +688,13 @@ setInterval(() => {
 // ================= START =================
 
 loadHistory();
-document.addEventListener("DOMContentLoaded", () => {
 
-    loadTheme();
 
-});
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadTheme();
+
+    }
+);
