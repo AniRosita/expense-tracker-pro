@@ -22,28 +22,74 @@ const PORT = Number(process.env.PORT) || 5000;
 // ================= CORS ================================
 // ======================================================
 
+// Frontend Railway URL
+const FRONTEND_URL =
+    "https://expense-tracker-pro-production-98cf.up.railway.app";
+
+// Backend Railway URL
+const BACKEND_URL =
+    "https://expense-tracker-pro-production-99eb.up.railway.app";
+
+
+// Allowed origins
 const allowedOrigins = [
-    "https://expense-tracker-pro-production-98cf.up.railway.app"
+    FRONTEND_URL,
+    BACKEND_URL,
+    "http://localhost:5000",
+    "http://127.0.0.1:5000"
 ];
 
+
+// Check origin
+function isAllowedOrigin(origin) {
+
+    if (!origin) {
+        return true;
+    }
+
+    // Exact allowed origins
+    if (allowedOrigins.includes(origin)) {
+        return true;
+    }
+
+    // Allow Railway generated domains
+    if (
+        origin.endsWith(".railway.app") ||
+        origin.endsWith(".up.railway.app")
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+
+// CORS middleware
 app.use(
     cors({
+
         origin: function (origin, callback) {
 
-            // Allow Postman / server-to-server requests
-            if (!origin) {
-                return callback(null, true);
+            if (isAllowedOrigin(origin)) {
+
+                console.log(
+                    "✅ CORS Allowed:",
+                    origin || "No Origin"
+                );
+
+                callback(null, true);
+
+            } else {
+
+                console.log(
+                    "❌ CORS Blocked:",
+                    origin
+                );
+
+                callback(null, false);
+
             }
 
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            console.log("❌ CORS blocked:", origin);
-
-            return callback(
-                new Error("Not allowed by CORS")
-            );
         },
 
         methods: [
@@ -62,6 +108,39 @@ app.use(
         credentials: true,
 
         optionsSuccessStatus: 204
+
+    })
+);
+
+
+// Explicit OPTIONS handler
+app.options(
+    "*",
+    cors({
+        origin: function (origin, callback) {
+
+            if (isAllowedOrigin(origin)) {
+                callback(null, true);
+            } else {
+                callback(null, false);
+            }
+
+        },
+
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS"
+        ],
+
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ],
+
+        credentials: true
     })
 );
 
@@ -70,7 +149,9 @@ app.use(
 // ================= BODY PARSER =========================
 // ======================================================
 
-app.use(express.json());
+app.use(
+    express.json()
+);
 
 app.use(
     express.urlencoded({
@@ -96,51 +177,58 @@ let db;
 
 try {
 
-    if (process.env.MYSQL_URL) {
+    const dbHost =
+        process.env.MYSQLHOST ||
+        process.env.MYSQL_HOST;
 
-        console.log("======================================");
-        console.log("Using Railway MYSQL_URL");
-        console.log("======================================");
+    const dbUser =
+        process.env.MYSQLUSER ||
+        process.env.MYSQL_USER;
 
-        db = mysql.createPool({
-            uri: process.env.MYSQL_URL,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0,
-            enableKeepAlive: true,
-            keepAliveInitialDelay: 0
-        });
+    const dbPassword =
+        process.env.MYSQLPASSWORD ||
+        process.env.MYSQL_PASSWORD;
+
+    const dbName =
+        process.env.MYSQLDATABASE ||
+        process.env.MYSQL_DATABASE;
+
+    const dbPort =
+        Number(
+            process.env.MYSQLPORT ||
+            process.env.MYSQL_PORT ||
+            3306
+        );
+
+
+    console.log("======================================");
+    console.log("MYSQL CONFIG");
+    console.log("Host:", dbHost);
+    console.log("Port:", dbPort);
+    console.log("Database:", dbName);
+    console.log("User:", dbUser);
+    console.log("======================================");
+
+
+    if (!dbHost || !dbUser || !dbName) {
+
+        console.error(
+            "❌ Railway MySQL variables are missing"
+        );
 
     } else {
 
-        const dbConfig = {
+        db = mysql.createPool({
 
-            host:
-                process.env.MYSQLHOST ||
-                process.env.MYSQL_HOST ||
-                "localhost",
+            host: dbHost,
 
-            user:
-                process.env.MYSQLUSER ||
-                process.env.MYSQL_USER ||
-                "root",
+            port: dbPort,
 
-            password:
-                process.env.MYSQLPASSWORD ||
-                process.env.MYSQL_PASSWORD ||
-                "Rosi@2006",
+            user: dbUser,
 
-            database:
-                process.env.MYSQLDATABASE ||
-                process.env.MYSQL_DATABASE ||
-                "expense_tracker",
+            password: dbPassword,
 
-            port:
-                Number(
-                    process.env.MYSQLPORT ||
-                    process.env.MYSQL_PORT ||
-                    3306
-                ),
+            database: dbName,
 
             waitForConnections: true,
 
@@ -151,18 +239,9 @@ try {
             enableKeepAlive: true,
 
             keepAliveInitialDelay: 0
-        };
 
+        });
 
-        console.log("======================================");
-        console.log("MySQL Host:", dbConfig.host);
-        console.log("MySQL Port:", dbConfig.port);
-        console.log("MySQL Database:", dbConfig.database);
-        console.log("MySQL User:", dbConfig.user);
-        console.log("======================================");
-
-
-        db = mysql.createPool(dbConfig);
     }
 
 } catch (error) {
@@ -192,17 +271,17 @@ if (db) {
                     err.message
                 );
 
-                return;
+            } else {
+
+                console.log("======================================");
+                console.log("MySQL Connected ✅");
+                console.log(
+                    "Database:",
+                    result[0]?.database_name
+                );
+                console.log("======================================");
+
             }
-
-
-            console.log("======================================");
-            console.log("MySQL Connected ✅");
-            console.log(
-                "Database:",
-                result[0]?.database_name
-            );
-            console.log("======================================");
 
         }
     );
@@ -290,7 +369,8 @@ app.get(
 
                 mysql: "disconnected",
 
-                message: "MySQL pool is not available"
+                message:
+                    "MySQL pool is not available"
 
             });
 
@@ -355,6 +435,20 @@ app.get(
     "/api/test-db",
     (req, res) => {
 
+        if (!db) {
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Database connection unavailable"
+
+            });
+
+        }
+
+
         db.query(
             "SELECT DATABASE() AS database_name",
             (err, result) => {
@@ -386,6 +480,52 @@ app.get(
         );
 
     }
+);
+
+
+// ======================================================
+// ================= DATABASE CHECK ======================
+// ======================================================
+
+function databaseRequired(req, res, next) {
+
+    if (!db) {
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Database connection unavailable"
+
+        });
+
+    }
+
+    next();
+
+}
+
+
+// Apply database check to API routes
+app.use(
+    "/api/login",
+    databaseRequired
+);
+
+app.use(
+    "/api/register",
+    databaseRequired
+);
+
+app.use(
+    "/api/user",
+    databaseRequired
+);
+
+app.use(
+    "/api/data",
+    databaseRequired
 );
 
 
@@ -572,6 +712,13 @@ function registerUser(req, res) {
         ).trim();
 
 
+    console.log("======================================");
+    console.log("REGISTER REQUEST");
+    console.log("Name:", name);
+    console.log("Email:", email);
+    console.log("======================================");
+
+
     if (!name || !email || !password) {
 
         return res.status(400).json({
@@ -586,7 +733,24 @@ function registerUser(req, res) {
     }
 
 
-    // 6 digit password validation
+    // Gmail validation
+    if (
+        !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)
+    ) {
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                "Only Gmail addresses are allowed"
+
+        });
+
+    }
+
+
+    // 6 digit password
     if (!/^\d{6}$/.test(password)) {
 
         return res.status(400).json({
@@ -633,8 +797,7 @@ function registerUser(req, res) {
 
 
                 if (
-                    err.code ===
-                    "ER_DUP_ENTRY"
+                    err.code === "ER_DUP_ENTRY"
                 ) {
 
                     return res.status(409).json({
@@ -664,7 +827,13 @@ function registerUser(req, res) {
             }
 
 
-            return res.json({
+            console.log(
+                "✅ Registration successful:",
+                email
+            );
+
+
+            return res.status(201).json({
 
                 success: true,
 
@@ -1200,11 +1369,8 @@ app.delete(
                         db.query(
 
                             `
-
                             DELETE FROM expenses
-
                             WHERE id = ?
-
                             `,
 
                             [id],
@@ -1850,10 +2016,7 @@ app.post(
                     results[0];
 
 
-                // -------------------------------
                 // RESTORE EXPENSE
-                // -------------------------------
-
                 if (
                     item.type === "expense"
                 ) {
@@ -1957,10 +2120,7 @@ app.post(
                 }
 
 
-                // -------------------------------
                 // RESTORE INCOME
-                // -------------------------------
-
                 if (
                     item.type === "income"
                 ) {
@@ -2347,10 +2507,8 @@ app.post(
                 const user =
                     results[0];
 
-
                 const otp =
                     generateOTP();
-
 
                 const expiresAt =
                     Date.now() +
@@ -2377,7 +2535,7 @@ app.post(
                     ) {
 
                         throw new Error(
-                            "EMAIL_USER or EMAIL_PASS is missing in Railway Variables"
+                            "EMAIL_USER or EMAIL_PASS is missing"
                         );
 
                     }
@@ -2475,7 +2633,6 @@ app.post(
                         "❌ Email Error:",
                         mailError.message
                     );
-
 
                     resetOTPs.delete(email);
 
@@ -2796,7 +2953,7 @@ app.post(
 
 
 // ======================================================
-// ================= 404 HANDLER =========================
+// ================= API 404 HANDLER ====================
 // ======================================================
 
 app.use(
@@ -2878,6 +3035,16 @@ app.listen(
         console.log(
             "Server running on port:",
             PORT
+        );
+
+        console.log(
+            "Frontend:",
+            FRONTEND_URL
+        );
+
+        console.log(
+            "Backend:",
+            BACKEND_URL
         );
 
         console.log(
