@@ -20,36 +20,36 @@ const PORT = Number(process.env.PORT) || 5000;
 // ======================================================
 
 const allowedOrigins = [
-    "https://expense-tracker-pro-production-98cf.up.railway.app"
+    "https://expense-tracker-pro-production-98cf.up.railway.app",
+    "https://expense-tracker-pro-production-99eb.up.railway.app"
 ];
 
 app.use((req, res, next) => {
-
     const origin = req.headers.origin;
 
     if (origin && allowedOrigins.includes(origin)) {
-
         res.setHeader("Access-Control-Allow-Origin", origin);
-        res.setHeader("Vary", "Origin");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        res.setHeader(
-            "Access-Control-Allow-Methods",
-            "GET,POST,PUT,DELETE,OPTIONS"
-        );
-        res.setHeader(
-            "Access-Control-Allow-Headers",
-            "Content-Type, Authorization"
-        );
     }
 
-    // Express 5 safe OPTIONS handling
+    res.setHeader("Vary", "Origin");
+
+    res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, OPTIONS"
+    );
+
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+    );
+
+    res.setHeader(
+        "Access-Control-Allow-Credentials",
+        "true"
+    );
+
     if (req.method === "OPTIONS") {
-
-        if (origin && allowedOrigins.includes(origin)) {
-            return res.sendStatus(204);
-        }
-
-        return res.sendStatus(403);
+        return res.sendStatus(204);
     }
 
     next();
@@ -75,9 +75,7 @@ app.use(express.static(__dirname));
 let db;
 
 try {
-
     const dbConfig = {
-
         host:
             process.env.MYSQLHOST ||
             process.env.MYSQL_HOST ||
@@ -98,17 +96,15 @@ try {
             process.env.MYSQL_DATABASE ||
             "expense_tracker",
 
-        port:
-            Number(
-                process.env.MYSQLPORT ||
-                process.env.MYSQL_PORT ||
-                3306
-            ),
+        port: Number(
+            process.env.MYSQLPORT ||
+            process.env.MYSQL_PORT ||
+            3306
+        ),
 
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
-
         enableKeepAlive: true,
         keepAliveInitialDelay: 0
     };
@@ -258,13 +254,17 @@ app.get("/api/test-db", (req, res) => {
 
 function registerUser(req, res) {
 
-    const name = String(req.body.name || "").trim();
+    const name = String(
+        req.body.name || ""
+    ).trim();
 
-    const email = String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+    const email = String(
+        req.body.email || ""
+    ).trim().toLowerCase();
 
-    const password = String(req.body.password || "").trim();
+    const password = String(
+        req.body.password || ""
+    ).trim();
 
     console.log("======================================");
     console.log("REGISTER REQUEST");
@@ -289,7 +289,7 @@ function registerUser(req, res) {
         });
     }
 
-    // 6 digit password
+    // Exactly 6 digit password
     if (!/^\d{6}$/.test(password)) {
 
         return res.status(400).json({
@@ -358,11 +358,13 @@ app.post("/register", registerUser);
 
 function loginUser(req, res) {
 
-    const email = String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+    const email = String(
+        req.body.email || ""
+    ).trim().toLowerCase();
 
-    const password = String(req.body.password || "").trim();
+    const password = String(
+        req.body.password || ""
+    ).trim();
 
     console.log("======================================");
     console.log("LOGIN REQUEST");
@@ -429,7 +431,6 @@ function loginUser(req, res) {
             return res.json({
                 success: true,
                 message: "Login successful",
-
                 user: {
                     id: user.id,
                     name: user.name,
@@ -449,9 +450,9 @@ app.post("/login", loginUser);
 
 app.get("/api/user/:email", (req, res) => {
 
-    const email = decodeURIComponent(req.params.email)
-        .trim()
-        .toLowerCase();
+    const email = decodeURIComponent(
+        req.params.email
+    ).trim().toLowerCase();
 
     db.query(
         `
@@ -497,9 +498,9 @@ app.get("/api/user/:email", (req, res) => {
 
 app.get("/expenses/:email", (req, res) => {
 
-    const email = decodeURIComponent(req.params.email)
-        .trim()
-        .toLowerCase();
+    const email = decodeURIComponent(
+        req.params.email
+    ).trim().toLowerCase();
 
     db.query(
         `
@@ -746,7 +747,8 @@ app.delete("/expenses/:id", (req, res) => {
                             success: false,
                             message:
                                 "Unable to save deleted expense history",
-                            error: historyErr.message
+                            error:
+                                historyErr.message
                         });
                     }
 
@@ -764,7 +766,8 @@ app.delete("/expenses/:id", (req, res) => {
                                     success: false,
                                     message:
                                         "Unable to delete expense",
-                                    error: deleteErr.message
+                                    error:
+                                        deleteErr.message
                                 });
                             }
 
@@ -789,9 +792,9 @@ app.delete("/expenses/:id", (req, res) => {
 
 app.get("/income/:email", (req, res) => {
 
-    const email = decodeURIComponent(req.params.email)
-        .trim()
-        .toLowerCase();
+    const email = decodeURIComponent(
+        req.params.email
+    ).trim().toLowerCase();
 
     db.query(
         `
@@ -1012,7 +1015,8 @@ app.delete("/income/:id", (req, res) => {
                             success: false,
                             message:
                                 "Unable to save deleted income history",
-                            error: historyErr.message
+                            error:
+                                historyErr.message
                         });
                     }
 
@@ -1030,7 +1034,8 @@ app.delete("/income/:id", (req, res) => {
                                     success: false,
                                     message:
                                         "Unable to delete income",
-                                    error: deleteErr.message
+                                    error:
+                                        deleteErr.message
                                 });
                             }
 
@@ -1055,9 +1060,9 @@ app.delete("/income/:id", (req, res) => {
 
 app.get("/trash/:email", (req, res) => {
 
-    const email = decodeURIComponent(req.params.email)
-        .trim()
-        .toLowerCase();
+    const email = decodeURIComponent(
+        req.params.email
+    ).trim().toLowerCase();
 
     db.query(
         `
@@ -1296,8 +1301,7 @@ app.delete("/trash/cleanup", (req, res) => {
     db.query(
         `
         DELETE FROM deleted_history
-        WHERE deleted_at <
-        NOW() - INTERVAL 60 DAY
+        WHERE deleted_at < NOW() - INTERVAL 60 DAY
         `,
         (err, result) => {
 
@@ -1327,9 +1331,9 @@ app.delete("/trash/cleanup", (req, res) => {
 
 app.get("/api/data/:email", (req, res) => {
 
-    const email = decodeURIComponent(req.params.email)
-        .trim()
-        .toLowerCase();
+    const email = decodeURIComponent(
+        req.params.email
+    ).trim().toLowerCase();
 
     db.query(
         `
@@ -1395,9 +1399,7 @@ app.get("/api/data/:email", (req, res) => {
 // ======================================================
 
 const transporter = nodemailer.createTransport({
-
     service: "gmail",
-
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -1423,9 +1425,9 @@ function generateOTP() {
 
 app.post("/forgot-password", (req, res) => {
 
-    const email = String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+    const email = String(
+        req.body.email || ""
+    ).trim().toLowerCase();
 
     if (!email) {
 
@@ -1483,6 +1485,7 @@ app.post("/forgot-password", (req, res) => {
                     !process.env.EMAIL_USER ||
                     !process.env.EMAIL_PASS
                 ) {
+
                     throw new Error(
                         "EMAIL_USER or EMAIL_PASS is missing"
                     );
@@ -1499,48 +1502,57 @@ app.post("/forgot-password", (req, res) => {
                         "Expense Tracker Pro - Password Reset OTP",
 
                     html: `
-                    <div style="
-                        font-family:Arial;
-                        max-width:500px;
-                        margin:auto;
-                        padding:25px;
-                        background:#f5f5f5;
-                        border-radius:15px;
-                    ">
-
-                        <h2>Expense Tracker Pro</h2>
-
-                        <p>Hello ${user.name},</p>
-
-                        <p>Your password reset OTP is:</p>
-
                         <div style="
-                            font-size:32px;
-                            font-weight:bold;
-                            letter-spacing:8px;
-                            text-align:center;
-                            background:white;
-                            padding:15px;
-                            border-radius:10px;
+                            font-family:Arial;
+                            max-width:500px;
+                            margin:auto;
+                            padding:25px;
+                            background:#f5f5f5;
+                            border-radius:15px;
                         ">
-                            ${otp}
+
+                            <h2>
+                                Expense Tracker Pro
+                            </h2>
+
+                            <p>
+                                Hello ${user.name},
+                            </p>
+
+                            <p>
+                                Your password reset OTP is:
+                            </p>
+
+                            <div style="
+                                font-size:32px;
+                                font-weight:bold;
+                                letter-spacing:8px;
+                                text-align:center;
+                                background:white;
+                                padding:15px;
+                                border-radius:10px;
+                            ">
+                                ${otp}
+                            </div>
+
+                            <p>
+                                This OTP is valid for
+                                <strong>10 minutes</strong>.
+                            </p>
+
+                            <p>
+                                If you did not request this,
+                                please ignore this email.
+                            </p>
+
                         </div>
-
-                        <p>
-                            This OTP is valid for
-                            <strong>10 minutes</strong>.
-                        </p>
-
-                        <p>
-                            If you did not request this,
-                            please ignore this email.
-                        </p>
-
-                    </div>
                     `
                 });
 
-                console.log("✅ OTP sent:", email);
+                console.log(
+                    "✅ OTP sent:",
+                    email
+                );
 
                 res.json({
                     success: true,
@@ -1575,11 +1587,13 @@ app.post("/forgot-password", (req, res) => {
 
 app.post("/verify-reset-otp", (req, res) => {
 
-    const email = String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+    const email = String(
+        req.body.email || ""
+    ).trim().toLowerCase();
 
-    const otp = String(req.body.otp || "").trim();
+    const otp = String(
+        req.body.otp || ""
+    ).trim();
 
     if (!email || !otp) {
 
@@ -1589,7 +1603,8 @@ app.post("/verify-reset-otp", (req, res) => {
         });
     }
 
-    const resetData = resetOTPs.get(email);
+    const resetData =
+        resetOTPs.get(email);
 
     if (!resetData) {
 
@@ -1600,7 +1615,10 @@ app.post("/verify-reset-otp", (req, res) => {
         });
     }
 
-    if (Date.now() > resetData.expiresAt) {
+    if (
+        Date.now() >
+        resetData.expiresAt
+    ) {
 
         resetOTPs.delete(email);
 
@@ -1631,16 +1649,23 @@ app.post("/verify-reset-otp", (req, res) => {
 
 app.post("/reset-password", (req, res) => {
 
-    const email = String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+    const email = String(
+        req.body.email || ""
+    ).trim().toLowerCase();
 
-    const otp = String(req.body.otp || "").trim();
+    const otp = String(
+        req.body.otp || ""
+    ).trim();
 
-    const newPassword =
-        String(req.body.newPassword || "").trim();
+    const newPassword = String(
+        req.body.newPassword || ""
+    ).trim();
 
-    if (!email || !otp || !newPassword) {
+    if (
+        !email ||
+        !otp ||
+        !newPassword
+    ) {
 
         return res.status(400).json({
             success: false,
@@ -1658,7 +1683,8 @@ app.post("/reset-password", (req, res) => {
         });
     }
 
-    const resetData = resetOTPs.get(email);
+    const resetData =
+        resetOTPs.get(email);
 
     if (!resetData) {
 
@@ -1669,7 +1695,10 @@ app.post("/reset-password", (req, res) => {
         });
     }
 
-    if (Date.now() > resetData.expiresAt) {
+    if (
+        Date.now() >
+        resetData.expiresAt
+    ) {
 
         resetOTPs.delete(email);
 
@@ -1734,9 +1763,6 @@ app.post("/reset-password", (req, res) => {
 // ================= 404 HANDLER =========================
 // ======================================================
 
-// IMPORTANT:
-// Express 5 - DO NOT use app.use("*", ...)
-
 app.use((req, res) => {
 
     console.log(
@@ -1780,9 +1806,16 @@ app.listen(
     () => {
 
         console.log("======================================");
-        console.log("Expense Tracker Server Started 🚀");
-        console.log("Express Backend Ready ✅");
-        console.log("Server running on port:", PORT);
+        console.log(
+            "Expense Tracker Server Started 🚀"
+        );
+        console.log(
+            "Express Backend Ready ✅"
+        );
+        console.log(
+            "Server running on port:",
+            PORT
+        );
         console.log("======================================");
     }
 );
