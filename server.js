@@ -104,11 +104,22 @@ const dbConfig = {
 // ================= MYSQL CONNECTION ====================
 // ======================================================
 
-const db =
-    mysql.createConnection(dbConfig);
+// Use a connection pool so Railway/MySQL idle timeouts
+// do not terminate the entire Node.js process.
 
+const db = mysql.createPool({
+    ...dbConfig,
 
-db.connect((err) => {
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
+});
+
+// Test MySQL connection
+db.query("SELECT 1", (err) => {
 
     if (err) {
 
@@ -118,7 +129,6 @@ db.connect((err) => {
         );
 
         return;
-
     }
 
     console.log(
@@ -131,7 +141,6 @@ db.connect((err) => {
     );
 
 });
-
 
 // ======================================================
 // ================= HOME ROUTE ==========================
