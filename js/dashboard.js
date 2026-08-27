@@ -1,54 +1,95 @@
 // ======================================================
-// ================= DASHBOARD ===========================
+// ================= EXPENSE TRACKER PRO =================
+// ================= DASHBOARD JS ========================
 // ======================================================
+
+"use strict";
+
+console.log("Dashboard JS Loaded Successfully ✅");
 
 // ======================================================
 // ================= LOGIN CHECK =========================
 // ======================================================
 
-if (!localStorage.getItem("userEmail")) {
+const loggedInEmail =
+    localStorage.getItem("userEmail");
+
+if (!loggedInEmail) {
+
     window.location.href = "index.html";
+
 }
 
 // ======================================================
 // ================= API BASE ============================
 // ======================================================
 
-const API_BASE = "";
+// Railway Backend
+
+const API_BASE =
+    "https://expense-tracker-pro-production-b745.up.railway.app";
 
 // ======================================================
 // ================= DOM ELEMENTS ========================
 // ======================================================
 
-const menuBtn = document.getElementById("menuBtn");
-const sideMenu = document.querySelector(".side-menu");
+const menuBtn =
+    document.getElementById("menuBtn");
 
-const themeBtn = document.getElementById("themeBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+const sideMenu =
+    document.querySelector(".side-menu");
 
-const addIncomeBtn = document.getElementById("addIncomeBtn");
-const addExpenseBtn = document.getElementById("addExpenseBtn");
+const themeBtn =
+    document.getElementById("themeBtn");
 
-const expenseList = document.getElementById("expenseList");
+const logoutBtn =
+    document.getElementById("logoutBtn");
 
-const totalExpense = document.getElementById("totalExpense");
-const totalIncome = document.getElementById("totalIncome");
-const totalBalance = document.getElementById("totalBalance");
+const addIncomeBtn =
+    document.getElementById("addIncomeBtn");
 
-const searchExpense = document.getElementById("searchExpense");
-const filterType = document.getElementById("transactionFilter");
+const addExpenseBtn =
+    document.getElementById("addExpenseBtn");
+
+const expenseList =
+    document.getElementById("expenseList");
+
+const totalExpense =
+    document.getElementById("totalExpense");
+
+const totalIncome =
+    document.getElementById("totalIncome");
+
+const totalBalance =
+    document.getElementById("totalBalance");
+
+const searchExpense =
+    document.getElementById("searchExpense");
+
+const filterType =
+    document.getElementById("transactionFilter");
 
 // ======================================================
-// ================= EDIT EXPENSE ========================
+// ================= EXPENSE EDIT ========================
 // ======================================================
 
-const editPopup = document.getElementById("editPopup");
-const editIndex = document.getElementById("editIndex");
+const editPopup =
+    document.getElementById("editPopup");
 
-const editName = document.getElementById("editName");
-const editAmount = document.getElementById("editAmount");
-const editCategory = document.getElementById("editCategory");
-const editDate = document.getElementById("editDate");
+const editIndex =
+    document.getElementById("editIndex");
+
+const editName =
+    document.getElementById("editName");
+
+const editAmount =
+    document.getElementById("editAmount");
+
+const editCategory =
+    document.getElementById("editCategory");
+
+const editDate =
+    document.getElementById("editDate");
 
 const updateExpenseBtn =
     document.getElementById("updateExpenseBtn");
@@ -57,7 +98,7 @@ const closeEditBtn =
     document.getElementById("closeEditBtn");
 
 // ======================================================
-// ================= EDIT INCOME =========================
+// ================= INCOME EDIT =========================
 // ======================================================
 
 const editIncomePopup =
@@ -92,7 +133,7 @@ const customCategory =
     document.getElementById("customCategory");
 
 // ======================================================
-// ================= IMPORT ==============================
+// ================= EXCEL IMPORT ========================
 // ======================================================
 
 const importExpenseBtn =
@@ -110,16 +151,121 @@ let expenses = [];
 window.allIncome = [];
 
 // ======================================================
+// ================= API HELPER ==========================
+// ======================================================
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const url =
+        API_BASE + endpoint;
+
+    console.log(
+        "API Request:",
+        options.method || "GET",
+        url
+    );
+
+    try {
+
+        const response =
+            await fetch(
+                url,
+                {
+                    ...options,
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json",
+
+                        ...(options.headers || {})
+
+                    }
+
+                }
+            );
+
+        const text =
+            await response.text();
+
+        let data = {};
+
+        try {
+
+            data =
+                text
+                    ? JSON.parse(text)
+                    : {};
+
+        } catch (jsonError) {
+
+            console.error(
+                "Invalid JSON response:",
+                text
+            );
+
+            throw new Error(
+                `Server returned invalid response (${response.status})`
+            );
+
+        }
+
+        console.log(
+            "API Response:",
+            response.status,
+            data
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                `Request failed (${response.status})`
+            );
+
+        }
+
+        return data;
+
+    } catch (error) {
+
+        console.error(
+            "API Request Error:",
+            endpoint,
+            error
+        );
+
+        throw error;
+
+    }
+
+}
+
+// ======================================================
 // ================= SIDEBAR =============================
 // ======================================================
 
-if (menuBtn && sideMenu) {
+if (
+    menuBtn &&
+    sideMenu
+) {
 
-    menuBtn.addEventListener("click", () => {
+    menuBtn.addEventListener(
+        "click",
+        () => {
 
-        sideMenu.classList.toggle("active");
+            sideMenu.classList.toggle(
+                "active"
+            );
 
-    });
+        }
+    );
 
 }
 
@@ -132,13 +278,19 @@ function loadSavedTheme() {
     const savedTheme =
         localStorage.getItem("theme");
 
-    if (savedTheme === "light") {
+    if (
+        savedTheme === "light"
+    ) {
 
-        document.body.classList.add("light-mode");
+        document.body.classList.add(
+            "light-mode"
+        );
 
     } else {
 
-        document.body.classList.remove("light-mode");
+        document.body.classList.remove(
+            "light-mode"
+        );
 
     }
 
@@ -149,14 +301,18 @@ function updateThemeButton() {
     if (!themeBtn) return;
 
     if (
-        document.body.classList.contains("light-mode")
+        document.body.classList.contains(
+            "light-mode"
+        )
     ) {
 
-        themeBtn.innerHTML = "🌙 Dark Mode";
+        themeBtn.innerHTML =
+            "🌙 Dark Mode";
 
     } else {
 
-        themeBtn.innerHTML = "☀️ Light Mode";
+        themeBtn.innerHTML =
+            "☀️ Light Mode";
 
     }
 
@@ -167,21 +323,30 @@ updateThemeButton();
 
 if (themeBtn) {
 
-    themeBtn.addEventListener("click", () => {
+    themeBtn.addEventListener(
+        "click",
+        () => {
 
-        document.body.classList.toggle("light-mode");
+            document.body.classList.toggle(
+                "light-mode"
+            );
 
-        const isLight =
-            document.body.classList.contains("light-mode");
+            const isLight =
+                document.body.classList.contains(
+                    "light-mode"
+                );
 
-        localStorage.setItem(
-            "theme",
-            isLight ? "light" : "dark"
-        );
+            localStorage.setItem(
+                "theme",
+                isLight
+                    ? "light"
+                    : "dark"
+            );
 
-        updateThemeButton();
+            updateThemeButton();
 
-    });
+        }
+    );
 
 }
 
@@ -191,14 +356,27 @@ if (themeBtn) {
 
 if (logoutBtn) {
 
-    logoutBtn.addEventListener("click", () => {
+    logoutBtn.addEventListener(
+        "click",
+        () => {
 
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("userName");
+            localStorage.removeItem(
+                "userEmail"
+            );
 
-        window.location.href = "index.html";
+            localStorage.removeItem(
+                "userName"
+            );
 
-    });
+            sessionStorage.removeItem(
+                "resetEmail"
+            );
+
+            window.location.href =
+                "index.html";
+
+        }
+    );
 
 }
 
@@ -208,26 +386,37 @@ if (logoutBtn) {
 
 if (expenseCategory) {
 
-    expenseCategory.addEventListener("change", function () {
+    expenseCategory.addEventListener(
+        "change",
+        function () {
 
-        if (this.value === "Others") {
+            if (
+                this.value === "Others"
+            ) {
 
-            if (customCategory) {
-                customCategory.style.display = "block";
-            }
+                if (customCategory) {
 
-        } else {
+                    customCategory.style.display =
+                        "block";
 
-            if (customCategory) {
+                }
 
-                customCategory.style.display = "none";
-                customCategory.value = "";
+            } else {
+
+                if (customCategory) {
+
+                    customCategory.style.display =
+                        "none";
+
+                    customCategory.value =
+                        "";
+
+                }
 
             }
 
         }
-
-    });
+    );
 
 }
 
@@ -238,35 +427,38 @@ if (expenseCategory) {
 async function loadExpenses() {
 
     const email =
-        localStorage.getItem("userEmail");
+        localStorage.getItem(
+            "userEmail"
+        );
 
-    if (!email) return;
+    if (!email) {
+
+        console.error(
+            "User email not found"
+        );
+
+        expenses = [];
+
+        return;
+
+    }
 
     try {
 
-        const response =
-            await fetch(
-                API_BASE +
+        const data =
+            await apiRequest(
                 "/expenses/" +
                 encodeURIComponent(email)
             );
 
-        if (!response.ok) {
-
-            throw new Error(
-                "Expense API Error: " +
-                response.status
-            );
-
-        }
-
-        const data =
-            await response.json();
-
-        if (data.success) {
+        if (
+            data.success
+        ) {
 
             expenses =
-                Array.isArray(data.expenses)
+                Array.isArray(
+                    data.expenses
+                )
                     ? data.expenses
                     : [];
 
@@ -306,35 +498,34 @@ async function loadExpenses() {
 async function loadIncome() {
 
     const email =
-        localStorage.getItem("userEmail");
+        localStorage.getItem(
+            "userEmail"
+        );
 
-    if (!email) return;
+    if (!email) {
+
+        window.allIncome = [];
+
+        return;
+
+    }
 
     try {
 
-        const response =
-            await fetch(
-                API_BASE +
+        const data =
+            await apiRequest(
                 "/income/" +
                 encodeURIComponent(email)
             );
 
-        if (!response.ok) {
-
-            throw new Error(
-                "Income API Error: " +
-                response.status
-            );
-
-        }
-
-        const data =
-            await response.json();
-
-        if (data.success) {
+        if (
+            data.success
+        ) {
 
             window.allIncome =
-                Array.isArray(data.income)
+                Array.isArray(
+                    data.income
+                )
                     ? data.income
                     : [];
 
@@ -346,6 +537,11 @@ async function loadIncome() {
         } else {
 
             window.allIncome = [];
+
+            console.error(
+                data.message ||
+                "Unable to load income"
+            );
 
         }
 
@@ -368,138 +564,182 @@ async function loadIncome() {
 
 if (addIncomeBtn) {
 
-    addIncomeBtn.addEventListener("click", async () => {
+    addIncomeBtn.addEventListener(
+        "click",
+        async () => {
 
-        const incomeNameInput =
-            document.getElementById("incomeName");
-
-        const incomeAmountInput =
-            document.getElementById("incomeAmount");
-
-        const incomeDateInput =
-            document.getElementById("incomeDate");
-
-        const source =
-            incomeNameInput
-                ? incomeNameInput.value.trim()
-                : "";
-
-        const amount =
-            incomeAmountInput
-                ? incomeAmountInput.value
-                : "";
-
-        const date =
-            incomeDateInput
-                ? incomeDateInput.value
-                : "";
-
-        if (
-            source === "" ||
-            amount === "" ||
-            date === ""
-        ) {
-
-            alert("Please fill all income fields");
-            return;
-
-        }
-
-        if (Number(amount) <= 0) {
-
-            alert("Please enter a valid income amount");
-            return;
-
-        }
-
-        const email =
-            localStorage.getItem("userEmail");
-
-        if (!email) {
-
-            alert(
-                "User email not found. Please login again."
-            );
-
-            return;
-
-        }
-
-        try {
-
-            const response =
-                await fetch(
-                    API_BASE + "/income",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            email: email,
-                            amount: Number(amount),
-                            date: date
-
-                        })
-                    }
+            const incomeNameInput =
+                document.getElementById(
+                    "incomeName"
                 );
 
-            const data =
-                await response.json();
+            const incomeAmountInput =
+                document.getElementById(
+                    "incomeAmount"
+                );
 
-            console.log(
-                "Add Income Response:",
-                data
-            );
+            const incomeDateInput =
+                document.getElementById(
+                    "incomeDate"
+                );
 
-            if (data.success) {
+            const source =
+                incomeNameInput
+                    ? incomeNameInput.value.trim()
+                    : "";
+
+            const amount =
+                incomeAmountInput
+                    ? incomeAmountInput.value.trim()
+                    : "";
+
+            const date =
+                incomeDateInput
+                    ? incomeDateInput.value
+                    : "";
+
+            if (
+                source === "" ||
+                amount === "" ||
+                date === ""
+            ) {
 
                 alert(
-                    "Income Added Successfully ✅"
+                    "Please fill all income fields."
                 );
 
-                if (incomeNameInput)
-                    incomeNameInput.value = "";
-
-                if (incomeAmountInput)
-                    incomeAmountInput.value = "";
-
-                if (incomeDateInput)
-                    incomeDateInput.value = "";
-
-                await loadIncome();
-                await loadExpenses();
-
-                displayTransactions();
-                calculateTotals();
-
-            } else {
-
-                alert(
-                    data.message ||
-                    "Unable to add income"
-                );
+                return;
 
             }
 
-        } catch (error) {
+            const numericAmount =
+                Number(amount);
 
-            console.error(
-                "Add Income Error:",
-                error
-            );
+            if (
+                !Number.isFinite(
+                    numericAmount
+                ) ||
+                numericAmount <= 0
+            ) {
 
-            alert(
-                "Server Error. Please try again."
-            );
+                alert(
+                    "Please enter a valid income amount."
+                );
+
+                return;
+
+            }
+
+            const email =
+                localStorage.getItem(
+                    "userEmail"
+                );
+
+            if (!email) {
+
+                alert(
+                    "User email not found. Please login again."
+                );
+
+                return;
+
+            }
+
+            try {
+
+                addIncomeBtn.disabled =
+                    true;
+
+                const data =
+                    await apiRequest(
+                        "/income",
+                        {
+                            method: "POST",
+
+                            body:
+                                JSON.stringify({
+
+                                    email:
+                                        email,
+
+                                    amount:
+                                        numericAmount,
+
+                                    date:
+                                        date
+
+                                })
+
+                        }
+                    );
+
+                if (
+                    data.success
+                ) {
+
+                    alert(
+                        "Income Added Successfully ✅"
+                    );
+
+                    if (
+                        incomeNameInput
+                    ) {
+
+                        incomeNameInput.value =
+                            "";
+
+                    }
+
+                    if (
+                        incomeAmountInput
+                    ) {
+
+                        incomeAmountInput.value =
+                            "";
+
+                    }
+
+                    if (
+                        incomeDateInput
+                    ) {
+
+                        incomeDateInput.value =
+                            "";
+
+                    }
+
+                    await refreshDashboard();
+
+                } else {
+
+                    alert(
+                        data.message ||
+                        "Unable to add income."
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Add Income Error:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Server Error. Please try again."
+                );
+
+            } finally {
+
+                addIncomeBtn.disabled =
+                    false;
+
+            }
 
         }
-
-    });
+    );
 
 }
 
@@ -509,424 +749,586 @@ if (addIncomeBtn) {
 
 if (addExpenseBtn) {
 
-    addExpenseBtn.addEventListener("click", async () => {
+    addExpenseBtn.addEventListener(
+        "click",
+        async () => {
 
-        const nameInput =
-            document.getElementById("expenseName");
+            const nameInput =
+                document.getElementById(
+                    "expenseName"
+                );
 
-        const amountInput =
-            document.getElementById("expenseAmount");
+            const amountInput =
+                document.getElementById(
+                    "expenseAmount"
+                );
 
-        const categorySelect =
-            document.getElementById("expenseCategory");
+            const categorySelect =
+                document.getElementById(
+                    "expenseCategory"
+                );
 
-        const customCategoryInput =
-            document.getElementById("customCategory");
+            const customCategoryInput =
+                document.getElementById(
+                    "customCategory"
+                );
 
-        const dateInput =
-            document.getElementById("expenseDate");
+            const dateInput =
+                document.getElementById(
+                    "expenseDate"
+                );
 
-        const name =
-            nameInput
-                ? nameInput.value.trim()
-                : "";
-
-        const amount =
-            amountInput
-                ? amountInput.value
-                : "";
-
-        let category =
-            categorySelect
-                ? categorySelect.value
-                : "";
-
-        const date =
-            dateInput
-                ? dateInput.value
-                : "";
-
-        if (category === "Others") {
-
-            category =
-                customCategoryInput
-                    ? customCategoryInput.value.trim()
+            const name =
+                nameInput
+                    ? nameInput.value.trim()
                     : "";
 
-            if (category === "") {
+            const amount =
+                amountInput
+                    ? amountInput.value.trim()
+                    : "";
+
+            let category =
+                categorySelect
+                    ? categorySelect.value.trim()
+                    : "";
+
+            const date =
+                dateInput
+                    ? dateInput.value
+                    : "";
+
+            if (
+                category === "Others"
+            ) {
+
+                category =
+                    customCategoryInput
+                        ? customCategoryInput.value.trim()
+                        : "";
+
+                if (
+                    category === ""
+                ) {
+
+                    alert(
+                        "Please enter custom category."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+            if (
+                name === "" ||
+                amount === "" ||
+                category === "" ||
+                date === ""
+            ) {
 
                 alert(
-                    "Please enter custom category"
+                    "Please fill all expense fields."
                 );
 
                 return;
 
             }
 
-        }
+            const numericAmount =
+                Number(amount);
 
-        if (
-            name === "" ||
-            amount === "" ||
-            date === ""
-        ) {
-
-            alert(
-                "Please fill all expense fields"
-            );
-
-            return;
-
-        }
-
-        if (Number(amount) <= 0) {
-
-            alert(
-                "Please enter a valid expense amount"
-            );
-
-            return;
-
-        }
-
-        const email =
-            localStorage.getItem("userEmail");
-
-        if (!email) {
-
-            alert(
-                "User email not found. Please login again."
-            );
-
-            return;
-
-        }
-
-        try {
-
-            const response =
-                await fetch(
-                    API_BASE + "/expenses",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            email: email,
-                            name: name,
-                            amount: Number(amount),
-                            category: category,
-                            date: date
-
-                        })
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            console.log(
-                "Add Expense Response:",
-                data
-            );
-
-            if (data.success) {
+            if (
+                !Number.isFinite(
+                    numericAmount
+                ) ||
+                numericAmount <= 0
+            ) {
 
                 alert(
-                    "Expense Added Successfully ✅"
+                    "Please enter a valid expense amount."
                 );
 
-                if (nameInput)
-                    nameInput.value = "";
-
-                if (amountInput)
-                    amountInput.value = "";
-
-                if (dateInput)
-                    dateInput.value = "";
-
-                if (customCategoryInput) {
-
-                    customCategoryInput.value = "";
-                    customCategoryInput.style.display =
-                        "none";
-
-                }
-
-                await loadExpenses();
-                await loadIncome();
-
-                displayTransactions();
-                calculateTotals();
-
-            } else {
-
-                alert(
-                    data.message ||
-                    "Unable to add expense"
-                );
+                return;
 
             }
 
-        } catch (error) {
+            const email =
+                localStorage.getItem(
+                    "userEmail"
+                );
 
-            console.error(
-                "Add Expense Error:",
-                error
-            );
+            if (!email) {
 
-            alert(
-                "Server Error. Please try again."
-            );
+                alert(
+                    "User email not found. Please login again."
+                );
+
+                return;
+
+            }
+
+            try {
+
+                addExpenseBtn.disabled =
+                    true;
+
+                const data =
+                    await apiRequest(
+                        "/expenses",
+                        {
+                            method: "POST",
+
+                            body:
+                                JSON.stringify({
+
+                                    email:
+                                        email,
+
+                                    name:
+                                        name,
+
+                                    amount:
+                                        numericAmount,
+
+                                    category:
+                                        category,
+
+                                    date:
+                                        date
+
+                                })
+
+                        }
+                    );
+
+                if (
+                    data.success
+                ) {
+
+                    alert(
+                        "Expense Added Successfully ✅"
+                    );
+
+                    if (nameInput) {
+
+                        nameInput.value =
+                            "";
+
+                    }
+
+                    if (amountInput) {
+
+                        amountInput.value =
+                            "";
+
+                    }
+
+                    if (dateInput) {
+
+                        dateInput.value =
+                            "";
+
+                    }
+
+                    if (
+                        customCategoryInput
+                    ) {
+
+                        customCategoryInput.value =
+                            "";
+
+                        customCategoryInput.style.display =
+                            "none";
+
+                    }
+
+                    await refreshDashboard();
+
+                } else {
+
+                    alert(
+                        data.message ||
+                        "Unable to add expense."
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Add Expense Error:",
+                    error
+                );
+
+                alert(
+                    error.message ||
+                    "Server Error. Please try again."
+                );
+
+            } finally {
+
+                addExpenseBtn.disabled =
+                    false;
+
+            }
 
         }
-
-    });
+    );
 
 }
+
 // ======================================================
-// ================= DISPLAY TRANSACTIONS =================
+// ================= DISPLAY TRANSACTIONS ===============
 // ======================================================
 
 function displayTransactions() {
 
     if (!expenseList) return;
 
-    expenseList.innerHTML = "";
+    expenseList.innerHTML =
+        "";
 
     const searchText =
         searchExpense
-            ? searchExpense.value.toLowerCase().trim()
+            ? searchExpense.value
+                .toLowerCase()
+                .trim()
             : "";
 
     const selectedType =
         filterType
-            ? filterType.value.toLowerCase()
+            ? filterType.value
+                .toLowerCase()
             : "all";
 
-    let transactions = [];
+    const transactions =
+        [];
 
     // ==================================================
     // EXPENSES
     // ==================================================
 
-    expenses.forEach(item => {
+    if (
+        Array.isArray(expenses)
+    ) {
 
-        transactions.push({
+        expenses.forEach(
+            item => {
 
-            type: "Expense",
+                transactions.push({
 
-            id: item.id,
+                    type:
+                        "Expense",
 
-            name: item.name,
+                    id:
+                        item.id,
 
-            amount:
-                Number(item.amount) || 0,
+                    name:
+                        item.name ||
+                        "Expense",
 
-            category:
-                item.category || "Others",
+                    amount:
+                        Number(
+                            item.amount
+                        ) || 0,
 
-            date: item.date
+                    category:
+                        item.category ||
+                        "Others",
 
-        });
+                    date:
+                        normalizeDate(
+                            item.date
+                        )
 
-    });
+                });
+
+            }
+        );
+
+    }
 
     // ==================================================
     // INCOME
     // ==================================================
 
-    if (Array.isArray(window.allIncome)) {
+    if (
+        Array.isArray(
+            window.allIncome
+        )
+    ) {
 
-        window.allIncome.forEach(item => {
+        window.allIncome.forEach(
+            item => {
 
-            transactions.push({
+                transactions.push({
 
-                type: "Income",
+                    type:
+                        "Income",
 
-                id: item.id,
+                    id:
+                        item.id,
 
-                name: "Income",
+                    name:
+                        item.name ||
+                        "Income",
 
-                amount:
-                    Number(item.amount) || 0,
+                    amount:
+                        Number(
+                            item.amount
+                        ) || 0,
 
-                category: "Income",
+                    category:
+                        "Income",
 
-                date: item.date
+                    date:
+                        normalizeDate(
+                            item.date
+                        )
 
-            });
+                });
 
-        });
+            }
+        );
 
     }
 
     // ==================================================
-    // SORT BY DATE
+    // SORT
     // ==================================================
 
-    transactions.sort((a, b) => {
+    transactions.sort(
+        (a, b) => {
 
-        return (
-            new Date(b.date) -
-            new Date(a.date)
-        );
+            return (
+                new Date(b.date) -
+                new Date(a.date)
+            );
 
-    });
+        }
+    );
+
+    // ==================================================
+    // EMPTY
+    // ==================================================
+
+    let visibleCount =
+        0;
 
     // ==================================================
     // DISPLAY
     // ==================================================
 
-    transactions.forEach(transaction => {
+    transactions.forEach(
+        transaction => {
 
-        const transactionType =
-            transaction.type.toLowerCase();
+            const transactionType =
+                transaction.type.toLowerCase();
 
-        const matchSearch =
+            const matchSearch =
 
-            String(transaction.name || "")
-                .toLowerCase()
-                .includes(searchText)
+                String(
+                    transaction.name ||
+                    ""
+                )
+                    .toLowerCase()
+                    .includes(
+                        searchText
+                    )
 
-            ||
+                ||
 
-            String(transaction.category || "")
-                .toLowerCase()
-                .includes(searchText);
+                String(
+                    transaction.category ||
+                    ""
+                )
+                    .toLowerCase()
+                    .includes(
+                        searchText
+                    );
 
-        const matchType =
+            const matchType =
 
-            selectedType === "all"
+                selectedType === "all"
 
-            ||
+                ||
 
-            transactionType === selectedType;
+                transactionType ===
+                    selectedType;
 
-        if (!matchSearch || !matchType) {
-            return;
-        }
+            if (
+                !matchSearch ||
+                !matchType
+            ) {
 
-        // ==================================================
-        // AMOUNT
-        // ==================================================
+                return;
 
-        let amountDisplay;
+            }
 
-        if (transaction.type === "Income") {
+            visibleCount++;
 
-            amountDisplay =
-                "+" +
-                formatCurrency(
-                    transaction.amount
+            let amountDisplay;
+
+            if (
+                transaction.type ===
+                "Income"
+            ) {
+
+                amountDisplay =
+                    "+" +
+                    formatCurrency(
+                        transaction.amount
+                    );
+
+            } else {
+
+                amountDisplay =
+                    "-" +
+                    formatCurrency(
+                        transaction.amount
+                    );
+
+            }
+
+            let actionButtons =
+                "";
+
+            // ==================================================
+            // EXPENSE ACTIONS
+            // ==================================================
+
+            if (
+                transaction.type ===
+                "Expense"
+            ) {
+
+                actionButtons = `
+
+                    <button
+                        class="edit-btn"
+                        onclick="editExpenseById(${Number(transaction.id)})">
+                        Edit
+                    </button>
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteExpenseById(${Number(transaction.id)})">
+                        Delete
+                    </button>
+
+                `;
+
+            }
+
+            // ==================================================
+            // INCOME ACTIONS
+            // ==================================================
+
+            if (
+                transaction.type ===
+                "Income"
+            ) {
+
+                actionButtons = `
+
+                    <button
+                        class="edit-btn"
+                        onclick="editIncomeById(${Number(transaction.id)})">
+                        Edit
+                    </button>
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteIncomeById(${Number(transaction.id)})">
+                        Delete
+                    </button>
+
+                `;
+
+            }
+
+            const row =
+                document.createElement(
+                    "tr"
                 );
 
-        } else {
+            row.innerHTML = `
 
-            amountDisplay =
-                "-" +
-                formatCurrency(
-                    transaction.amount
-                );
+                <td>
+                    ${escapeHTML(
+                        transaction.type
+                    )}
+                </td>
 
-        }
+                <td>
+                    ${escapeHTML(
+                        transaction.name
+                    )}
+                </td>
 
-        // ==================================================
-        // ACTION BUTTONS
-        // ==================================================
+                <td>
+                    ${amountDisplay}
+                </td>
 
-        let actionButtons = "";
+                <td>
+                    ${escapeHTML(
+                        transaction.category
+                    )}
+                </td>
 
-        // EXPENSE → EDIT + DELETE
+                <td>
+                    ${escapeHTML(
+                        transaction.date ||
+                        "-"
+                    )}
+                </td>
 
-        if (transaction.type === "Expense") {
-
-            actionButtons = `
-
-                <button
-                    class="edit-btn"
-                    onclick="editExpenseById(${transaction.id})">
-                    Edit
-                </button>
-
-                <button
-                    class="delete-btn"
-                    onclick="deleteExpenseById(${transaction.id})">
-                    Delete
-                </button>
+                <td>
+                    ${actionButtons}
+                </td>
 
             `;
 
-        }
-
-        // INCOME → EDIT + DELETE
-
-        if (transaction.type === "Income") {
-
-            actionButtons = `
-
-                <button
-                    class="edit-btn"
-                    onclick="editIncomeById(${transaction.id})">
-                    Edit
-                </button>
-
-                <button
-                    class="delete-btn"
-                    onclick="deleteIncomeById(${transaction.id})">
-                    Delete
-                </button>
-
-            `;
+            expenseList.appendChild(
+                row
+            );
 
         }
+    );
 
-        // ==================================================
-        // CREATE ROW
-        // ==================================================
+    // ==================================================
+    // EMPTY MESSAGE
+    // ==================================================
+
+    if (
+        visibleCount === 0
+    ) {
 
         const row =
-            document.createElement("tr");
+            document.createElement(
+                "tr"
+            );
 
         row.innerHTML = `
 
-            <td>
-                ${transaction.type}
-            </td>
-
-            <td>
-                ${transaction.name}
-            </td>
-
-            <td>
-                ${amountDisplay}
-            </td>
-
-            <td>
-                ${transaction.category}
-            </td>
-
-            <td>
-                ${transaction.date || "-"}
-            </td>
-
-            <td>
-                ${actionButtons}
+            <td
+                colspan="6"
+                style="text-align:center;padding:25px;"
+            >
+                No transactions found.
             </td>
 
         `;
 
-        expenseList.appendChild(row);
+        expenseList.appendChild(
+            row
+        );
 
-    });
+    }
 
 }
-
 
 // ======================================================
 // ================= SEARCH ==============================
@@ -936,15 +1338,10 @@ if (searchExpense) {
 
     searchExpense.addEventListener(
         "input",
-        () => {
-
-            displayTransactions();
-
-        }
+        displayTransactions
     );
 
 }
-
 
 // ======================================================
 // ================= FILTER ==============================
@@ -954,15 +1351,10 @@ if (filterType) {
 
     filterType.addEventListener(
         "change",
-        () => {
-
-            displayTransactions();
-
-        }
+        displayTransactions
     );
 
 }
-
 
 // ======================================================
 // ================= EDIT EXPENSE ========================
@@ -979,7 +1371,9 @@ function editExpenseById(id) {
 
     if (!expenseItem) {
 
-        alert("Expense not found");
+        alert(
+            "Expense not found."
+        );
 
         return;
 
@@ -995,28 +1389,33 @@ function editExpenseById(id) {
     if (editName) {
 
         editName.value =
-            expenseItem.name || "";
+            expenseItem.name ||
+            "";
 
     }
 
     if (editAmount) {
 
         editAmount.value =
-            expenseItem.amount || "";
+            expenseItem.amount ||
+            "";
 
     }
 
     if (editCategory) {
 
         editCategory.value =
-            expenseItem.category || "";
+            expenseItem.category ||
+            "";
 
     }
 
     if (editDate) {
 
         editDate.value =
-            expenseItem.date || "";
+            normalizeDate(
+                expenseItem.date
+            );
 
     }
 
@@ -1029,15 +1428,11 @@ function editExpenseById(id) {
 
 }
 
-
-// IMPORTANT: HTML onclick needs this
-
 window.editExpenseById =
     editExpenseById;
 
-
 // ======================================================
-// ================= CLOSE EXPENSE EDIT =================
+// ================= CLOSE EDIT ==========================
 // ======================================================
 
 if (closeEditBtn) {
@@ -1057,7 +1452,6 @@ if (closeEditBtn) {
     );
 
 }
-
 
 // ======================================================
 // ================= UPDATE EXPENSE ======================
@@ -1081,7 +1475,9 @@ if (updateExpenseBtn) {
 
             const amount =
                 editAmount
-                    ? Number(editAmount.value)
+                    ? Number(
+                        editAmount.value
+                    )
                     : 0;
 
             const category =
@@ -1103,7 +1499,7 @@ if (updateExpenseBtn) {
             ) {
 
                 alert(
-                    "Please fill all expense fields correctly"
+                    "Please fill all expense fields correctly."
                 );
 
                 return;
@@ -1112,21 +1508,17 @@ if (updateExpenseBtn) {
 
             try {
 
-                const response =
-                    await fetch(
-                        API_BASE +
+                updateExpenseBtn.disabled =
+                    true;
+
+                const data =
+                    await apiRequest(
                         "/expenses/" +
-                        id,
+                        encodeURIComponent(id),
                         {
 
-                            method: "PUT",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
+                            method:
+                                "PUT",
 
                             body:
                                 JSON.stringify({
@@ -1148,10 +1540,9 @@ if (updateExpenseBtn) {
                         }
                     );
 
-                const data =
-                    await response.json();
-
-                if (data.success) {
+                if (
+                    data.success
+                ) {
 
                     alert(
                         "Expense Updated Successfully ✅"
@@ -1164,17 +1555,13 @@ if (updateExpenseBtn) {
 
                     }
 
-                    await loadExpenses();
-                    await loadIncome();
-
-                    displayTransactions();
-                    calculateTotals();
+                    await refreshDashboard();
 
                 } else {
 
                     alert(
                         data.message ||
-                        "Expense Update Failed"
+                        "Expense Update Failed."
                     );
 
                 }
@@ -1187,8 +1574,14 @@ if (updateExpenseBtn) {
                 );
 
                 alert(
-                    "Server Error. Please try again."
+                    error.message ||
+                    "Server Error."
                 );
+
+            } finally {
+
+                updateExpenseBtn.disabled =
+                    false;
 
             }
 
@@ -1197,10 +1590,8 @@ if (updateExpenseBtn) {
 
 }
 
-
 // ======================================================
 // ================= DELETE EXPENSE ======================
-// ================= MOVE TO HISTORY =====================
 // ======================================================
 
 async function deleteExpenseById(id) {
@@ -1214,30 +1605,33 @@ async function deleteExpenseById(id) {
 
     if (!expenseItem) {
 
-        alert("Expense not found");
+        alert(
+            "Expense not found."
+        );
 
         return;
 
     }
-
-    // ==================================================
-    // CONFIRM
-    // ==================================================
 
     const confirmDelete =
         confirm(
 
             "Are you sure you want to delete this expense?\n\n" +
 
-            expenseItem.name +
-            " - " +
-            formatCurrency(
-                Number(expenseItem.amount)
+            (
+                expenseItem.name ||
+                "Expense"
             ) +
 
-            "\n\n" +
+            " - " +
 
-            "This record will be kept in Delete History for 60 days."
+            formatCurrency(
+                Number(
+                    expenseItem.amount
+                )
+            ) +
+
+            "\n\nThis record will be kept in Delete History for 60 days."
 
         );
 
@@ -1247,64 +1641,33 @@ async function deleteExpenseById(id) {
 
     }
 
-    // ==================================================
-    // DELETE API
-    // ==================================================
-
     try {
 
-        const response =
-            await fetch(
-                API_BASE +
+        const data =
+            await apiRequest(
                 "/expenses/" +
-                id,
+                encodeURIComponent(id),
                 {
-
-                    method: "DELETE",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    }
-
+                    method:
+                        "DELETE"
                 }
             );
 
-        const data =
-            await response.json();
-
-        console.log(
-            "Delete Expense Response:",
-            data
-        );
-
-        if (data.success) {
+        if (
+            data.success
+        ) {
 
             alert(
-
-                "Expense moved to Delete History 🗑️\n\n" +
-
-                "You can restore it within 60 days."
-
+                "Expense moved to Delete History 🗑️"
             );
 
-            // Reload database data
-
-            await loadExpenses();
-            await loadIncome();
-
-            // Refresh dashboard
-
-            displayTransactions();
-            calculateTotals();
+            await refreshDashboard();
 
         } else {
 
             alert(
                 data.message ||
-                "Expense Delete Failed"
+                "Expense Delete Failed."
             );
 
         }
@@ -1317,137 +1680,18 @@ async function deleteExpenseById(id) {
         );
 
         alert(
-            "Server Error. Please try again."
+            error.message ||
+            "Server Error."
         );
 
     }
 
 }
-
-
-// IMPORTANT: HTML onclick needs this
 
 window.deleteExpenseById =
     deleteExpenseById;
 
-
 // ======================================================
-// ================= DELETE INCOME =======================
-// ======================================================
-
-async function deleteIncomeById(id) {
-
-    const incomeItem =
-        window.allIncome.find(
-            item =>
-                Number(item.id) ===
-                Number(id)
-        );
-
-    if (!incomeItem) {
-
-        alert("Income not found");
-
-        return;
-
-    }
-
-    // ==================================================
-    // CONFIRM
-    // ==================================================
-
-    const confirmDelete =
-        confirm(
-
-            "Are you sure you want to delete this income?\n\n" +
-
-            formatCurrency(
-                Number(incomeItem.amount)
-            )
-
-        );
-
-    if (!confirmDelete) {
-
-        return;
-
-    }
-
-    // ==================================================
-    // DELETE API
-    // ==================================================
-
-    try {
-
-        const response =
-            await fetch(
-                API_BASE +
-                "/income/" +
-                id,
-                {
-
-                    method: "DELETE",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    }
-
-                }
-            );
-
-        const data =
-            await response.json();
-
-        console.log(
-            "Delete Income Response:",
-            data
-        );
-
-        if (data.success) {
-
-            alert(
-                "Income deleted successfully 🗑️"
-            );
-
-            await loadIncome();
-            await loadExpenses();
-
-            displayTransactions();
-            calculateTotals();
-
-        } else {
-
-            alert(
-                data.message ||
-                "Income Delete Failed"
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Delete Income Error:",
-            error
-        );
-
-        alert(
-            "Server Error. Please try again."
-        );
-
-    }
-
-}
-
-
-// IMPORTANT: HTML onclick needs this
-
-window.deleteIncomeById =
-    deleteIncomeById;
-    // ======================================================
 // ================= EDIT INCOME =========================
 // ======================================================
 
@@ -1462,7 +1706,9 @@ function editIncomeById(id) {
 
     if (!incomeItem) {
 
-        alert("Income not found");
+        alert(
+            "Income not found."
+        );
 
         return;
 
@@ -1478,6 +1724,7 @@ function editIncomeById(id) {
     if (editIncomeSource) {
 
         editIncomeSource.value =
+            incomeItem.name ||
             "Income";
 
     }
@@ -1485,14 +1732,17 @@ function editIncomeById(id) {
     if (editIncomeAmount) {
 
         editIncomeAmount.value =
-            incomeItem.amount || "";
+            incomeItem.amount ||
+            "";
 
     }
 
     if (editIncomeDate) {
 
         editIncomeDate.value =
-            incomeItem.date || "";
+            normalizeDate(
+                incomeItem.date
+            );
 
     }
 
@@ -1505,12 +1755,8 @@ function editIncomeById(id) {
 
 }
 
-
-// IMPORTANT: HTML onclick needs this
-
 window.editIncomeById =
     editIncomeById;
-
 
 // ======================================================
 // ================= CLOSE INCOME EDIT ==================
@@ -1522,7 +1768,9 @@ if (closeIncomeEditBtn) {
         "click",
         () => {
 
-            if (editIncomePopup) {
+            if (
+                editIncomePopup
+            ) {
 
                 editIncomePopup.style.display =
                     "none";
@@ -1533,7 +1781,6 @@ if (closeIncomeEditBtn) {
     );
 
 }
-
 
 // ======================================================
 // ================= UPDATE INCOME =======================
@@ -1569,7 +1816,7 @@ if (updateIncomeBtn) {
             ) {
 
                 alert(
-                    "Please fill all income fields correctly"
+                    "Please fill all income fields correctly."
                 );
 
                 return;
@@ -1578,21 +1825,17 @@ if (updateIncomeBtn) {
 
             try {
 
-                const response =
-                    await fetch(
-                        API_BASE +
+                updateIncomeBtn.disabled =
+                    true;
+
+                const data =
+                    await apiRequest(
                         "/income/" +
-                        id,
+                        encodeURIComponent(id),
                         {
 
-                            method: "PUT",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
+                            method:
+                                "PUT",
 
                             body:
                                 JSON.stringify({
@@ -1608,38 +1851,30 @@ if (updateIncomeBtn) {
                         }
                     );
 
-                const data =
-                    await response.json();
-
-                console.log(
-                    "Update Income Response:",
-                    data
-                );
-
-                if (data.success) {
+                if (
+                    data.success
+                ) {
 
                     alert(
                         "Income Updated Successfully ✅"
                     );
 
-                    if (editIncomePopup) {
+                    if (
+                        editIncomePopup
+                    ) {
 
                         editIncomePopup.style.display =
                             "none";
 
                     }
 
-                    await loadIncome();
-                    await loadExpenses();
-
-                    displayTransactions();
-                    calculateTotals();
+                    await refreshDashboard();
 
                 } else {
 
                     alert(
                         data.message ||
-                        "Income Update Failed"
+                        "Income Update Failed."
                     );
 
                 }
@@ -1652,9 +1887,14 @@ if (updateIncomeBtn) {
                 );
 
                 alert(
-                    "Server Error: " +
-                    error.message
+                    error.message ||
+                    "Server Error."
                 );
+
+            } finally {
+
+                updateIncomeBtn.disabled =
+                    false;
 
             }
 
@@ -1663,6 +1903,99 @@ if (updateIncomeBtn) {
 
 }
 
+// ======================================================
+// ================= DELETE INCOME =======================
+// ======================================================
+
+async function deleteIncomeById(id) {
+
+    const incomeItem =
+        window.allIncome.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+    if (!incomeItem) {
+
+        alert(
+            "Income not found."
+        );
+
+        return;
+
+    }
+
+    const confirmDelete =
+        confirm(
+
+            "Are you sure you want to delete this income?\n\n" +
+
+            formatCurrency(
+                Number(
+                    incomeItem.amount
+                )
+            )
+
+        );
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+    try {
+
+        const data =
+            await apiRequest(
+                "/income/" +
+                encodeURIComponent(id),
+                {
+
+                    method:
+                        "DELETE"
+
+                }
+            );
+
+        if (
+            data.success
+        ) {
+
+            alert(
+                "Income deleted successfully 🗑️"
+            );
+
+            await refreshDashboard();
+
+        } else {
+
+            alert(
+                data.message ||
+                "Income Delete Failed."
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Delete Income Error:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Server Error."
+        );
+
+    }
+
+}
+
+window.deleteIncomeById =
+    deleteIncomeById;
 
 // ======================================================
 // ================= CURRENT MONTH TOTALS ===============
@@ -1679,28 +2012,28 @@ function calculateTotals() {
     const currentYear =
         today.getFullYear();
 
-
     // ==================================================
-    // EXPENSE TOTAL
+    // EXPENSE
     // ==================================================
 
     const expenseTotal =
         expenses.reduce(
-            (total, item) => {
+            (
+                total,
+                item
+            ) => {
 
-                const itemDate =
-                    new Date(item.date);
+                const date =
+                    parseDate(
+                        item.date
+                    );
 
                 if (
-
-                    !isNaN(itemDate) &&
-
-                    itemDate.getMonth() ===
+                    date &&
+                    date.getMonth() ===
                         currentMonth &&
-
-                    itemDate.getFullYear() ===
+                    date.getFullYear() ===
                         currentYear
-
                 ) {
 
                     return (
@@ -1720,28 +2053,28 @@ function calculateTotals() {
             0
         );
 
-
     // ==================================================
-    // INCOME TOTAL
+    // INCOME
     // ==================================================
 
     const incomeTotal =
         window.allIncome.reduce(
-            (total, item) => {
+            (
+                total,
+                item
+            ) => {
 
-                const itemDate =
-                    new Date(item.date);
+                const date =
+                    parseDate(
+                        item.date
+                    );
 
                 if (
-
-                    !isNaN(itemDate) &&
-
-                    itemDate.getMonth() ===
+                    date &&
+                    date.getMonth() ===
                         currentMonth &&
-
-                    itemDate.getFullYear() ===
+                    date.getFullYear() ===
                         currentYear
-
                 ) {
 
                     return (
@@ -1760,7 +2093,6 @@ function calculateTotals() {
             },
             0
         );
-
 
     // ==================================================
     // BALANCE
@@ -1770,9 +2102,8 @@ function calculateTotals() {
         incomeTotal -
         expenseTotal;
 
-
     // ==================================================
-    // UPDATE UI
+    // UI
     // ==================================================
 
     if (totalExpense) {
@@ -1802,11 +2133,6 @@ function calculateTotals() {
 
     }
 
-
-    // ==================================================
-    // CONSOLE
-    // ==================================================
-
     console.log(
         "Current Month Totals:",
         {
@@ -1825,12 +2151,13 @@ function calculateTotals() {
 
 }
 
-
 // ======================================================
 // ================= FORMAT CURRENCY =====================
 // ======================================================
 
-function formatCurrency(amount) {
+function formatCurrency(
+    amount
+) {
 
     const value =
         Number(amount) || 0;
@@ -1853,12 +2180,10 @@ function formatCurrency(amount) {
 
 }
 
-
-// IMPORTANT: Other functions can use this
-
 window.formatCurrency =
     formatCurrency;
-    // ======================================================
+
+// ======================================================
 // ================= EXCEL IMPORT ========================
 // ======================================================
 
@@ -1878,9 +2203,8 @@ if (
 
 }
 
-
 // ======================================================
-// ================= FILE CHANGE =========================
+// ================= EXCEL FILE CHANGE ==================
 // ======================================================
 
 if (expenseFileInput) {
@@ -1898,10 +2222,16 @@ if (expenseFileInput) {
 
             }
 
+            let importedCount =
+                0;
+
+            let failedCount =
+                0;
+
             try {
 
                 // ==================================================
-                // CHECK XLSX LIBRARY
+                // XLSX CHECK
                 // ==================================================
 
                 if (
@@ -1910,77 +2240,21 @@ if (expenseFileInput) {
                 ) {
 
                     alert(
-                        "Excel library not loaded"
+                        "Excel library not loaded. Please add SheetJS XLSX script."
                     );
 
                     return;
 
                 }
 
-
                 // ==================================================
-                // READ FILE
+                // EMAIL CHECK
                 // ==================================================
-
-                const data =
-                    await file.arrayBuffer();
-
-
-                const workbook =
-                    XLSX.read(
-                        data,
-                        {
-                            type: "array"
-                        }
-                    );
-
-
-                const sheetName =
-                    workbook.SheetNames[0];
-
-
-                const worksheet =
-                    workbook.Sheets[
-                        sheetName
-                    ];
-
-
-                const importedData =
-                    XLSX.utils.sheet_to_json(
-                        worksheet,
-                        {
-                            defval: ""
-                        }
-                    );
-
-
-                // ==================================================
-                // EMPTY FILE
-                // ==================================================
-
-                if (
-                    importedData.length ===
-                    0
-                ) {
-
-                    alert(
-                        "No data found in selected file."
-                    );
-
-                    return;
-
-                }
-
-
-                let importedCount =
-                    0;
-
 
                 const email =
                     localStorage.getItem(
                         "userEmail"
                     );
-
 
                 if (!email) {
 
@@ -1992,75 +2266,168 @@ if (expenseFileInput) {
 
                 }
 
+                // ==================================================
+                // READ FILE
+                // ==================================================
+
+                const arrayBuffer =
+                    await file.arrayBuffer();
+
+                const workbook =
+                    XLSX.read(
+                        arrayBuffer,
+                        {
+                            type:
+                                "array"
+                        }
+                    );
+
+                if (
+                    !workbook.SheetNames.length
+                ) {
+
+                    alert(
+                        "No worksheet found."
+                    );
+
+                    return;
+
+                }
+
+                const sheetName =
+                    workbook.SheetNames[0];
+
+                const worksheet =
+                    workbook.Sheets[
+                        sheetName
+                    ];
+
+                const importedData =
+                    XLSX.utils.sheet_to_json(
+                        worksheet,
+                        {
+                            defval:
+                                ""
+                        }
+                    );
+
+                console.log(
+                    "Excel Rows:",
+                    importedData
+                );
+
+                if (
+                    importedData.length ===
+                    0
+                ) {
+
+                    alert(
+                        "No data found in selected Excel file."
+                    );
+
+                    return;
+
+                }
 
                 // ==================================================
-                // IMPORT EACH ROW
+                // PROCESS ROWS
                 // ==================================================
 
                 for (
-                    const row
-                    of importedData
+                    let index = 0;
+                    index < importedData.length;
+                    index++
                 ) {
 
-                    const name =
-                        row.Name ||
-                        row.name ||
-                        row.Expense ||
-                        row.expense;
+                    const row =
+                        importedData[index];
 
+                    console.log(
+                        `Processing Excel Row ${index + 1}:`,
+                        row
+                    );
+
+                    // ==================================================
+                    // NAME
+                    // ==================================================
+
+                    const name =
+                        getExcelValue(
+                            row,
+                            [
+                                "Name",
+                                "name",
+                                "Expense",
+                                "expense",
+                                "Description",
+                                "description"
+                            ]
+                        );
+
+                    // ==================================================
+                    // AMOUNT
+                    // ==================================================
+
+                    const rawAmount =
+                        getExcelValue(
+                            row,
+                            [
+                                "Amount",
+                                "amount",
+                                "Price",
+                                "price"
+                            ]
+                        );
 
                     const amount =
                         Number(
-                            row.Amount ||
-                            row.amount
+                            String(
+                                rawAmount
+                            )
+                                .replace(
+                                    /,/g,
+                                    ""
+                                )
+                                .replace(
+                                    /₹/g,
+                                    ""
+                                )
+                                .trim()
                         );
 
+                    // ==================================================
+                    // CATEGORY
+                    // ==================================================
 
                     const category =
-                        row.Category ||
-                        row.category ||
+                        getExcelValue(
+                            row,
+                            [
+                                "Category",
+                                "category",
+                                "Type",
+                                "type"
+                            ]
+                        ) ||
                         "Others";
 
+                    // ==================================================
+                    // DATE
+                    // ==================================================
 
                     let date =
-                        row.Date ||
-                        row.date;
+                        getExcelValue(
+                            row,
+                            [
+                                "Date",
+                                "date"
+                            ]
+                        );
 
-
-                    // ==================================================
-                    // EXCEL DATE CONVERSION
-                    // ==================================================
-
-                    if (
-                        typeof date ===
-                        "number"
-                    ) {
-
-                        const excelDate =
-                            XLSX.SSF.parse_date_code(
-                                date
-                            );
-
-
-                        if (excelDate) {
-
-                            date =
-                                `${excelDate.y}-${String(
-                                    excelDate.m
-                                ).padStart(
-                                    2,
-                                    "0"
-                                )}-${String(
-                                    excelDate.d
-                                ).padStart(
-                                    2,
-                                    "0"
-                                )}`;
-
-                        }
-
-                    }
-
+                    date =
+                        convertExcelDate(
+                            date
+                        );
 
                     // ==================================================
                     // VALIDATION
@@ -2068,36 +2435,42 @@ if (expenseFileInput) {
 
                     if (
                         !name ||
+                        !Number.isFinite(
+                            amount
+                        ) ||
                         amount <= 0 ||
                         !date
                     ) {
+
+                        failedCount++;
+
+                        console.error(
+                            `❌ Excel Row ${index + 1} skipped`,
+                            {
+                                name,
+                                amount,
+                                category,
+                                date
+                            }
+                        );
 
                         continue;
 
                     }
 
-
                     // ==================================================
-                    // SEND TO SERVER
+                    // SEND TO BACKEND
                     // ==================================================
 
                     try {
 
-                        const response =
-                            await fetch(
-                                API_BASE +
+                        const result =
+                            await apiRequest(
                                 "/expenses",
                                 {
 
                                     method:
                                         "POST",
-
-                                    headers: {
-
-                                        "Content-Type":
-                                            "application/json"
-
-                                    },
 
                                     body:
                                         JSON.stringify({
@@ -2119,19 +2492,17 @@ if (expenseFileInput) {
                                                 ),
 
                                             date:
-                                                String(
-                                                    date
-                                                )
+                                                date
 
                                         })
 
                                 }
                             );
 
-
-                        const result =
-                            await response.json();
-
+                        console.log(
+                            `Excel Row ${index + 1} Response:`,
+                            result
+                        );
 
                         if (
                             result.success
@@ -2139,13 +2510,23 @@ if (expenseFileInput) {
 
                             importedCount++;
 
-                        }
+                        } else {
 
+                            failedCount++;
+
+                            console.error(
+                                `❌ Backend rejected row ${index + 1}:`,
+                                result
+                            );
+
+                        }
 
                     } catch (rowError) {
 
+                        failedCount++;
+
                         console.error(
-                            "Import Row Error:",
+                            `❌ Excel Row ${index + 1} Error:`,
                             rowError
                         );
 
@@ -2153,62 +2534,529 @@ if (expenseFileInput) {
 
                 }
 
+                // ==================================================
+                // REFRESH
+                // ==================================================
+
+                await refreshDashboard();
 
                 // ==================================================
-                // REFRESH DASHBOARD
-                // ==================================================
-
-                await loadExpenses();
-
-                await loadIncome();
-
-                displayTransactions();
-
-                calculateTotals();
-
-
-                // ==================================================
-                // SUCCESS MESSAGE
+                // RESULT
                 // ==================================================
 
                 alert(
 
+                    "Excel Import Completed ✅\n\n" +
+
+                    "Successfully imported: " +
                     importedCount +
-                    " expense(s) imported successfully ✅"
+
+                    "\nFailed/Skipped: " +
+                    failedCount
 
                 );
 
+                console.log(
+                    "Excel Import Summary:",
+                    {
+
+                        totalRows:
+                            importedData.length,
+
+                        imported:
+                            importedCount,
+
+                        failed:
+                            failedCount
+
+                    }
+                );
 
             } catch (error) {
 
                 console.error(
-                    "Import Error:",
+                    "Excel Import Error:",
                     error
                 );
 
-
                 alert(
-                    "Unable to import the file."
+                    error.message ||
+                    "Unable to import Excel file."
                 );
 
+            } finally {
+
+                this.value =
+                    "";
+
             }
-
-
-            // Reset file input
-
-            this.value = "";
 
         }
     );
 
 }
 
+// ======================================================
+// ================= EXCEL VALUE HELPER =================
+// ======================================================
+
+function getExcelValue(
+    row,
+    keys
+) {
+
+    for (
+        const key of keys
+    ) {
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                row,
+                key
+            )
+        ) {
+
+            const value =
+                row[key];
+
+            if (
+                value !==
+                    undefined &&
+                value !==
+                    null &&
+                String(value).trim() !==
+                    ""
+            ) {
+
+                return value;
+
+            }
+
+        }
+
+    }
+
+    return "";
+
+}
 
 // ======================================================
-// ================= INITIAL LOAD ========================
+// ================= EXCEL DATE ==========================
 // ======================================================
+
+function convertExcelDate(
+    value
+) {
+
+    if (
+        value ===
+            undefined ||
+        value ===
+            null ||
+        value ===
+            ""
+    ) {
+
+        return "";
+
+    }
+
+    // ==================================================
+    // EXCEL SERIAL NUMBER
+    // ==================================================
+
+    if (
+        typeof value ===
+        "number"
+    ) {
+
+        if (
+            typeof XLSX !==
+            "undefined" &&
+            XLSX.SSF &&
+            XLSX.SSF.parse_date_code
+        ) {
+
+            const parsed =
+                XLSX.SSF.parse_date_code(
+                    value
+                );
+
+            if (parsed) {
+
+                return (
+
+                    String(
+                        parsed.y
+                    ) +
+
+                    "-" +
+
+                    String(
+                        parsed.m
+                    ).padStart(
+                        2,
+                        "0"
+                    ) +
+
+                    "-" +
+
+                    String(
+                        parsed.d
+                    ).padStart(
+                        2,
+                        "0"
+                    )
+
+                );
+
+            }
+
+        }
+
+    }
+
+    const stringValue =
+        String(
+            value
+        ).trim();
+
+    // ==================================================
+    // YYYY-MM-DD
+    // ==================================================
+
+    if (
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            stringValue
+        )
+    ) {
+
+        return stringValue;
+
+    }
+
+    // ==================================================
+    // DD/MM/YYYY
+    // ==================================================
+
+    let match =
+        stringValue.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+        );
+
+    if (match) {
+
+        return (
+
+            match[3] +
+            "-" +
+            match[2].padStart(
+                2,
+                "0"
+            ) +
+            "-" +
+            match[1].padStart(
+                2,
+                "0"
+            )
+
+        );
+
+    }
+
+    // ==================================================
+    // DD-MM-YYYY
+    // ==================================================
+
+    match =
+        stringValue.match(
+            /^(\d{1,2})-(\d{1,2})-(\d{4})$/
+        );
+
+    if (match) {
+
+        return (
+
+            match[3] +
+            "-" +
+            match[2].padStart(
+                2,
+                "0"
+            ) +
+            "-" +
+            match[1].padStart(
+                2,
+                "0"
+            )
+
+        );
+
+    }
+
+    // ==================================================
+    // NORMAL DATE
+    // ==================================================
+
+    const parsedDate =
+        new Date(
+            stringValue
+        );
+
+    if (
+        !isNaN(
+            parsedDate.getTime()
+        )
+    ) {
+
+        return (
+
+            parsedDate
+                .getFullYear() +
+
+            "-" +
+
+            String(
+                parsedDate.getMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            ) +
+
+            "-" +
+
+            String(
+                parsedDate.getDate()
+            ).padStart(
+                2,
+                "0"
+            )
+
+        );
+
+    }
+
+    return "";
+
+}
+
+// ======================================================
+// ================= DATE PARSER =========================
+// ======================================================
+
+function parseDate(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return null;
+
+    }
+
+    const stringValue =
+        String(
+            value
+        ).trim();
+
+    // YYYY-MM-DD
+
+    const match =
+        stringValue.match(
+            /^(\d{4})-(\d{2})-(\d{2})/
+        );
+
+    if (match) {
+
+        const year =
+            Number(
+                match[1]
+            );
+
+        const month =
+            Number(
+                match[2]
+            ) - 1;
+
+        const day =
+            Number(
+                match[3]
+            );
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+        if (
+            !isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return date;
+
+        }
+
+    }
+
+    const date =
+        new Date(
+            stringValue
+        );
+
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return null;
+
+    }
+
+    return date;
+
+}
+
+// ======================================================
+// ================= NORMALIZE DATE ======================
+// ======================================================
+
+function normalizeDate(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "";
+
+    }
+
+    const date =
+        parseDate(
+            value
+        );
+
+    if (
+        !date
+    ) {
+
+        return String(
+            value
+        );
+
+    }
+
+    return (
+
+        date.getFullYear() +
+        "-" +
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        ) +
+        "-" +
+        String(
+            date.getDate()
+        ).padStart(
+            2,
+            "0"
+        )
+
+    );
+
+}
+
+// ======================================================
+// ================= HTML SECURITY =======================
+// ======================================================
+
+function escapeHTML(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+// ======================================================
+// ================= REFRESH DASHBOARD ==================
+// ======================================================
+
+async function refreshDashboard() {
+
+    console.log(
+        "Refreshing dashboard..."
+    );
+
+    await Promise.all([
+        loadExpenses(),
+        loadIncome()
+    ]);
+
+    displayTransactions();
+
+    calculateTotals();
+
+    console.log(
+        "Dashboard refreshed successfully ✅"
+    );
+
+}
+
+// ======================================================
+// ================= INITIALIZE ==========================
+// ======================================================
+
+let dashboardInitialized =
+    false;
 
 async function initializeDashboard() {
+
+    if (
+        dashboardInitialized
+    ) {
+
+        console.log(
+            "Dashboard already initialized."
+        );
+
+        return;
+
+    }
+
+    dashboardInitialized =
+        true;
 
     try {
 
@@ -2216,31 +3064,11 @@ async function initializeDashboard() {
             "Loading dashboard data..."
         );
 
-
-        // Load expenses
-
-        await loadExpenses();
-
-
-        // Load income
-
-        await loadIncome();
-
-
-        // Display transactions
-
-        displayTransactions();
-
-
-        // Calculate totals
-
-        calculateTotals();
-
+        await refreshDashboard();
 
         console.log(
             "Dashboard data loaded successfully ✅"
         );
-
 
     } catch (error) {
 
@@ -2253,27 +3081,29 @@ async function initializeDashboard() {
 
 }
 
-
 // ======================================================
 // ================= DOM READY ============================
 // ======================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+if (
+    document.readyState ===
+    "loading"
+) {
 
-        initializeDashboard();
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeDashboard
+    );
 
-    }
-);
+} else {
 
+    initializeDashboard();
+
+}
 
 // ======================================================
-// ================= FINAL GLOBAL FUNCTIONS ==============
+// ================= GLOBAL FUNCTIONS ====================
 // ======================================================
-
-// Make sure HTML onclick buttons
-// can access these functions.
 
 window.editExpenseById =
     editExpenseById;
@@ -2290,11 +3120,22 @@ window.deleteIncomeById =
 window.formatCurrency =
     formatCurrency;
 
+window.calculateTotals =
+    calculateTotals;
+
+window.loadExpenses =
+    loadExpenses;
+
+window.loadIncome =
+    loadIncome;
+
+window.refreshDashboard =
+    refreshDashboard;
 
 // ======================================================
-// ================= DASHBOARD COMPLETE ==================
+// ================= COMPLETE ============================
 // ======================================================
 
 console.log(
-    "Dashboard JS Loaded Successfully ✅"
+    "Dashboard JS Ready 🚀"
 );
