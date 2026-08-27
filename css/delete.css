@@ -1,428 +1,480 @@
-// ================= LOGIN CHECK =================
+/* ================= DELETE HISTORY ================= */
 
-const email = localStorage.getItem("userEmail");
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-if (!email) {
-    window.location.href = "index.html";
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f5f7fb;
+    color: #222;
+    min-height: 100vh;
 }
 
 
-// ================= LOAD SAVED THEME =================
+/* ================= NAVBAR ================= */
 
-function loadTheme() {
+.navbar {
+    width: 100%;
+    min-height: 70px;
 
-    const darkMode =
-        localStorage.getItem("darkMode");
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-    if (darkMode === "true") {
+    padding: 15px 30px;
 
-        document.body.classList.add("dark-mode");
+    background: #ffffff;
 
-    } else {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
 
-        document.body.classList.remove("dark-mode");
+.navbar h2 {
+    font-size: 22px;
+    font-weight: 600;
+}
 
+.navbar button {
+    border: none;
+    background: #667eea;
+    color: white;
+
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+.navbar button:hover {
+    opacity: 0.9;
+}
+
+
+/* ================= MAIN CONTENT ================= */
+
+.main-content {
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+    padding: 35px 20px;
+}
+
+
+/* ================= PAGE TITLE ================= */
+
+.page-title {
+    margin-bottom: 25px;
+}
+
+.page-title h1 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.page-title p {
+    color: #777;
+    font-size: 15px;
+}
+
+
+/* ================= FILTER CARD ================= */
+
+.filter-card {
+    background: #ffffff;
+
+    padding: 20px;
+
+    border-radius: 12px;
+
+    display: flex;
+    gap: 15px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.filter-card select {
+    padding: 11px 15px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    font-family: 'Poppins', sans-serif;
+
+    cursor: pointer;
+}
+
+
+/* ================= HISTORY CARD ================= */
+
+.history-card {
+    background: #ffffff;
+
+    padding: 25px;
+
+    border-radius: 12px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.history-card h2 {
+    margin-bottom: 20px;
+}
+
+
+/* ================= HISTORY ITEM ================= */
+
+.history-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 15px;
+
+    border: 1px solid #eee;
+
+    border-radius: 10px;
+
+    margin-bottom: 12px;
+
+    background: #fafafa;
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+
+/* ================= DELETE / RESTORE BUTTONS ================= */
+
+.restore-btn {
+    border: none;
+
+    background: #28a745;
+
+    color: white;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+.restore-btn:hover {
+    opacity: 0.9;
+}
+
+.permanent-delete-btn {
+    border: none;
+
+    background: #dc3545;
+
+    color: white;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    margin-left: 8px;
+}
+
+
+/* ================= EMPTY HISTORY ================= */
+
+.empty-history {
+    text-align: center;
+
+    padding: 40px 20px;
+
+    color: #888;
+}
+
+
+/* ================= DARK MODE ================= */
+
+body.dark-mode {
+    background: #121212;
+
+    color: #ffffff;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .filter-card,
+body.dark-mode .history-card {
+    background: #1e1e1e;
+}
+
+body.dark-mode .page-title p {
+    color: #aaa;
+}
+
+body.dark-mode .filter-card select {
+    background: #2a2a2a;
+
+    color: #fff;
+
+    border-color: #444;
+}
+
+body.dark-mode .history-item {
+    background: #252525;
+
+    border-color: #444;
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+
+    .navbar {
+        padding: 12px 15px;
+    }
+
+    .navbar h2 {
+        font-size: 17px;
+    }
+
+    .navbar button {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .main-content {
+        padding: 25px 15px;
+    }
+
+    .page-title h1 {
+        font-size: 24px;
+    }
+
+    .filter-card {
+        flex-direction: column;
+    }
+
+    .filter-card select {
+        width: 100%;
+    }
+
+    .history-item {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 12px;
     }
 
 }
+/* ======================================================
+   ============== GLOBAL DARK THEME ====================
+   ============== MATCH DASHBOARD / REPORTS ============
+   ====================================================== */
 
-
-// ================= DELETE HISTORY DATA =================
-
-let historyData = [];
-
-
-// ================= LOAD HISTORY FROM MYSQL =================
-
-async function loadHistory() {
-
-    try {
-
-        const response =
-            await fetch(
-                "http://localhost:5000/delete-history/" +
-                encodeURIComponent(email)
-            );
-
-        const data =
-            await response.json();
-
-
-        if (data.success) {
-
-            historyData =
-                data.history || [];
-
-            showHistory();
-
-        } else {
-
-            document.getElementById(
-                "historyList"
-            ).innerHTML =
-                "<h3>No History Found</h3>";
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "History Load Error:",
-            error
-        );
-
-        document.getElementById(
-            "historyList"
-        ).innerHTML = `
-
-            <div class="no-history">
-
-                <h3>
-                    Unable to load Delete History
-                </h3>
-
-                <p>
-                    Please make sure the server is running.
-                </p>
-
-            </div>
-
-        `;
-
-    }
-
+body {
+    background: #0f172a;
+    color: #f8fafc;
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
 }
 
 
-// ================= SHOW HISTORY =================
-
-function showHistory() {
-
-    const box =
-        document.getElementById("historyList");
-
-    if (!box) return;
-
-    box.innerHTML = "";
-
-
-    // ================= TYPE FILTER =================
-
-    const typeSelect =
-        document.getElementById("historyType");
-
-    const selectedType =
-        typeSelect
-            ? typeSelect.value.toLowerCase()
-            : "all";
-
-
-    // ================= DATE FILTER =================
-
-    const dateSelect =
-        document.getElementById("dateFilter");
-
-    const selectedDate =
-        dateSelect
-            ? dateSelect.value
-            : "all";
-
-
-    // ================= FILTER =================
-
-    let data =
-        historyData.filter(item => {
-
-            const itemType =
-                String(
-                    item.type || ""
-                ).toLowerCase();
-
-
-            if (
-                selectedType !== "all" &&
-                itemType !== selectedType
-            ) {
-
-                return false;
-
-            }
-
-
-            if (selectedDate === "all") {
-
-                return true;
-
-            }
-
-
-            const deletedDate =
-                new Date(item.deleted_at);
-
-
-            if (
-                isNaN(
-                    deletedDate.getTime()
-                )
-            ) {
-
-                return true;
-
-            }
-
-
-            const now =
-                new Date();
-
-
-            const difference =
-                now - deletedDate;
-
-
-            const days =
-                difference /
-                (1000 * 60 * 60 * 24);
-
-
-            if (selectedDate === "month") {
-
-                return days <= 30;
-
-            }
-
-
-            if (selectedDate === "old") {
-
-                return days > 30;
-
-            }
-
-
-            return true;
-
-        });
-
-
-    // ================= NO HISTORY =================
-
-    if (data.length === 0) {
-
-        box.innerHTML = `
-
-            <div class="no-history">
-
-                <h3>
-                    No History Found
-                </h3>
-
-                <p>
-                    Deleted records will appear here.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    // ================= DISPLAY =================
-
-    data.forEach(item => {
-
-        const deletedDate =
-            new Date(item.deleted_at);
-
-
-        // ================= DAYS LEFT =================
-
-        let daysLeft = 60;
-
-
-        if (
-            !isNaN(
-                deletedDate.getTime()
-            )
-        ) {
-
-            const now =
-                new Date();
-
-            const diff =
-                now - deletedDate;
-
-            const daysPassed =
-                Math.floor(
-                    diff /
-                    (1000 * 60 * 60 * 24)
-                );
-
-            daysLeft =
-                Math.max(
-                    0,
-                    60 - daysPassed
-                );
-
-        }
-
-
-        // ================= ORIGINAL DATE =================
-
-        const originalDate =
-            item.date
-                ? new Date(item.date).toLocaleDateString()
-                : "-";
-
-
-        // ================= DELETED DATE =================
-
-        const deletedDateText =
-            !isNaN(
-                deletedDate.getTime()
-            )
-                ? deletedDate.toLocaleDateString()
-                : "-";
-
-
-        // ================= TYPE =================
-
-        const typeText =
-            String(
-                item.type || "unknown"
-            ).toUpperCase();
-
-
-        // ================= CARD =================
-
-        const card =
-            document.createElement("div");
-
-        card.className =
-            "history-item";
-
-
-        card.innerHTML = `
-
-            <div>
-
-                <h3>
-                    ${item.name || "Unknown"}
-                </h3>
-
-
-                <p>
-                    <strong>Type:</strong>
-                    ${typeText}
-                </p>
-
-
-                <p>
-                    <strong>Amount:</strong>
-                    ₹${Number(
-                        item.amount || 0
-                    ).toLocaleString("en-IN")}
-                </p>
-
-
-                <p>
-                    <strong>Category:</strong>
-                    ${item.category || "-"}
-                </p>
-
-
-                <p>
-                    <strong>Original Date:</strong>
-                    ${originalDate}
-                </p>
-
-
-                <p>
-                    <strong>Deleted On:</strong>
-                    ${deletedDateText}
-                </p>
-
-
-                <p class="days-left">
-
-                    🕒
-
-                    <strong>
-                        ${daysLeft} day(s) remaining
-                    </strong>
-
-                    before permanent deletion.
-
-                </p>
-
-            </div>
-
-        `;
-
-
-        box.appendChild(card);
-
-    });
-
+/* ================= NAVBAR ================= */
+
+body:not(.light-mode) .navbar {
+    background: #0f172a;
+    color: #ffffff;
+    border-bottom: 1px solid #263449;
 }
 
 
-// ================= FILTER EVENTS =================
+/* Navbar heading */
 
-const historyType =
-    document.getElementById("historyType");
-
-if (historyType) {
-
-    historyType.addEventListener(
-        "change",
-        showHistory
-    );
-
+body:not(.light-mode) .navbar h2 {
+    color: #c04bdc;
 }
 
 
-const dateFilter =
-    document.getElementById("dateFilter");
+/* Dashboard button */
 
-if (dateFilter) {
-
-    dateFilter.addEventListener(
-        "change",
-        showHistory
-    );
-
+body:not(.light-mode) .navbar button {
+    background: #a855f7;
+    color: #ffffff;
+    border: none;
 }
 
 
-// ================= DASHBOARD =================
+/* ================= MAIN CONTENT ================= */
 
-function goDashboard() {
-
-    window.location.href =
-        "dashboard.html";
-
+body:not(.light-mode) .main-content {
+    background: #0f172a;
+    color: #ffffff;
 }
 
 
-// ================= CHECK THEME =================
+/* ================= PAGE TITLE ================= */
 
-// Apply dashboard's saved theme
-loadTheme();
-
-
-// ================= AUTO REFRESH =================
-
-setInterval(() => {
-
-    loadTheme();
-
-    showHistory();
-
-}, 60000);
+body:not(.light-mode) .page-title h1 {
+    color: #c04bdc;
+}
 
 
-// ================= START =================
+body:not(.light-mode) .page-title p {
+    color: #cbd5e1;
+}
 
-loadHistory();
+
+/* ================= FILTER CARD ================= */
+
+body:not(.light-mode) .filter-card {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #2d3a4f;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+
+/* ================= SELECT ================= */
+
+body:not(.light-mode) .filter-card select {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #475569;
+}
+
+
+body:not(.light-mode) .filter-card select:focus {
+    border-color: #a855f7;
+    outline: none;
+}
+
+
+/* ================= HISTORY CARD ================= */
+
+body:not(.light-mode) .history-card {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #2d3a4f;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+
+/* History heading */
+
+body:not(.light-mode) .history-card h2 {
+    color: #dbeafe;
+}
+
+
+/* ================= HISTORY TABLE ================= */
+
+body:not(.light-mode) .history-card table {
+    background: #1e293b;
+    color: #ffffff;
+}
+
+
+/* Table heading */
+
+body:not(.light-mode) .history-card th {
+    background: #263449;
+    color: #dbeafe;
+    border-color: #334155;
+}
+
+
+/* Table data */
+
+body:not(.light-mode) .history-card td {
+    background: #1e293b;
+    color: #f8fafc;
+    border-color: #334155;
+}
+
+
+/* Table hover */
+
+body:not(.light-mode) .history-card tr:hover td {
+    background: #263449;
+}
+
+
+/* ================= DELETED EXPENSE ================= */
+
+body:not(.light-mode) .expense-item,
+body:not(.light-mode) .history-item {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #334155;
+}
+
+
+/* ================= DATE / SECONDARY TEXT ================= */
+
+body:not(.light-mode) .history-card small,
+body:not(.light-mode) .history-card .date,
+body:not(.light-mode) .history-card .secondary-text {
+    color: #94a3b8;
+}
+
+
+/* ================= RESTORE BUTTON ================= */
+
+body:not(.light-mode) .restore-btn {
+    background: #22c55e;
+    color: #ffffff;
+    border: none;
+}
+
+
+body:not(.light-mode) .restore-btn:hover {
+    background: #16a34a;
+}
+
+
+/* ================= DELETE BUTTON ================= */
+
+body:not(.light-mode) .delete-btn {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+}
+
+
+/* ================= SCROLLBAR ================= */
+
+body:not(.light-mode)::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+body:not(.light-mode)::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+
+body:not(.light-mode)::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+
+body:not(.light-mode)::-webkit-scrollbar-thumb:hover {
+    background: #a855f7;
+}

@@ -918,65 +918,159 @@ app.put(
 
 // ======================================================
 // ================= DELETE EXPENSE ======================
+// ================= SAVE TO HISTORY =====================
 // ======================================================
 
 app.delete(
     "/expenses/:id",
     (req, res) => {
 
-        const id =
-            req.params.id;
+        const id = req.params.id;
 
+        // First get the expense before deleting
+        const selectSql = `
+            SELECT
+                id,
+                email,
+                name,
+                amount,
+                category,
+                date
+            FROM expenses
+            WHERE id = ?
+            LIMIT 1
+        `;
 
         db.query(
-
-            `
-            DELETE FROM expenses
-            WHERE id = ?
-            `,
-
+            selectSql,
             [id],
+            (selectErr, results) => {
 
-            (err, result) => {
-
-                if (err) {
+                if (selectErr) {
 
                     console.error(
-                        "❌ Delete Expense Error:",
-                        err
+                        "❌ Find Expense Before Delete Error:",
+                        selectErr
                     );
 
                     return res.status(500).json({
-
                         success: false,
+                        message: "Unable to find expense",
+                        error: selectErr.message
+                    });
+                }
 
-                        error:
-                            err.message
 
+                // Expense not found
+                if (results.length === 0) {
+
+                    return res.status(404).json({
+                        success: false,
+                        message: "Expense not found"
                     });
 
                 }
 
 
-                res.json({
+                const expense = results[0];
 
-                    success: true,
 
-                    message:
-                        "Expense deleted successfully",
+                // Save deleted expense to history
+                const historySql = `
+                    INSERT INTO deleted_history
+                    (
+                        email,
+                        original_id,
+                        type,
+                        name,
+                        amount,
+                        category,
+                        date
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
 
-                    affectedRows:
-                        result.affectedRows
 
-                });
+                db.query(
+                    historySql,
+                    [
+                        expense.email,
+                        expense.id,
+                        "expense",
+                        expense.name,
+                        expense.amount,
+                        expense.category,
+                        expense.date
+                    ],
+                    (historyErr) => {
+
+                        if (historyErr) {
+
+                            console.error(
+                                "❌ Save Expense History Error:",
+                                historyErr
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message: "Unable to save deleted expense history",
+                                error: historyErr.message
+                            });
+
+                        }
+
+
+                        // Delete original expense
+                        const deleteSql = `
+                            DELETE FROM expenses
+                            WHERE id = ?
+                        `;
+
+
+                        db.query(
+                            deleteSql,
+                            [id],
+                            (deleteErr, result) => {
+
+                                if (deleteErr) {
+
+                                    console.error(
+                                        "❌ Delete Expense Error:",
+                                        deleteErr
+                                    );
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message: "Unable to delete expense",
+                                        error: deleteErr.message
+                                    });
+
+                                }
+
+
+                                res.json({
+
+                                    success: true,
+
+                                    message:
+                                        "Expense deleted and saved to history successfully",
+
+                                    affectedRows:
+                                        result.affectedRows
+
+                                });
+
+                            }
+                        );
+
+                    }
+                );
 
             }
         );
 
     }
 );
-
-
 // ======================================================
 // ================= GET INCOME ==========================
 // ======================================================
@@ -1257,57 +1351,151 @@ app.put(
 
 // ======================================================
 // ================= DELETE INCOME =======================
+// ================= SAVE TO HISTORY =====================
 // ======================================================
 
 app.delete(
     "/income/:id",
     (req, res) => {
 
-        const id =
-            req.params.id;
+        const id = req.params.id;
 
+        // First get income before deleting
+        const selectSql = `
+            SELECT
+                id,
+                email,
+                amount,
+                date
+            FROM income
+            WHERE id = ?
+            LIMIT 1
+        `;
 
         db.query(
-
-            `
-            DELETE FROM income
-            WHERE id = ?
-            `,
-
+            selectSql,
             [id],
+            (selectErr, results) => {
 
-            (err, result) => {
-
-                if (err) {
+                if (selectErr) {
 
                     console.error(
-                        "❌ Delete Income Error:",
-                        err
+                        "❌ Find Income Before Delete Error:",
+                        selectErr
                     );
 
                     return res.status(500).json({
-
                         success: false,
+                        message: "Unable to find income",
+                        error: selectErr.message
+                    });
+                }
 
-                        error:
-                            err.message
 
+                // Income not found
+                if (results.length === 0) {
+
+                    return res.status(404).json({
+                        success: false,
+                        message: "Income not found"
                     });
 
                 }
 
 
-                res.json({
+                const income = results[0];
 
-                    success: true,
 
-                    message:
-                        "Income deleted successfully",
+                // Save deleted income to history
+                const historySql = `
+                    INSERT INTO deleted_history
+                    (
+                        email,
+                        original_id,
+                        type,
+                        name,
+                        amount,
+                        category,
+                        date
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
 
-                    affectedRows:
-                        result.affectedRows
 
-                });
+                db.query(
+                    historySql,
+                    [
+                        income.email,
+                        income.id,
+                        "income",
+                        null,
+                        income.amount,
+                        null,
+                        income.date
+                    ],
+                    (historyErr) => {
+
+                        if (historyErr) {
+
+                            console.error(
+                                "❌ Save Income History Error:",
+                                historyErr
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message: "Unable to save deleted income history",
+                                error: historyErr.message
+                            });
+
+                        }
+
+
+                        // Delete original income
+                        const deleteSql = `
+                            DELETE FROM income
+                            WHERE id = ?
+                        `;
+
+
+                        db.query(
+                            deleteSql,
+                            [id],
+                            (deleteErr, result) => {
+
+                                if (deleteErr) {
+
+                                    console.error(
+                                        "❌ Delete Income Error:",
+                                        deleteErr
+                                    );
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message: "Unable to delete income",
+                                        error: deleteErr.message
+                                    });
+
+                                }
+
+
+                                res.json({
+
+                                    success: true,
+
+                                    message:
+                                        "Income deleted and saved to history successfully",
+
+                                    affectedRows:
+                                        result.affectedRows
+
+                                });
+
+                            }
+                        );
+
+                    }
+                );
 
             }
         );

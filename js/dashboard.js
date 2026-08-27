@@ -1552,6 +1552,7 @@ if (updateExpenseBtn) {
 
 // ======================================================
 // ================= DELETE EXPENSE ======================
+// ================= MOVE TO HISTORY =====================
 // ======================================================
 
 async function deleteExpenseById(id) {
@@ -1559,21 +1560,19 @@ async function deleteExpenseById(id) {
     const expenseItem =
         expenses.find(
             item =>
-                Number(item.id) ===
-                Number(id)
+                Number(item.id) === Number(id)
         );
-
 
     if (!expenseItem) {
 
-        alert(
-            "Expense not found"
-        );
+        alert("Expense not found");
 
         return;
 
     }
 
+
+    // ================= CONFIRM DELETE =================
 
     const confirmDelete =
         confirm(
@@ -1581,10 +1580,10 @@ async function deleteExpenseById(id) {
             expenseItem.name +
             " - " +
             formatCurrency(
-                Number(
-                    expenseItem.amount
-                )
-            )
+                Number(expenseItem.amount)
+            ) +
+            "\n\n" +
+            "This record will be kept in Delete History for 60 days."
         );
 
 
@@ -1597,19 +1596,18 @@ async function deleteExpenseById(id) {
 
     try {
 
-        // server.js:
-        // DELETE /expenses/:id
-
         const response =
             await fetch(
                 API_BASE +
                 "/expenses/" +
                 id,
                 {
+                    method: "DELETE",
 
-                    method:
-                        "DELETE"
-
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    }
                 }
             );
 
@@ -1618,22 +1616,33 @@ async function deleteExpenseById(id) {
             await response.json();
 
 
-        if (
-            data.success
-        ) {
+        console.log(
+            "Delete Expense Response:",
+            data
+        );
+
+
+        if (data.success) {
 
             alert(
-                "Expense Deleted Successfully 🗑️"
+                "Expense moved to Delete History 🗑️\n\n" +
+                "You can restore it within 60 days."
             );
 
+
+            // ================= RELOAD DATA =================
 
             await loadExpenses();
 
             await loadIncome();
 
+
+            // ================= REFRESH DASHBOARD =================
+
             displayTransactions();
 
             calculateTotals();
+
 
         } else {
 
@@ -1644,12 +1653,14 @@ async function deleteExpenseById(id) {
 
         }
 
+
     } catch (error) {
 
         console.error(
             "Delete Expense Error:",
             error
         );
+
 
         alert(
             "Server Error. Please try again."
@@ -1660,10 +1671,10 @@ async function deleteExpenseById(id) {
 }
 
 
+// ================= MAKE FUNCTION GLOBAL =================
+
 window.deleteExpenseById =
     deleteExpenseById;
-
-
 // ======================================================
 // ================= EDIT INCOME =========================
 // ======================================================

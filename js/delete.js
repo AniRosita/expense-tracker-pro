@@ -1,54 +1,64 @@
-// ================= DELETE HISTORY DATA =================
+// ================= DELETE HISTORY / TRASH =================
 
 let historyData = [];
 
 
-// ================= LOAD HISTORY FROM MYSQL =================
+// ================= LOGIN CHECK =================
 
-async function loadHistory() {
+const email = localStorage.getItem("userEmail");
 
-    const email =
-        localStorage.getItem("userEmail");
+if (!email) {
+    window.location.href = "index.html";
+}
 
 
-    // ================= LOGIN CHECK =================
+// ================= LOAD SAVED THEME =================
 
-    if (!email) {
+function loadTheme() {
 
-        window.location.href = "index.html";
+    const savedTheme =
+        localStorage.getItem("theme");
 
-        return;
+    if (savedTheme === "light") {
+
+        document.body.classList.add("light-mode");
+
+    } else {
+
+        document.body.classList.remove("light-mode");
 
     }
 
+}
+
+// ================= LOAD TRASH FROM MYSQL =================
+
+async function loadHistory() {
 
     try {
 
         const response =
             await fetch(
-                "/delete-history/" +
+                "/trash/" +
                 encodeURIComponent(email)
             );
-
 
         if (!response.ok) {
 
             throw new Error(
-                "History API Error: " +
+                "Trash API Error: " +
                 response.status
             );
 
         }
 
-
         const data =
             await response.json();
-
 
         if (data.success) {
 
             historyData =
-                data.history || [];
+                data.trash || [];
 
             showHistory();
 
@@ -58,20 +68,17 @@ async function loadHistory() {
 
         }
 
-
     } catch (error) {
 
         console.error(
-            "History Load Error:",
+            "Trash Load Error:",
             error
         );
-
 
         const box =
             document.getElementById(
                 "historyList"
             );
-
 
         if (box) {
 
@@ -107,9 +114,7 @@ function showNoHistory() {
             "historyList"
         );
 
-
     if (!box) return;
-
 
     box.innerHTML = `
 
@@ -139,9 +144,7 @@ function showHistory() {
             "historyList"
         );
 
-
     if (!box) return;
-
 
     box.innerHTML = "";
 
@@ -152,7 +155,6 @@ function showHistory() {
         document.getElementById(
             "historyType"
         );
-
 
     const selectedType =
         typeSelect
@@ -167,7 +169,6 @@ function showHistory() {
             "dateFilter"
         );
 
-
     const selectedDate =
         dateSelect
             ? dateSelect.value
@@ -179,14 +180,13 @@ function showHistory() {
     let data =
         historyData.filter(item => {
 
-
-            // ================= TYPE FILTER =================
-
             const itemType =
                 String(
-                    item.type || ""
+                    item.transaction_type || ""
                 ).toLowerCase();
 
+
+            // TYPE FILTER
 
             if (
                 selectedType !== "all" &&
@@ -198,7 +198,7 @@ function showHistory() {
             }
 
 
-            // ================= DATE FILTER =================
+            // DATE FILTER
 
             if (
                 selectedDate === "all"
@@ -229,17 +229,15 @@ function showHistory() {
             const now =
                 new Date();
 
-
             const difference =
                 now - deletedDate;
-
 
             const days =
                 difference /
                 (1000 * 60 * 60 * 24);
 
 
-            // ================= LAST 30 DAYS =================
+            // LAST 30 DAYS
 
             if (
                 selectedDate === "month"
@@ -250,7 +248,7 @@ function showHistory() {
             }
 
 
-            // ================= OLDER RECORDS =================
+            // OLDER RECORDS
 
             if (
                 selectedDate === "old"
@@ -266,7 +264,7 @@ function showHistory() {
         });
 
 
-    // ================= NO HISTORY =================
+    // ================= NO RESULTS =================
 
     if (data.length === 0) {
 
@@ -304,17 +302,14 @@ function showHistory() {
             const now =
                 new Date();
 
-
             const difference =
                 now - deletedDate;
-
 
             const daysPassed =
                 Math.floor(
                     difference /
                     (1000 * 60 * 60 * 24)
                 );
-
 
             daysLeft =
                 Math.max(
@@ -353,7 +348,8 @@ function showHistory() {
 
         const typeText =
             String(
-                item.type || "unknown"
+                item.transaction_type ||
+                "unknown"
             ).toUpperCase();
 
 
@@ -367,13 +363,12 @@ function showHistory() {
             );
 
 
-        // ================= CREATE HISTORY ITEM =================
+        // ================= CREATE CARD =================
 
         const card =
             document.createElement(
                 "div"
             );
-
 
         card.className =
             "history-item";
@@ -384,7 +379,7 @@ function showHistory() {
             <div>
 
                 <h3>
-                    ${item.name || "Unknown"}
+                    ${item.name || "Income"}
                 </h3>
 
 
@@ -430,6 +425,16 @@ function showHistory() {
 
                 </p>
 
+
+                <button
+                    class="restore-btn"
+                    onclick="restoreItem(${item.id})"
+                >
+
+                    ♻️ Restore
+
+                </button>
+
             </div>
 
         `;
@@ -444,13 +449,119 @@ function showHistory() {
 }
 
 
-// ================= HISTORY TYPE FILTER =================
+// ================= RESTORE ITEM =================
+
+async function restoreItem(id) {
+
+    const result =
+        await Swal.fire({
+
+            title:
+                "Restore this record?",
+
+            text:
+                "This record will be moved back to your Income/Expense list.",
+
+            icon:
+                "question",
+
+            showCancelButton:
+                true,
+
+            confirmButtonText:
+                "Yes, Restore",
+
+            cancelButtonText:
+                "Cancel"
+
+        });
+
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/trash/restore/" + id,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.message ||
+                "Restore failed"
+            );
+
+        }
+
+
+        await Swal.fire({
+
+            title:
+                "Restored! ♻️",
+
+            text:
+                data.message ||
+                "Record restored successfully.",
+
+            icon:
+                "success",
+
+            confirmButtonText:
+                "OK"
+
+        });
+
+
+        // Reload Trash
+
+        loadHistory();
+
+
+    } catch (error) {
+
+        console.error(
+            "Restore Error:",
+            error
+        );
+
+
+        Swal.fire({
+
+            title:
+                "Restore Failed",
+
+            text:
+                error.message,
+
+            icon:
+                "error"
+
+        });
+
+    }
+
+}
+
+
+// ================= FILTER EVENTS =================
 
 const historyType =
     document.getElementById(
         "historyType"
     );
-
 
 if (historyType) {
 
@@ -462,13 +573,10 @@ if (historyType) {
 }
 
 
-// ================= DATE FILTER =================
-
 const dateFilter =
     document.getElementById(
         "dateFilter"
     );
-
 
 if (dateFilter) {
 
@@ -490,53 +598,18 @@ function goDashboard() {
 }
 
 
-// ================= LOAD DASHBOARD THEME =================
+// ================= APPLY THEME =================
 
-function loadSavedTheme() {
-
-    const savedTheme =
-        localStorage.getItem(
-            "darkMode"
-        );
-
-
-    if (
-        savedTheme === "true"
-    ) {
-
-        document.body.classList.remove(
-            "light-mode"
-        );
-
-        document.body.classList.add(
-            "dark-mode"
-        );
-
-    } else {
-
-        document.body.classList.remove(
-            "dark-mode"
-        );
-
-        document.body.classList.add(
-            "light-mode"
-        );
-
-    }
-
-}
-
-
-// ================= APPLY SAVED THEME =================
-
-loadSavedTheme();
+loadTheme();
 
 
 // ================= AUTO REFRESH =================
 
-// Update remaining days every minute
+// Refresh every minute so remaining days stay updated.
 
 setInterval(() => {
+
+    loadTheme();
 
     showHistory();
 
@@ -546,3 +619,8 @@ setInterval(() => {
 // ================= START =================
 
 loadHistory();
+document.addEventListener("DOMContentLoaded", () => {
+
+    loadTheme();
+
+});
