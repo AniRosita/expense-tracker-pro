@@ -141,20 +141,18 @@ db.query(
 // ======================================================
 
 function checkDatabase(req, res, next) {
-    if (!db) {
-        return res.status(500).json({
-            success: false,
-            message: "MySQL connection unavailable"
-        });
-    }
+    db.query("SELECT 1", (err) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: "MySQL connection unavailable",
+                error: err.message
+            });
+        }
 
-    next();
+        next();
+    });
 }
-
-app.use("/api", checkDatabase);
-app.use("/expenses", checkDatabase);
-app.use("/income", checkDatabase);
-app.use("/trash", checkDatabase);
 
 // ======================================================
 // HOME
@@ -187,8 +185,10 @@ app.get("/api/status", (req, res) => {
                 success: true,
                 server: "running",
                 mysql: "connected",
-                database: result[0]?.database_name,
-                message: "Expense Tracker API is working ✅"
+                database:
+                    result[0]?.database_name,
+                message:
+                    "Expense Tracker API is working ✅"
             });
         }
     );
@@ -223,7 +223,8 @@ app.get("/api/test-db", (req, res) => {
 
             res.json({
                 success: true,
-                database: result[0]?.database_name
+                database:
+                    result[0]?.database_name
             });
         }
     );
@@ -266,14 +267,16 @@ function registerUser(req, res) {
     if (!gmailRegex.test(email)) {
         return res.status(400).json({
             success: false,
-            message: "Only Gmail addresses are allowed"
+            message:
+                "Only Gmail addresses are allowed"
         });
     }
 
     if (!passwordRegex.test(password)) {
         return res.status(400).json({
             success: false,
-            message: "Password must contain exactly 6 digits"
+            message:
+                "Password must contain exactly 6 digits"
         });
     }
 
@@ -294,7 +297,8 @@ function registerUser(req, res) {
                 if (err.code === "ER_DUP_ENTRY") {
                     return res.status(409).json({
                         success: false,
-                        message: "Email already exists"
+                        message:
+                            "Email already exists"
                     });
                 }
 
@@ -312,7 +316,8 @@ function registerUser(req, res) {
 
             res.status(201).json({
                 success: true,
-                message: "Registration successful",
+                message:
+                    "Registration successful",
                 userId: result.insertId
             });
         }
@@ -338,7 +343,8 @@ function loginUser(req, res) {
     if (!email || !password) {
         return res.status(400).json({
             success: false,
-            message: "Email and password are required"
+            message:
+                "Email and password are required"
         });
     }
 
@@ -367,7 +373,8 @@ function loginUser(req, res) {
             if (!results.length) {
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid email or password"
+                    message:
+                        "Invalid email or password"
                 });
             }
 
@@ -379,13 +386,15 @@ function loginUser(req, res) {
             ) {
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid email or password"
+                    message:
+                        "Invalid email or password"
                 });
             }
 
             res.json({
                 success: true,
-                message: "Login successful",
+                message:
+                    "Login successful",
                 user: {
                     id: user.id,
                     name: user.name,
@@ -428,7 +437,8 @@ app.get("/api/user/:email", (req, res) => {
             if (!results.length) {
                 return res.status(404).json({
                     success: false,
-                    message: "User not found"
+                    message:
+                        "User not found"
                 });
             }
 
@@ -461,7 +471,8 @@ app.get("/expenses/:email", (req, res) => {
             if (err) {
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to load expenses",
+                    message:
+                        "Unable to load expenses",
                     error: err.message
                 });
             }
@@ -518,15 +529,18 @@ app.post("/expenses", (req, res) => {
             if (err) {
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to add expense",
+                    message:
+                        "Unable to add expense",
                     error: err.message
                 });
             }
 
             res.json({
                 success: true,
-                message: "Expense added successfully",
-                expenseId: result.insertId
+                message:
+                    "Expense added successfully",
+                expenseId:
+                    result.insertId
             });
         }
     );
@@ -614,7 +628,8 @@ app.delete("/expenses/:id", (req, res) => {
             if (!results.length) {
                 return res.status(404).json({
                     success: false,
-                    message: "Expense not found"
+                    message:
+                        "Expense not found"
                 });
             }
 
@@ -811,8 +826,7 @@ app.put("/income/:id", (req, res) => {
                     success: false,
                     message:
                         "Unable to update income",
-                    error:
-                        err.message
+                    error: err.message
                 });
             }
 
@@ -843,8 +857,7 @@ app.delete("/income/:id", (req, res) => {
                     success: false,
                     message:
                         "Unable to find income",
-                    error:
-                        err.message
+                    error: err.message
                 });
             }
 
@@ -953,8 +966,7 @@ app.get("/trash/:email", (req, res) => {
                     success: false,
                     message:
                         "Unable to load delete history",
-                    error:
-                        err.message
+                    error: err.message
                 });
             }
 
@@ -982,8 +994,7 @@ app.post("/trash/restore/:id", (req, res) => {
                     success: false,
                     message:
                         "Unable to find deleted record",
-                    error:
-                        err.message
+                    error: err.message
                 });
             }
 
@@ -996,8 +1007,6 @@ app.post("/trash/restore/:id", (req, res) => {
             }
 
             const item = results[0];
-
-            // ================= EXPENSE =================
 
             if (item.type === "expense") {
                 db.query(
@@ -1042,8 +1051,6 @@ app.post("/trash/restore/:id", (req, res) => {
 
                 return;
             }
-
-            // ================= INCOME =================
 
             if (item.type === "income") {
                 db.query(
@@ -1112,8 +1119,7 @@ app.delete("/trash/cleanup", (req, res) => {
                     success: false,
                     message:
                         "Unable to clean old history",
-                    error:
-                        err.message
+                    error: err.message
                 });
             }
 
@@ -1197,7 +1203,7 @@ app.get("/api/data/:email", (req, res) => {
 });
 
 // ======================================================
-// ================= RESEND EMAIL =======================
+// RESEND EMAIL CONFIG
 // ======================================================
 
 const RESEND_API_KEY =
@@ -1217,12 +1223,6 @@ if (RESEND_API_KEY) {
 }
 
 console.log("======================================");
-
-// ======================================================
-// OTP STORAGE
-// ======================================================
-
-const resetOTPs = new Map();
 
 // ======================================================
 // OTP GENERATOR
@@ -1259,18 +1259,18 @@ async function sendOTPEmail(
 </head>
 
 <body style="
-    margin:0;
-    padding:30px;
-    background:#f5f5f5;
-    font-family:Arial,sans-serif;
+margin:0;
+padding:30px;
+background:#f5f5f5;
+font-family:Arial,sans-serif;
 ">
 
 <div style="
-    max-width:500px;
-    margin:auto;
-    background:white;
-    padding:30px;
-    border-radius:16px;
+max-width:500px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:16px;
 ">
 
 <h2 style="text-align:center;">
@@ -1286,14 +1286,14 @@ Your password reset OTP is:
 </p>
 
 <div style="
-    font-size:34px;
-    font-weight:bold;
-    letter-spacing:8px;
-    text-align:center;
-    background:#f5f5f5;
-    padding:20px;
-    border-radius:12px;
-    margin:25px 0;
+font-size:34px;
+font-weight:bold;
+letter-spacing:8px;
+text-align:center;
+background:#f5f5f5;
+padding:20px;
+border-radius:12px;
+margin:25px 0;
 ">
 
 ${otp}
@@ -1313,8 +1313,8 @@ please ignore this email.
 <hr>
 
 <p style="
-    color:#777;
-    font-size:13px;
+color:#777;
+font-size:13px;
 ">
 
 Expense Tracker Pro
@@ -1333,7 +1333,8 @@ Expense Tracker Pro
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
 
                 "Authorization":
                     `Bearer ${RESEND_API_KEY}`
@@ -1353,7 +1354,8 @@ Expense Tracker Pro
         }
     );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     if (!response.ok) {
         console.error(
@@ -1378,6 +1380,7 @@ Expense Tracker Pro
 
 // ======================================================
 // FORGOT PASSWORD
+// OTP STORED IN MYSQL
 // ======================================================
 
 async function forgotPassword(req, res) {
@@ -1393,7 +1396,8 @@ async function forgotPassword(req, res) {
     if (!email) {
         return res.status(400).json({
             success: false,
-            message: "Email is required"
+            message:
+                "Email is required"
         });
     }
 
@@ -1438,75 +1442,150 @@ async function forgotPassword(req, res) {
                 });
             }
 
-            const user = results[0];
+            const user =
+                results[0];
 
-            const otp = generateOTP();
+            const otp =
+                generateOTP();
 
-            resetOTPs.set(email, {
-                otp: otp,
-                expiresAt:
+            const expiresAt =
+                new Date(
                     Date.now() +
                     10 * 60 * 1000
-            });
-
-            try {
-                console.log(
-                    "📤 Sending OTP through Resend..."
                 );
 
-                await sendOTPEmail(
-                    email,
-                    user.name,
-                    otp
-                );
+            // ==========================================
+            // DELETE OLD OTP
+            // ==========================================
 
-                console.log(
-                    "✅ OTP sent successfully:",
-                    email
-                );
+            db.query(
+                `
+                DELETE FROM password_resets
+                WHERE LOWER(email)=?
+                `,
+                [email],
+                async (deleteErr) => {
 
-                res.json({
-                    success: true,
-                    message:
-                        "OTP sent successfully to your email"
-                });
+                    if (deleteErr) {
+                        console.error(
+                            "❌ OTP DELETE ERROR:",
+                            deleteErr.message
+                        );
 
-            } catch (error) {
+                        return res.status(500).json({
+                            success: false,
+                            message:
+                                "Unable to prepare OTP",
+                            error:
+                                deleteErr.message
+                        });
+                    }
 
-                console.error(
-                    "❌ Email Error:",
-                    error.message
-                );
+                    // ==================================
+                    // SAVE NEW OTP
+                    // ==================================
 
-                resetOTPs.delete(email);
+                    db.query(
+                        `
+                        INSERT INTO password_resets
+                        (email, otp, expires_at)
+                        VALUES (?, ?, ?)
+                        `,
+                        [
+                            email,
+                            otp,
+                            expiresAt
+                        ],
+                        async (insertErr) => {
 
-                res.status(500).json({
-                    success: false,
-                    message:
-                        "Unable to send OTP email",
-                    error:
-                        error.message
-                });
-            }
+                            if (insertErr) {
+                                console.error(
+                                    "❌ OTP INSERT ERROR:",
+                                    insertErr.message
+                                );
+
+                                return res.status(500).json({
+                                    success: false,
+                                    message:
+                                        "Unable to save OTP",
+                                    error:
+                                        insertErr.message
+                                });
+                            }
+
+                            try {
+
+                                console.log(
+                                    "📤 Sending OTP through Resend..."
+                                );
+
+                                await sendOTPEmail(
+                                    email,
+                                    user.name,
+                                    otp
+                                );
+
+                                console.log(
+                                    "✅ OTP sent successfully:",
+                                    email
+                                );
+
+                                res.json({
+                                    success: true,
+                                    message:
+                                        "OTP sent successfully to your email"
+                                });
+
+                            } catch (error) {
+
+                                console.error(
+                                    "❌ Email Error:",
+                                    error.message
+                                );
+
+                                db.query(
+                                    `
+                                    DELETE FROM password_resets
+                                    WHERE LOWER(email)=?
+                                    `,
+                                    [email]
+                                );
+
+                                res.status(500).json({
+                                    success: false,
+                                    message:
+                                        "Unable to send OTP email",
+                                    error:
+                                        error.message
+                                });
+                            }
+                        }
+                    );
+                }
+            );
         }
     );
 }
 
 app.post(
     "/forgot-password",
+    checkDatabase,
     forgotPassword
 );
 
 app.post(
     "/api/forgot-password",
+    checkDatabase,
     forgotPassword
 );
 
 // ======================================================
 // VERIFY OTP
+// OTP READ FROM MYSQL
 // ======================================================
 
 function verifyResetOTP(req, res) {
+
     const email = String(
         req.body.email || ""
     ).trim().toLowerCase();
@@ -1514,6 +1593,11 @@ function verifyResetOTP(req, res) {
     const otp = String(
         req.body.otp || ""
     ).trim();
+
+    console.log(
+        "🔐 Verifying OTP:",
+        email
+    );
 
     if (!email || !otp) {
         return res.status(400).json({
@@ -1523,54 +1607,102 @@ function verifyResetOTP(req, res) {
         });
     }
 
-    const resetData =
-        resetOTPs.get(email);
+    db.query(
+        `
+        SELECT id, email, otp, expires_at
+        FROM password_resets
+        WHERE LOWER(email)=?
+        ORDER BY id DESC
+        LIMIT 1
+        `,
+        [email],
+        (err, results) => {
 
-    if (!resetData) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "OTP not found. Please request a new OTP."
-        });
-    }
+            if (err) {
+                console.error(
+                    "❌ VERIFY OTP DATABASE ERROR:",
+                    err.message
+                );
 
-    if (
-        Date.now() >
-        resetData.expiresAt
-    ) {
-        resetOTPs.delete(email);
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Database error",
+                    error:
+                        err.message
+                });
+            }
 
-        return res.status(400).json({
-            success: false,
-            message:
-                "OTP expired. Please request a new OTP."
-        });
-    }
+            if (!results.length) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "OTP not found. Please request a new OTP."
+                });
+            }
 
-    if (
-        resetData.otp !== otp
-    ) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "Invalid OTP"
-        });
-    }
+            const resetData =
+                results[0];
 
-    res.json({
-        success: true,
-        message:
-            "OTP verified successfully"
-    });
+            const expiresAt =
+                new Date(
+                    resetData.expires_at
+                ).getTime();
+
+            if (
+                Date.now() >
+                expiresAt
+            ) {
+
+                db.query(
+                    `
+                    DELETE FROM password_resets
+                    WHERE id=?
+                    `,
+                    [resetData.id]
+                );
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "OTP expired. Please request a new OTP."
+                });
+            }
+
+            if (
+                String(resetData.otp) !==
+                String(otp)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid OTP"
+                });
+            }
+
+            console.log(
+                "✅ OTP verified:",
+                email
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "OTP verified successfully"
+            });
+        }
+    );
 }
 
 app.post(
     "/verify-reset-otp",
+    checkDatabase,
     verifyResetOTP
 );
 
 app.post(
     "/api/verify-reset-otp",
+    checkDatabase,
     verifyResetOTP
 );
 
@@ -1579,6 +1711,7 @@ app.post(
 // ======================================================
 
 function resetPassword(req, res) {
+
     const email = String(
         req.body.email || ""
     ).trim().toLowerCase();
@@ -1590,6 +1723,11 @@ function resetPassword(req, res) {
     const newPassword = String(
         req.body.newPassword || ""
     ).trim();
+
+    console.log(
+        "🔑 Reset Password:",
+        email
+    );
 
     if (
         !email ||
@@ -1603,9 +1741,7 @@ function resetPassword(req, res) {
         });
     }
 
-    if (
-        !gmailRegex.test(email)
-    ) {
+    if (!gmailRegex.test(email)) {
         return res.status(400).json({
             success: false,
             message:
@@ -1613,9 +1749,7 @@ function resetPassword(req, res) {
         });
     }
 
-    if (
-        !passwordRegex.test(newPassword)
-    ) {
+    if (!passwordRegex.test(newPassword)) {
         return res.status(400).json({
             success: false,
             message:
@@ -1623,101 +1757,157 @@ function resetPassword(req, res) {
         });
     }
 
-    const resetData =
-        resetOTPs.get(email);
-
-    if (!resetData) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "OTP not found. Please request a new OTP."
-        });
-    }
-
-    if (
-        Date.now() >
-        resetData.expiresAt
-    ) {
-        resetOTPs.delete(email);
-
-        return res.status(400).json({
-            success: false,
-            message:
-                "OTP expired"
-        });
-    }
-
-    if (
-        resetData.otp !== otp
-    ) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "Invalid OTP"
-        });
-    }
-
     db.query(
         `
-        UPDATE users
-        SET password=?
+        SELECT id, email, otp, expires_at
+        FROM password_resets
         WHERE LOWER(email)=?
+        ORDER BY id DESC
         LIMIT 1
         `,
-        [
-            newPassword,
-            email
-        ],
-        (err, result) => {
+        [email],
+        (otpErr, results) => {
 
-            if (err) {
+            if (otpErr) {
                 console.error(
-                    "❌ RESET PASSWORD DATABASE ERROR:",
-                    err.message
+                    "❌ RESET OTP DATABASE ERROR:",
+                    otpErr.message
                 );
 
                 return res.status(500).json({
                     success: false,
                     message:
-                        "Unable to reset password",
+                        "Database error",
                     error:
-                        err.message
+                        otpErr.message
+                });
+            }
+
+            if (!results.length) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "OTP not found. Please request a new OTP."
+                });
+            }
+
+            const resetData =
+                results[0];
+
+            if (
+                Date.now() >
+                new Date(
+                    resetData.expires_at
+                ).getTime()
+            ) {
+
+                db.query(
+                    `
+                    DELETE FROM password_resets
+                    WHERE id=?
+                    `,
+                    [resetData.id]
+                );
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "OTP expired. Please request a new OTP."
                 });
             }
 
             if (
-                result.affectedRows === 0
+                String(resetData.otp) !==
+                String(otp)
             ) {
-                return res.status(404).json({
+                return res.status(400).json({
                     success: false,
                     message:
-                        "User not found"
+                        "Invalid OTP"
                 });
             }
 
-            resetOTPs.delete(email);
+            // ==========================================
+            // UPDATE PASSWORD
+            // ==========================================
 
-            console.log(
-                "✅ Password reset successfully:",
-                email
+            db.query(
+                `
+                UPDATE users
+                SET password=?
+                WHERE LOWER(email)=?
+                LIMIT 1
+                `,
+                [
+                    newPassword,
+                    email
+                ],
+                (err, result) => {
+
+                    if (err) {
+                        console.error(
+                            "❌ RESET PASSWORD DATABASE ERROR:",
+                            err.message
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            message:
+                                "Unable to reset password",
+                            error:
+                                err.message
+                        });
+                    }
+
+                    if (
+                        result.affectedRows === 0
+                    ) {
+                        return res.status(404).json({
+                            success: false,
+                            message:
+                                "User not found"
+                        });
+                    }
+
+                    // ==================================
+                    // DELETE USED OTP
+                    // ==================================
+
+                    db.query(
+                        `
+                        DELETE FROM password_resets
+                        WHERE id=?
+                        `,
+                        [resetData.id],
+                        () => {
+
+                            console.log(
+                                "✅ Password reset successfully:",
+                                email
+                            );
+
+                            res.json({
+                                success: true,
+                                message:
+                                    "Password reset successfully"
+                            });
+                        }
+                    );
+                }
             );
-
-            res.json({
-                success: true,
-                message:
-                    "Password reset successfully"
-            });
         }
     );
 }
 
 app.post(
     "/reset-password",
+    checkDatabase,
     resetPassword
 );
 
 app.post(
     "/api/reset-password",
+    checkDatabase,
     resetPassword
 );
 
@@ -1726,6 +1916,7 @@ app.post(
 // ======================================================
 
 app.use((req, res) => {
+
     console.log(
         "404:",
         req.method,
@@ -1747,6 +1938,7 @@ app.use((req, res) => {
 
 app.use(
     (err, req, res, next) => {
+
         console.error(
             "❌ SERVER ERROR:",
             err.message
