@@ -22,8 +22,7 @@ const PORT = Number(process.env.PORT) || 5000;
 // ======================================================
 
 const allowedOrigins = [
-    "https://expense-tracker-pro-production-98cf.up.railway.app",
-    "https://expense-tracker-pro-production-99eb.up.railway.app"
+    "https://expense-tracker-pro-production-98cf.up.railway.app"
 ];
 
 app.use((req, res, next) => {
@@ -63,7 +62,6 @@ app.use((req, res, next) => {
         "86400"
     );
 
-    // Browser preflight request
     if (req.method === "OPTIONS") {
         console.log("✅ CORS PREFLIGHT ALLOWED");
         return res.status(204).end();
