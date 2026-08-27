@@ -10,13 +10,13 @@ const nodemailer = require("nodemailer");
 const app = express();
 
 // ======================================================
-// ================= PORT ================================
+// ================= PORT ===============================
 // ======================================================
 
 const PORT = Number(process.env.PORT) || 5000;
 
 // ======================================================
-// ================= CORS ================================
+// ================= CORS ===============================
 // ======================================================
 
 const allowedOrigins = [
@@ -27,36 +27,61 @@ const allowedOrigins = [
 app.use((req, res, next) => {
     const origin = req.headers.origin;
 
+    console.log("CORS REQUEST");
+    console.log("Method:", req.method);
+    console.log("Origin:", origin);
+    console.log("URL:", req.originalUrl);
+
+    // Allow known frontend/backend Railway domains
     if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.header("Access-Control-Allow-Origin", origin);
     }
 
-    res.setHeader("Vary", "Origin");
+    // Also allow same-origin/no-origin requests
+    res.header("Vary", "Origin");
 
-    res.setHeader(
+    res.header(
         "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS"
+        "GET,POST,PUT,DELETE,OPTIONS"
     );
 
-    res.setHeader(
+    res.header(
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization"
     );
 
-    res.setHeader(
+    res.header(
         "Access-Control-Allow-Credentials",
         "true"
     );
 
+    // Preflight request
     if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
+        console.log("✅ OPTIONS / CORS PREFLIGHT");
+
+        if (origin && allowedOrigins.includes(origin)) {
+            return res.status(204).end();
+        }
+
+        // Allow preflight even if origin is not present
+        if (!origin) {
+            return res.status(204).end();
+        }
+
+        console.log("❌ CORS BLOCKED:", origin);
+
+        return res.status(403).json({
+            success: false,
+            message: "CORS origin not allowed",
+            origin: origin
+        });
     }
 
     next();
 });
 
 // ======================================================
-// ================= BODY PARSER =========================
+// ================= BODY PARSER ========================
 // ======================================================
 
 app.use(express.json());
@@ -69,7 +94,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 // ======================================================
-// ================= MYSQL CONNECTION ====================
+// ================= MYSQL CONNECTION ===================
 // ======================================================
 
 let db;
@@ -96,15 +121,17 @@ try {
             process.env.MYSQL_DATABASE ||
             "expense_tracker",
 
-        port: Number(
-            process.env.MYSQLPORT ||
-            process.env.MYSQL_PORT ||
-            3306
-        ),
+        port:
+            Number(
+                process.env.MYSQLPORT ||
+                process.env.MYSQL_PORT ||
+                3306
+            ),
 
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
+
         enableKeepAlive: true,
         keepAliveInitialDelay: 0
     };
@@ -120,7 +147,6 @@ try {
     db = mysql.createPool(dbConfig);
 
 } catch (error) {
-
     console.error(
         "❌ MySQL Pool Creation Error:",
         error.message
@@ -132,20 +158,16 @@ try {
 // ======================================================
 
 if (db) {
-
     db.query(
         "SELECT DATABASE() AS database_name",
         (err, result) => {
 
             if (err) {
-
                 console.error(
                     "❌ MySQL Connection Failed:",
                     err.message
                 );
-
             } else {
-
                 console.log("======================================");
                 console.log("MySQL Connected ✅");
                 console.log(
@@ -165,7 +187,6 @@ if (db) {
 function checkDatabase(req, res, next) {
 
     if (!db) {
-
         return res.status(500).json({
             success: false,
             message: "MySQL connection is not available"
@@ -192,6 +213,19 @@ app.get("/", (req, res) => {
 });
 
 // ======================================================
+// ================= CORS TEST ===========================
+// ======================================================
+
+app.get("/api/cors-test", (req, res) => {
+
+    res.json({
+        success: true,
+        message: "CORS is working ✅",
+        origin: req.headers.origin || null
+    });
+});
+
+// ======================================================
 // ================= STATUS ==============================
 // ======================================================
 
@@ -202,7 +236,6 @@ app.get("/api/status", (req, res) => {
         (err, result) => {
 
             if (err) {
-
                 return res.status(500).json({
                     success: false,
                     server: "running",
@@ -233,7 +266,6 @@ app.get("/api/test-db", (req, res) => {
         (err, result) => {
 
             if (err) {
-
                 return res.status(500).json({
                     success: false,
                     error: err.message
@@ -260,7 +292,9 @@ function registerUser(req, res) {
 
     const email = String(
         req.body.email || ""
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     const password = String(
         req.body.password || ""
@@ -289,12 +323,13 @@ function registerUser(req, res) {
         });
     }
 
-    // Exactly 6 digit password
+    // Exactly 6 digits
     if (!/^\d{6}$/.test(password)) {
 
         return res.status(400).json({
             success: false,
-            message: "Password must contain exactly 6 digits"
+            message:
+                "Password must contain exactly 6 digits"
         });
     }
 
@@ -324,7 +359,8 @@ function registerUser(req, res) {
 
                     return res.status(409).json({
                         success: false,
-                        message: "Email already exists"
+                        message:
+                            "Email already exists"
                     });
                 }
 
@@ -342,7 +378,8 @@ function registerUser(req, res) {
 
             return res.status(201).json({
                 success: true,
-                message: "Registration successful",
+                message:
+                    "Registration successful",
                 userId: result.insertId
             });
         }
@@ -353,14 +390,16 @@ app.post("/api/register", registerUser);
 app.post("/register", registerUser);
 
 // ======================================================
-// ================= LOGIN ===============================
+// ================= LOGIN ==============================
 // ======================================================
 
 function loginUser(req, res) {
 
     const email = String(
         req.body.email || ""
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     const password = String(
         req.body.password || ""
@@ -375,7 +414,8 @@ function loginUser(req, res) {
 
         return res.status(400).json({
             success: false,
-            message: "Email and password are required"
+            message:
+                "Email and password are required"
         });
     }
 
@@ -407,11 +447,15 @@ function loginUser(req, res) {
                 });
             }
 
-            if (!results || results.length === 0) {
+            if (
+                !results ||
+                results.length === 0
+            ) {
 
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid email or password"
+                    message:
+                        "Invalid email or password"
                 });
             }
 
@@ -424,13 +468,15 @@ function loginUser(req, res) {
 
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid email or password"
+                    message:
+                        "Invalid email or password"
                 });
             }
 
             return res.json({
                 success: true,
                 message: "Login successful",
+
                 user: {
                     id: user.id,
                     name: user.name,
@@ -452,7 +498,9 @@ app.get("/api/user/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     db.query(
         `
@@ -500,7 +548,9 @@ app.get("/expenses/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     db.query(
         `
@@ -527,7 +577,8 @@ app.get("/expenses/:email", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to load expenses",
+                    message:
+                        "Unable to load expenses",
                     error: err.message
                 });
             }
@@ -594,15 +645,18 @@ app.post("/expenses", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to add expense",
+                    message:
+                        "Unable to add expense",
                     error: err.message
                 });
             }
 
             res.json({
                 success: true,
-                message: "Expense added successfully",
-                expenseId: result.insertId
+                message:
+                    "Expense added successfully",
+                expenseId:
+                    result.insertId
             });
         }
     );
@@ -632,7 +686,8 @@ app.put("/expenses/:id", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message: "All expense fields are required"
+            message:
+                "All expense fields are required"
         });
     }
 
@@ -659,15 +714,18 @@ app.put("/expenses/:id", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to update expense",
+                    message:
+                        "Unable to update expense",
                     error: err.message
                 });
             }
 
             res.json({
                 success: true,
-                message: "Expense updated successfully",
-                affectedRows: result.affectedRows
+                message:
+                    "Expense updated successfully",
+                affectedRows:
+                    result.affectedRows
             });
         }
     );
@@ -701,8 +759,10 @@ app.delete("/expenses/:id", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to find expense",
-                    error: selectErr.message
+                    message:
+                        "Unable to find expense",
+                    error:
+                        selectErr.message
                 });
             }
 
@@ -710,7 +770,8 @@ app.delete("/expenses/:id", (req, res) => {
 
                 return res.status(404).json({
                     success: false,
-                    message: "Expense not found"
+                    message:
+                        "Expense not found"
                 });
             }
 
@@ -794,7 +855,9 @@ app.get("/income/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     db.query(
         `
@@ -814,8 +877,10 @@ app.get("/income/:email", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to load income",
-                    error: err.message
+                    message:
+                        "Unable to load income",
+                    error:
+                        err.message
                 });
             }
 
@@ -847,7 +912,8 @@ app.post("/income", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message: "Email, amount and date are required"
+            message:
+                "Email, amount and date are required"
         });
     }
 
@@ -872,15 +938,19 @@ app.post("/income", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to add income",
-                    error: err.message
+                    message:
+                        "Unable to add income",
+                    error:
+                        err.message
                 });
             }
 
             res.json({
                 success: true,
-                message: "Income added successfully",
-                incomeId: result.insertId
+                message:
+                    "Income added successfully",
+                incomeId:
+                    result.insertId
             });
         }
     );
@@ -906,7 +976,8 @@ app.put("/income/:id", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message: "Amount and date are required"
+            message:
+                "Amount and date are required"
         });
     }
 
@@ -929,15 +1000,19 @@ app.put("/income/:id", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to update income",
-                    error: err.message
+                    message:
+                        "Unable to update income",
+                    error:
+                        err.message
                 });
             }
 
             res.json({
                 success: true,
-                message: "Income updated successfully",
-                affectedRows: result.affectedRows
+                message:
+                    "Income updated successfully",
+                affectedRows:
+                    result.affectedRows
             });
         }
     );
@@ -969,8 +1044,10 @@ app.delete("/income/:id", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to find income",
-                    error: selectErr.message
+                    message:
+                        "Unable to find income",
+                    error:
+                        selectErr.message
                 });
             }
 
@@ -978,7 +1055,8 @@ app.delete("/income/:id", (req, res) => {
 
                 return res.status(404).json({
                     success: false,
-                    message: "Income not found"
+                    message:
+                        "Income not found"
                 });
             }
 
@@ -1062,7 +1140,9 @@ app.get("/trash/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     db.query(
         `
@@ -1092,8 +1172,10 @@ app.get("/trash/:email", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to load delete history",
-                    error: err.message
+                    message:
+                        "Unable to load delete history",
+                    error:
+                        err.message
                 });
             }
 
@@ -1135,8 +1217,10 @@ app.post("/trash/restore/:id", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to find deleted record",
-                    error: selectErr.message
+                    message:
+                        "Unable to find deleted record",
+                    error:
+                        selectErr.message
                 });
             }
 
@@ -1144,7 +1228,8 @@ app.post("/trash/restore/:id", (req, res) => {
 
                 return res.status(404).json({
                     success: false,
-                    message: "Deleted record not found"
+                    message:
+                        "Deleted record not found"
                 });
             }
 
@@ -1286,7 +1371,8 @@ app.post("/trash/restore/:id", (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: "Unknown history record type"
+                message:
+                    "Unknown history record type"
             });
         }
     );
@@ -1301,7 +1387,8 @@ app.delete("/trash/cleanup", (req, res) => {
     db.query(
         `
         DELETE FROM deleted_history
-        WHERE deleted_at < NOW() - INTERVAL 60 DAY
+        WHERE deleted_at <
+        NOW() - INTERVAL 60 DAY
         `,
         (err, result) => {
 
@@ -1309,8 +1396,10 @@ app.delete("/trash/cleanup", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to clean old history",
-                    error: err.message
+                    message:
+                        "Unable to clean old history",
+                    error:
+                        err.message
                 });
             }
 
@@ -1333,7 +1422,9 @@ app.get("/api/data/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     db.query(
         `
@@ -1355,8 +1446,10 @@ app.get("/api/data/:email", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Unable to load expenses",
-                    error: expenseErr.message
+                    message:
+                        "Unable to load expenses",
+                    error:
+                        expenseErr.message
                 });
             }
 
@@ -1378,8 +1471,10 @@ app.get("/api/data/:email", (req, res) => {
 
                         return res.status(500).json({
                             success: false,
-                            message: "Unable to load income",
-                            error: incomeErr.message
+                            message:
+                                "Unable to load income",
+                            error:
+                                incomeErr.message
                         });
                     }
 
@@ -1400,6 +1495,7 @@ app.get("/api/data/:email", (req, res) => {
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
+
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -1427,13 +1523,16 @@ app.post("/forgot-password", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     if (!email) {
 
         return res.status(400).json({
             success: false,
-            message: "Email is required"
+            message:
+                "Email is required"
         });
     }
 
@@ -1454,8 +1553,10 @@ app.post("/forgot-password", (req, res) => {
 
                 return res.status(500).json({
                     success: false,
-                    message: "Database error",
-                    error: err.message
+                    message:
+                        "Database error",
+                    error:
+                        err.message
                 });
             }
 
@@ -1463,7 +1564,8 @@ app.post("/forgot-password", (req, res) => {
 
                 return res.status(404).json({
                     success: false,
-                    message: "Email not registered"
+                    message:
+                        "Email not registered"
                 });
             }
 
@@ -1472,7 +1574,8 @@ app.post("/forgot-password", (req, res) => {
             const otp = generateOTP();
 
             const expiresAt =
-                Date.now() + 10 * 60 * 1000;
+                Date.now() +
+                10 * 60 * 1000;
 
             resetOTPs.set(email, {
                 otp,
@@ -1537,7 +1640,9 @@ app.post("/forgot-password", (req, res) => {
 
                             <p>
                                 This OTP is valid for
-                                <strong>10 minutes</strong>.
+                                <strong>
+                                    10 minutes
+                                </strong>.
                             </p>
 
                             <p>
@@ -1589,7 +1694,9 @@ app.post("/verify-reset-otp", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     const otp = String(
         req.body.otp || ""
@@ -1599,7 +1706,8 @@ app.post("/verify-reset-otp", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message: "Email and OTP are required"
+            message:
+                "Email and OTP are required"
         });
     }
 
@@ -1629,17 +1737,21 @@ app.post("/verify-reset-otp", (req, res) => {
         });
     }
 
-    if (resetData.otp !== otp) {
+    if (
+        resetData.otp !== otp
+    ) {
 
         return res.status(400).json({
             success: false,
-            message: "Invalid OTP"
+            message:
+                "Invalid OTP"
         });
     }
 
     res.json({
         success: true,
-        message: "OTP verified successfully"
+        message:
+            "OTP verified successfully"
     });
 });
 
@@ -1651,7 +1763,9 @@ app.post("/reset-password", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    ).trim().toLowerCase();
+    )
+        .trim()
+        .toLowerCase();
 
     const otp = String(
         req.body.otp || ""
@@ -1674,7 +1788,9 @@ app.post("/reset-password", (req, res) => {
         });
     }
 
-    if (!/^\d{6}$/.test(newPassword)) {
+    if (
+        !/^\d{6}$/.test(newPassword)
+    ) {
 
         return res.status(400).json({
             success: false,
@@ -1704,15 +1820,19 @@ app.post("/reset-password", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message: "OTP expired"
+            message:
+                "OTP expired"
         });
     }
 
-    if (resetData.otp !== otp) {
+    if (
+        resetData.otp !== otp
+    ) {
 
         return res.status(400).json({
             success: false,
-            message: "Invalid OTP"
+            message:
+                "Invalid OTP"
         });
     }
 
@@ -1740,11 +1860,14 @@ app.post("/reset-password", (req, res) => {
                 });
             }
 
-            if (result.affectedRows === 0) {
+            if (
+                result.affectedRows === 0
+            ) {
 
                 return res.status(404).json({
                     success: false,
-                    message: "User not found"
+                    message:
+                        "User not found"
                 });
             }
 
@@ -1773,8 +1896,10 @@ app.use((req, res) => {
 
     res.status(404).json({
         success: false,
-        message: "API route not found",
-        route: req.originalUrl
+        message:
+            "API route not found",
+        route:
+            req.originalUrl
     });
 });
 
@@ -1791,8 +1916,10 @@ app.use((err, req, res, next) => {
 
     res.status(500).json({
         success: false,
-        message: "Internal Server Error",
-        error: err.message
+        message:
+            "Internal Server Error",
+        error:
+            err.message
     });
 });
 
