@@ -262,37 +262,57 @@ if (registerForm) {
 
 
             // ==================================================
-            // ================= SUCCESS ========================
-            // ==================================================
+// ================= SUCCESS ========================
+// ==================================================
 
-            if (
-                response.ok &&
-                data.success === true
-            ) {
+if (
+    response.ok &&
+    data.success === true
+) {
 
-                showToast(
-                    "Account Created Successfully ✅",
-                    "success"
-                );
-
-
-                // Clear form
-                registerForm.reset();
+    console.log(
+        "✅ Account Created Successfully"
+    );
 
 
-                // Redirect to login
-                setTimeout(() => {
+    // SUCCESS POPUP
+    await Swal.fire({
 
-                    window.location.href =
-                        "index.html";
+        title:
+            "Account Created Successfully! 🎉",
 
-                }, 1500);
+        text:
+            "Your account has been created successfully.",
+
+        icon:
+            "success",
+
+        confirmButtonColor:
+            "#4f46e5",
+
+        timer:
+            2000,
+
+        timerProgressBar:
+            true,
+
+        showConfirmButton:
+            false
+
+    });
 
 
-                return;
-            }
+    // Clear form
+    registerForm.reset();
 
 
+    // Redirect to Login
+    window.location.href =
+        "index.html";
+
+
+    return;
+}
             // ==================================================
             // ================= DUPLICATE EMAIL ================
             // ==================================================
