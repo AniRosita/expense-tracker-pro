@@ -10,18 +10,46 @@
 
     <title>Expense Tracker Pro</title>
 
-    <link rel="icon"
+
+    <!-- ======================================================
+         FAVICON
+    ======================================================= -->
+
+    <link
+        rel="icon"
         type="image/png"
-        href="assets/profile.png">
+        href="assets/profile.png"
+    >
 
-    <link rel="stylesheet"
-        href="css/style.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <!-- ======================================================
+         CSS
+    ======================================================= -->
 
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+
+    <!-- ======================================================
+         GOOGLE FONT
+    ======================================================= -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ======================================================
+         FONT AWESOME
+    ======================================================= -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
 
 </head>
 
@@ -86,7 +114,9 @@
             <form id="loginForm">
 
 
-                <!-- EMAIL -->
+                <!-- ==================================================
+                     EMAIL
+                =================================================== -->
 
                 <div class="input-box">
 
@@ -95,15 +125,19 @@
                     <input
                         type="email"
                         id="email"
+                        name="email"
                         placeholder="Enter Gmail Address"
                         autocomplete="email"
-                        required>
+                        required
+                    >
 
                 </div>
 
 
 
-                <!-- PASSWORD -->
+                <!-- ==================================================
+                     PASSWORD
+                =================================================== -->
 
                 <div class="input-box">
 
@@ -112,11 +146,15 @@
                     <input
                         type="password"
                         id="password"
+                        name="password"
                         placeholder="Enter 6 Digit Password"
                         maxlength="6"
+                        minlength="6"
                         inputmode="numeric"
+                        pattern="[0-9]{6}"
                         autocomplete="current-password"
-                        required>
+                        required
+                    >
 
                 </div>
 
@@ -129,11 +167,10 @@
                 <div class="forgot-password">
 
                     <a
-                        href="forgot-password.html"
-                        id="forgotPasswordLink">
-
+                        href="#"
+                        id="forgotPasswordLink"
+                    >
                         Forgot Password?
-
                     </a>
 
                 </div>
@@ -146,7 +183,8 @@
 
                 <button
                     type="submit"
-                    id="loginBtn">
+                    id="loginBtn"
+                >
 
                     <i class="fas fa-right-to-bracket"></i>
 
@@ -194,14 +232,13 @@
                 style="
                     margin-top:15px;
                     text-align:center;
-                ">
+                "
+            >
 
                 Don't have an account?
 
                 <a href="register.html">
-
                     Create Account
-
                 </a>
 
             </p>
@@ -217,11 +254,57 @@
          SCRIPTS
     ======================================================= -->
 
+    <!-- Toast -->
     <script src="js/toast.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- SweetAlert2 -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+    </script>
+
+
+    <!-- Authentication -->
     <script src="js/auth.js"></script>
+
+
+
+    <!-- ======================================================
+         FORGOT PASSWORD CLICK
+    ======================================================= -->
+
+    <script>
+
+        const forgotPasswordLink =
+            document.getElementById("forgotPasswordLink");
+
+
+        if (forgotPasswordLink) {
+
+            forgotPasswordLink.addEventListener(
+                "click",
+                function (e) {
+
+                    e.preventDefault();
+
+                    if (typeof forgotPassword === "function") {
+
+                        forgotPassword();
+
+                    } else {
+
+                        console.error(
+                            "forgotPassword() function not found"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+    </script>
 
 
 </body>

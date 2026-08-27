@@ -1,5 +1,5 @@
 // ======================================================
-// ============== EXPENSE TRACKER SERVER ================
+// ============== EXPENSE TRACKER PRO SERVER ============
 // ======================================================
 
 const express = require("express");
@@ -15,31 +15,42 @@ const app = express();
 // ================= PORT ================================
 // ======================================================
 
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 
 // ======================================================
 // ================= CORS ================================
 // ======================================================
 
-app.use(cors({
-    origin: true,
-    methods: [
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE",
-        "OPTIONS"
-    ],
-    allowedHeaders: [
-        "Content-Type",
-        "Authorization"
-    ]
-}));
+// Frontend + Backend same Railway service normally
+// uses relative URLs and does not need CORS.
+//
+// CORS is still enabled so another Railway frontend
+// domain can communicate with this backend if required.
+
+app.use(
+    cors({
+        origin: true,
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS"
+        ],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ]
+    })
+);
+
+// Explicit preflight support
+app.options("*", cors());
 
 
 // ======================================================
-// ================= MIDDLEWARE ==========================
+// ================= BODY PARSER =========================
 // ======================================================
 
 app.use(express.json());
@@ -64,57 +75,87 @@ app.use(
 // ================= MYSQL CONFIG ========================
 // ======================================================
 
-const dbConfig = {
+// Railway MySQL may provide MYSQL_URL.
+//
+// If MYSQL_URL exists, use it directly.
+//
+// Otherwise use individual MYSQL variables.
+//
+// Local fallback is kept for local testing.
 
-    host:
-        process.env.MYSQLHOST ||
-        process.env.MYSQL_HOST ||
-        "localhost",
+let db;
 
-    user:
-        process.env.MYSQLUSER ||
-        process.env.MYSQL_USER ||
-        "root",
+if (process.env.MYSQL_URL) {
 
-    password:
-        process.env.MYSQLPASSWORD ||
-        process.env.MYSQL_PASSWORD ||
-        "Rosi@2006",
+    console.log("Using MYSQL_URL from Railway");
 
-    database:
-        process.env.MYSQLDATABASE ||
-        process.env.MYSQL_DATABASE ||
-        "expense_tracker",
+    db = mysql.createPool(
+        process.env.MYSQL_URL
+    );
 
-    port:
-        Number(
-            process.env.MYSQLPORT ||
-            process.env.MYSQL_PORT ||
-            3306
-        )
+} else {
 
-};
+    const dbConfig = {
 
+        host:
+            process.env.MYSQLHOST ||
+            process.env.MYSQL_HOST ||
+            "localhost",
 
-// ======================================================
-// ================= MYSQL CONNECTION ====================
-// ======================================================
+        user:
+            process.env.MYSQLUSER ||
+            process.env.MYSQL_USER ||
+            "root",
 
-const db = mysql.createPool({
+        password:
+            process.env.MYSQLPASSWORD ||
+            process.env.MYSQL_PASSWORD ||
+            "Rosi@2006",
 
-    ...dbConfig,
+        database:
+            process.env.MYSQLDATABASE ||
+            process.env.MYSQL_DATABASE ||
+            "expense_tracker",
 
-    waitForConnections: true,
+        port:
+            Number(
+                process.env.MYSQLPORT ||
+                process.env.MYSQL_PORT ||
+                3306
+            )
+    };
 
-    connectionLimit: 10,
+    console.log(
+        "MySQL Host:",
+        dbConfig.host
+    );
 
-    queueLimit: 0,
+    console.log(
+        "MySQL Port:",
+        dbConfig.port
+    );
 
-    enableKeepAlive: true,
+    console.log(
+        "MySQL Database:",
+        dbConfig.database
+    );
 
-    keepAliveInitialDelay: 0
+    db = mysql.createPool({
 
-});
+        ...dbConfig,
+
+        waitForConnections: true,
+
+        connectionLimit: 10,
+
+        queueLimit: 0,
+
+        enableKeepAlive: true,
+
+        keepAliveInitialDelay: 0
+
+    });
+}
 
 
 // ======================================================
@@ -122,27 +163,32 @@ const db = mysql.createPool({
 // ======================================================
 
 db.query(
-    "SELECT 1",
+    "SELECT 1 AS test",
     (err) => {
 
         if (err) {
 
             console.error(
-                "❌ MySQL Connection Error:",
+                "❌ MySQL Connection Failed"
+            );
+
+            console.error(
                 err.message
             );
 
             return;
-
         }
+
+        console.log(
+            "======================================"
+        );
 
         console.log(
             "MySQL Connected ✅"
         );
 
         console.log(
-            "Database:",
-            dbConfig.database
+            "======================================"
         );
 
     }
@@ -175,10 +221,7 @@ const transporter =
 // ================= OTP STORAGE =========================
 // ======================================================
 
-// OTP temporary-aa memory-la store aagum.
-
-const resetOTPs =
-    new Map();
+const resetOTPs = new Map();
 
 
 // ======================================================
@@ -223,10 +266,15 @@ app.get(
     (req, res) => {
 
         db.query(
-            "SELECT 1 AS test",
-            (err) => {
+            "SELECT DATABASE() AS database_name",
+            (err, result) => {
 
                 if (err) {
+
+                    console.error(
+                        "❌ Status DB Error:",
+                        err.message
+                    );
 
                     return res.status(500).json({
 
@@ -256,7 +304,7 @@ app.get(
                         "connected",
 
                     database:
-                        dbConfig.database,
+                        result[0].database_name,
 
                     message:
                         "Expense Tracker API is working ✅"
@@ -317,10 +365,18 @@ app.get(
 
 function loginUser(req, res) {
 
-    const {
-        email,
-        password
-    } = req.body;
+    const email =
+        String(
+            req.body.email || ""
+        )
+        .trim()
+        .toLowerCase();
+
+    const password =
+        String(
+            req.body.password || ""
+        )
+        .trim();
 
 
     if (
@@ -350,7 +406,7 @@ function loginUser(req, res) {
 
         FROM users
 
-        WHERE email = ?
+        WHERE LOWER(email) = ?
 
         LIMIT 1
 
@@ -365,8 +421,11 @@ function loginUser(req, res) {
             if (err) {
 
                 console.error(
-                    "❌ Login Database Error:",
-                    err
+                    "❌ LOGIN DATABASE ERROR:"
+                );
+
+                console.error(
+                    err.message
                 );
 
                 return res.status(500).json({
@@ -385,6 +444,7 @@ function loginUser(req, res) {
 
 
             if (
+                !results ||
                 results.length === 0
             ) {
 
@@ -421,7 +481,7 @@ function loginUser(req, res) {
             }
 
 
-            res.json({
+            return res.json({
 
                 success: true,
 
@@ -454,12 +514,12 @@ function loginUser(req, res) {
 // ======================================================
 
 app.post(
-    "/login",
+    "/api/login",
     loginUser
 );
 
 app.post(
-    "/api/login",
+    "/login",
     loginUser
 );
 
@@ -470,11 +530,22 @@ app.post(
 
 function registerUser(req, res) {
 
-    const {
-        name,
-        email,
-        password
-    } = req.body;
+    const name =
+        String(
+            req.body.name || ""
+        ).trim();
+
+    const email =
+        String(
+            req.body.email || ""
+        )
+        .trim()
+        .toLowerCase();
+
+    const password =
+        String(
+            req.body.password || ""
+        ).trim();
 
 
     if (
@@ -521,8 +592,8 @@ function registerUser(req, res) {
             if (err) {
 
                 console.error(
-                    "❌ Register Database Error:",
-                    err
+                    "❌ REGISTER DATABASE ERROR:",
+                    err.message
                 );
 
 
@@ -558,7 +629,7 @@ function registerUser(req, res) {
             }
 
 
-            res.json({
+            return res.json({
 
                 success: true,
 
@@ -581,12 +652,12 @@ function registerUser(req, res) {
 // ======================================================
 
 app.post(
-    "/register",
+    "/api/register",
     registerUser
 );
 
 app.post(
-    "/api/register",
+    "/register",
     registerUser
 );
 
@@ -602,7 +673,9 @@ app.get(
         const email =
             decodeURIComponent(
                 req.params.email
-            );
+            )
+            .trim()
+            .toLowerCase();
 
 
         db.query(
@@ -616,7 +689,7 @@ app.get(
 
             FROM users
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             LIMIT 1
 
@@ -631,6 +704,9 @@ app.get(
                     return res.status(500).json({
 
                         success: false,
+
+                        message:
+                            "Database error",
 
                         error:
                             err.message
@@ -656,7 +732,7 @@ app.get(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -687,7 +763,9 @@ app.get(
             );
 
 
-        const sql = `
+        db.query(
+
+            `
 
             SELECT
                 id,
@@ -703,19 +781,17 @@ app.get(
 
             ORDER BY date DESC, id DESC
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [email],
+
             (err, results) => {
 
                 if (err) {
 
                     console.error(
                         "❌ Get Expenses Error:",
-                        err
+                        err.message
                     );
 
                     return res.status(500).json({
@@ -733,7 +809,7 @@ app.get(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -743,6 +819,7 @@ app.get(
                 });
 
             }
+
         );
 
     }
@@ -786,7 +863,9 @@ app.post(
         }
 
 
-        const sql = `
+        db.query(
+
+            `
 
             INSERT INTO expenses
             (
@@ -799,11 +878,8 @@ app.post(
 
             VALUES (?, ?, ?, ?, ?)
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [
                 email,
                 name,
@@ -811,6 +887,7 @@ app.post(
                 category,
                 date
             ],
+
             (err, result) => {
 
                 if (err) {
@@ -830,7 +907,7 @@ app.post(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -843,6 +920,7 @@ app.post(
                 });
 
             }
+
         );
 
     }
@@ -859,7 +937,6 @@ app.put(
 
         const id =
             req.params.id;
-
 
         const {
             name,
@@ -920,6 +997,9 @@ app.put(
 
                         success: false,
 
+                        message:
+                            "Unable to update expense",
+
                         error:
                             err.message
 
@@ -928,7 +1008,7 @@ app.put(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -961,7 +1041,9 @@ app.delete(
             req.params.id;
 
 
-        const selectSql = `
+        db.query(
+
+            `
 
             SELECT
                 id,
@@ -977,12 +1059,10 @@ app.delete(
 
             LIMIT 1
 
-        `;
+            `,
 
-
-        db.query(
-            selectSql,
             [id],
+
             (selectErr, results) => {
 
                 if (selectErr) {
@@ -1022,7 +1102,9 @@ app.delete(
                     results[0];
 
 
-                const historySql = `
+                db.query(
+
+                    `
 
                     INSERT INTO deleted_history
                     (
@@ -1037,12 +1119,7 @@ app.delete(
 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
 
-                `;
-
-
-                db.query(
-
-                    historySql,
+                    `,
 
                     [
                         expense.email,
@@ -1057,6 +1134,11 @@ app.delete(
                     (historyErr) => {
 
                         if (historyErr) {
+
+                            console.error(
+                                "❌ History Insert Error:",
+                                historyErr.message
+                            );
 
                             return res.status(500).json({
 
@@ -1076,8 +1158,11 @@ app.delete(
                         db.query(
 
                             `
+
                             DELETE FROM expenses
+
                             WHERE id = ?
+
                             `,
 
                             [id],
@@ -1101,7 +1186,7 @@ app.delete(
                                 }
 
 
-                                res.json({
+                                return res.json({
 
                                     success: true,
 
@@ -1182,7 +1267,7 @@ app.get(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -1272,7 +1357,7 @@ app.post(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -1302,7 +1387,6 @@ app.put(
 
         const id =
             req.params.id;
-
 
         const {
             amount,
@@ -1355,6 +1439,9 @@ app.put(
 
                         success: false,
 
+                        message:
+                            "Unable to update income",
+
                         error:
                             err.message
 
@@ -1363,7 +1450,7 @@ app.put(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -1506,8 +1593,11 @@ app.delete(
                         db.query(
 
                             `
+
                             DELETE FROM income
+
                             WHERE id = ?
+
                             `,
 
                             [id],
@@ -1531,7 +1621,7 @@ app.delete(
                                 }
 
 
-                                res.json({
+                                return res.json({
 
                                     success: true,
 
@@ -1558,6 +1648,7 @@ app.delete(
     }
 );
 
+
 // ======================================================
 // ================= GET DELETE HISTORY =================
 // ======================================================
@@ -1571,13 +1662,10 @@ app.get(
                 req.params.email
             );
 
-        console.log(
-            "GET TRASH:",
-            email
-        );
 
+        db.query(
 
-        const sql = `
+            `
 
             SELECT
                 id,
@@ -1596,19 +1684,17 @@ app.get(
 
             ORDER BY deleted_at DESC, id DESC
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             [email],
+
             (err, results) => {
 
                 if (err) {
 
                     console.error(
                         "❌ Get Trash Error:",
-                        err
+                        err.message
                     );
 
                     return res.status(500).json({
@@ -1626,7 +1712,7 @@ app.get(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -1636,6 +1722,7 @@ app.get(
                 });
 
             }
+
         );
 
     }
@@ -1654,8 +1741,9 @@ app.post(
             req.params.id;
 
 
-        // First get deleted record
-        const selectSql = `
+        db.query(
+
+            `
 
             SELECT
                 id,
@@ -1673,20 +1761,13 @@ app.post(
 
             LIMIT 1
 
-        `;
+            `,
 
-
-        db.query(
-            selectSql,
             [id],
+
             (selectErr, results) => {
 
                 if (selectErr) {
-
-                    console.error(
-                        "❌ Restore Select Error:",
-                        selectErr
-                    );
 
                     return res.status(500).json({
 
@@ -1703,7 +1784,6 @@ app.post(
                 }
 
 
-                // Record not found
                 if (
                     results.length === 0
                 ) {
@@ -1732,7 +1812,9 @@ app.post(
                     item.type === "expense"
                 ) {
 
-                    const insertSql = `
+                    db.query(
+
+                        `
 
                         INSERT INTO expenses
                         (
@@ -1745,12 +1827,7 @@ app.post(
 
                         VALUES (?, ?, ?, ?, ?)
 
-                    `;
-
-
-                    db.query(
-
-                        insertSql,
+                        `,
 
                         [
                             item.email,
@@ -1763,11 +1840,6 @@ app.post(
                         (insertErr, insertResult) => {
 
                             if (insertErr) {
-
-                                console.error(
-                                    "❌ Restore Expense Error:",
-                                    insertErr
-                                );
 
                                 return res.status(500).json({
 
@@ -1784,7 +1856,6 @@ app.post(
                             }
 
 
-                            // Delete from history
                             db.query(
 
                                 `
@@ -1801,11 +1872,6 @@ app.post(
 
                                     if (deleteErr) {
 
-                                        console.error(
-                                            "❌ Delete History Error:",
-                                            deleteErr
-                                        );
-
                                         return res.status(500).json({
 
                                             success: false,
@@ -1821,7 +1887,7 @@ app.post(
                                     }
 
 
-                                    res.json({
+                                    return res.json({
 
                                         success: true,
 
@@ -1841,9 +1907,7 @@ app.post(
 
                     );
 
-
                     return;
-
                 }
 
 
@@ -1855,7 +1919,9 @@ app.post(
                     item.type === "income"
                 ) {
 
-                    const insertSql = `
+                    db.query(
+
+                        `
 
                         INSERT INTO income
                         (
@@ -1866,12 +1932,7 @@ app.post(
 
                         VALUES (?, ?, ?)
 
-                    `;
-
-
-                    db.query(
-
-                        insertSql,
+                        `,
 
                         [
                             item.email,
@@ -1882,11 +1943,6 @@ app.post(
                         (insertErr, insertResult) => {
 
                             if (insertErr) {
-
-                                console.error(
-                                    "❌ Restore Income Error:",
-                                    insertErr
-                                );
 
                                 return res.status(500).json({
 
@@ -1903,7 +1959,6 @@ app.post(
                             }
 
 
-                            // Delete from history
                             db.query(
 
                                 `
@@ -1920,11 +1975,6 @@ app.post(
 
                                     if (deleteErr) {
 
-                                        console.error(
-                                            "❌ Delete History Error:",
-                                            deleteErr
-                                        );
-
                                         return res.status(500).json({
 
                                             success: false,
@@ -1940,7 +1990,7 @@ app.post(
                                     }
 
 
-                                    res.json({
+                                    return res.json({
 
                                         success: true,
 
@@ -1960,15 +2010,9 @@ app.post(
 
                     );
 
-
                     return;
-
                 }
 
-
-                // ==========================================
-                // UNKNOWN TYPE
-                // ==========================================
 
                 return res.status(400).json({
 
@@ -1995,25 +2039,19 @@ app.delete(
     "/trash/cleanup",
     (req, res) => {
 
-        const sql = `
+        db.query(
+
+            `
 
             DELETE FROM deleted_history
 
             WHERE deleted_at < NOW() - INTERVAL 60 DAY
 
-        `;
+            `,
 
-
-        db.query(
-            sql,
             (err, result) => {
 
                 if (err) {
-
-                    console.error(
-                        "❌ Trash Cleanup Error:",
-                        err
-                    );
 
                     return res.status(500).json({
 
@@ -2030,7 +2068,7 @@ app.delete(
                 }
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -2043,10 +2081,12 @@ app.delete(
                 });
 
             }
+
         );
 
     }
 );
+
 
 // ======================================================
 // ================= GET ALL USER DATA ==================
@@ -2092,6 +2132,9 @@ app.get(
 
                         success: false,
 
+                        message:
+                            "Unable to load expenses",
+
                         error:
                             expenseErr.message
 
@@ -2128,6 +2171,9 @@ app.get(
 
                                 success: false,
 
+                                message:
+                                    "Unable to load income",
+
                                 error:
                                     incomeErr.message
 
@@ -2136,7 +2182,7 @@ app.get(
                         }
 
 
-                        res.json({
+                        return res.json({
 
                             success: true,
 
@@ -2201,7 +2247,7 @@ app.post(
 
             FROM users
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             LIMIT 1
 
@@ -2214,8 +2260,8 @@ app.post(
                 if (err) {
 
                     console.error(
-                        "Forgot Password DB Error:",
-                        err
+                        "❌ Forgot Password DB Error:",
+                        err.message
                     );
 
                     return res.status(500).json({
@@ -2223,7 +2269,10 @@ app.post(
                         success: false,
 
                         message:
-                            "Database error"
+                            "Database error",
+
+                        error:
+                            err.message
 
                     });
 
@@ -2256,7 +2305,7 @@ app.post(
 
                 const expiresAt =
                     Date.now() +
-                    (10 * 60 * 1000);
+                    10 * 60 * 1000;
 
 
                 resetOTPs.set(
@@ -2275,6 +2324,18 @@ app.post(
 
 
                 try {
+
+                    if (
+                        !process.env.EMAIL_USER ||
+                        !process.env.EMAIL_PASS
+                    ) {
+
+                        throw new Error(
+                            "EMAIL_USER or EMAIL_PASS is missing in Railway Variables"
+                        );
+
+                    }
+
 
                     await transporter.sendMail({
 
@@ -2348,12 +2409,12 @@ app.post(
 
 
                     console.log(
-                        "OTP sent to:",
+                        "OTP sent successfully to:",
                         email
                     );
 
 
-                    res.json({
+                    return res.json({
 
                         success: true,
 
@@ -2362,12 +2423,11 @@ app.post(
 
                     });
 
-
                 } catch (mailError) {
 
                     console.error(
                         "❌ Email Error:",
-                        mailError
+                        mailError.message
                     );
 
 
@@ -2376,12 +2436,15 @@ app.post(
                     );
 
 
-                    res.status(500).json({
+                    return res.status(500).json({
 
                         success: false,
 
                         message:
-                            "Unable to send OTP email"
+                            "Unable to send OTP email",
+
+                        error:
+                            mailError.message
 
                     });
 
@@ -2489,7 +2552,7 @@ app.post(
         }
 
 
-        res.json({
+        return res.json({
 
             success: true,
 
@@ -2527,7 +2590,7 @@ app.post(
         const newPassword =
             String(
                 req.body.newPassword || ""
-            );
+            ).trim();
 
 
         if (
@@ -2549,7 +2612,7 @@ app.post(
 
 
         if (
-            newPassword.length < 6
+            !/^\d{6}$/.test(newPassword)
         ) {
 
             return res.status(400).json({
@@ -2557,7 +2620,7 @@ app.post(
                 success: false,
 
                 message:
-                    "Password must contain at least 6 characters"
+                    "Password must contain exactly 6 digits"
 
             });
 
@@ -2627,7 +2690,7 @@ app.post(
 
             SET password = ?
 
-            WHERE email = ?
+            WHERE LOWER(email) = ?
 
             LIMIT 1
 
@@ -2643,8 +2706,8 @@ app.post(
                 if (err) {
 
                     console.error(
-                        "Reset Password DB Error:",
-                        err
+                        "❌ Reset Password DB Error:",
+                        err.message
                     );
 
                     return res.status(500).json({
@@ -2683,7 +2746,7 @@ app.post(
                 );
 
 
-                res.json({
+                return res.json({
 
                     success: true,
 
@@ -2707,7 +2770,14 @@ app.post(
 app.use(
     (req, res) => {
 
-        res.status(404).json({
+        console.log(
+            "404:",
+            req.method,
+            req.originalUrl
+        );
+
+
+        return res.status(404).json({
 
             success: false,
 
@@ -2731,12 +2801,12 @@ app.use(
     (err, req, res, next) => {
 
         console.error(
-            "❌ Server Error:",
+            "❌ SERVER ERROR:",
             err
         );
 
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
@@ -2758,6 +2828,7 @@ app.use(
 
 app.listen(
     PORT,
+    "0.0.0.0",
     () => {
 
         console.log(
@@ -2769,23 +2840,12 @@ app.listen(
         );
 
         console.log(
-            "MySQL + Express Backend Ready ✅"
+            "Express Backend Ready ✅"
         );
 
         console.log(
-            "Server running on port " +
+            "Server running on port:",
             PORT
-        );
-
-        console.log(
-            "Local URL: http://localhost:" +
-            PORT
-        );
-
-        console.log(
-            "Status URL: http://localhost:" +
-            PORT +
-            "/api/status"
         );
 
         console.log(

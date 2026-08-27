@@ -7,9 +7,8 @@
 // ================= API BASE ============================
 // ======================================================
 
-// IMPORTANT:
 // Frontend + Backend are hosted on the SAME Railway service.
-// Use relative URLs to avoid CORS / domain mismatch.
+// Relative URL prevents CORS / Railway domain mismatch.
 
 const API_BASE = "";
 
@@ -94,7 +93,7 @@ if (loginForm) {
 
 
         // ==================================================
-        // ================= PASSWORD VALIDATION =============
+        // ================= PASSWORD VALIDATION ============
         // ==================================================
 
         const passwordPattern =
@@ -115,7 +114,7 @@ if (loginForm) {
 
 
         // ==================================================
-        // ================= LOGIN API =======================
+        // ================= LOGIN API ======================
         // ==================================================
 
         try {
@@ -137,18 +136,14 @@ if (loginForm) {
                         method: "POST",
 
                         headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            "Accept":
-                                "application/json"
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
                         },
 
-                        body:
-                            JSON.stringify({
-                                email: email,
-                                password: password
-                            })
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        })
                     }
                 );
 
@@ -177,7 +172,6 @@ if (loginForm) {
                     "Login JSON Error:",
                     jsonError
                 );
-
             }
 
 
@@ -195,20 +189,16 @@ if (loginForm) {
 
                 throw new Error(
 
-                    data &&
-                    data.message
-
+                    data && data.message
                         ? data.message
-
                         : `Server Error (${response.status})`
 
                 );
-
             }
 
 
             // ==================================================
-            // ================= LOGIN SUCCESS =================
+            // ================= LOGIN SUCCESS ==================
             // ==================================================
 
             if (
@@ -280,23 +270,17 @@ if (loginForm) {
 
                 await Swal.fire({
 
-                    title:
-                        "Login Successful!",
+                    title: "Login Successful!",
 
-                    text:
-                        "Welcome Back 👋",
+                    text: "Welcome Back 👋",
 
-                    icon:
-                        "success",
+                    icon: "success",
 
-                    confirmButtonColor:
-                        "#4f46e5",
+                    confirmButtonColor: "#4f46e5",
 
-                    timer:
-                        1200,
+                    timer: 1200,
 
-                    showConfirmButton:
-                        false
+                    showConfirmButton: false
 
                 });
 
@@ -319,19 +303,16 @@ if (loginForm) {
 
                 Swal.fire({
 
-                    title:
-                        "Login Failed!",
+                    title: "Login Failed!",
 
                     text:
                         data && data.message
                             ? data.message
                             : "Invalid email or password",
 
-                    icon:
-                        "error",
+                    icon: "error",
 
-                    confirmButtonColor:
-                        "#4f46e5"
+                    confirmButtonColor: "#4f46e5"
 
                 });
 
@@ -341,7 +322,7 @@ if (loginForm) {
 
 
         // ==================================================
-        // ================= CONNECTION ERROR ================
+        // ================= LOGIN CATCH ====================
         // ==================================================
 
         catch (error) {
@@ -354,18 +335,15 @@ if (loginForm) {
 
             Swal.fire({
 
-                title:
-                    "Server Error!",
+                title: "Server Error!",
 
                 text:
                     error.message ||
                     "Unable to connect to server. Please try again.",
 
-                icon:
-                    "error",
+                icon: "error",
 
-                confirmButtonColor:
-                    "#4f46e5"
+                confirmButtonColor: "#4f46e5"
 
             });
 
@@ -376,6 +354,7 @@ if (loginForm) {
 }
 
 
+
 // ======================================================
 // ================= FORGOT PASSWORD ====================
 // ======================================================
@@ -384,17 +363,15 @@ async function forgotPassword() {
 
 
     // ==================================================
-    // ================= GET EMAIL ========================
+    // ================= GET EMAIL =======================
     // ==================================================
 
     const { value: email } =
         await Swal.fire({
 
-            title:
-                "Forgot Password?",
+            title: "Forgot Password?",
 
-            input:
-                "email",
+            input: "email",
 
             inputLabel:
                 "Enter your registered Gmail",
@@ -402,11 +379,13 @@ async function forgotPassword() {
             inputPlaceholder:
                 "example@gmail.com",
 
-            showCancelButton:
-                true,
+            showCancelButton: true,
 
             confirmButtonText:
                 "Send OTP",
+
+            cancelButtonText:
+                "Cancel",
 
             confirmButtonColor:
                 "#4f46e5",
@@ -441,13 +420,11 @@ async function forgotPassword() {
 
 
     // ==================================================
-    // ================= NO EMAIL ========================
+    // ================= NO EMAIL =======================
     // ==================================================
 
     if (!email) {
-
         return;
-
     }
 
 
@@ -460,31 +437,27 @@ async function forgotPassword() {
 
         Swal.fire({
 
-            title:
-                "Sending OTP...",
+            title: "Sending OTP...",
 
-            text:
-                "Please wait",
+            text: "Please wait",
 
-            allowOutsideClick:
-                false,
+            allowOutsideClick: false,
 
-            didOpen:
-                () => {
+            didOpen: () => {
 
-                    Swal.showLoading();
+                Swal.showLoading();
 
-                }
+            }
 
         });
 
 
         // ==================================================
-        // ================= FORGOT PASSWORD URL =============
+        // ================= FORGOT PASSWORD API =============
         // ==================================================
 
         const forgotURL =
-            `${API_BASE}/forgot-password`;
+            `${API_BASE}/api/forgot-password`;
 
 
         console.log(
@@ -494,13 +467,16 @@ async function forgotPassword() {
 
 
         // ==================================================
-        // ================= REQUEST ==========================
+        // ================= API REQUEST =====================
         // ==================================================
 
         const response =
             await fetch(
+
                 forgotURL,
+
                 {
+
                     method: "POST",
 
                     headers: {
@@ -524,6 +500,7 @@ async function forgotPassword() {
                         })
 
                 }
+
             );
 
 
@@ -552,6 +529,18 @@ async function forgotPassword() {
         Swal.close();
 
 
+        console.log(
+            "Forgot Password Status:",
+            response.status
+        );
+
+
+        console.log(
+            "Forgot Password Response:",
+            data
+        );
+
+
         // ==================================================
         // ================= ERROR CHECK =====================
         // ==================================================
@@ -564,12 +553,9 @@ async function forgotPassword() {
 
             throw new Error(
 
-                data &&
-                data.message
-
+                data && data.message
                     ? data.message
-
-                    : "Unable to send OTP"
+                    : `Server Error (${response.status})`
 
             );
 
@@ -582,14 +568,12 @@ async function forgotPassword() {
 
         await Swal.fire({
 
-            title:
-                "OTP Sent! 📧",
+            title: "OTP Sent! 📧",
 
             text:
                 "OTP has been sent to your Gmail.",
 
-            icon:
-                "success",
+            icon: "success",
 
             confirmButtonText:
                 "Enter OTP",
@@ -605,13 +589,18 @@ async function forgotPassword() {
         // ==================================================
 
         sessionStorage.setItem(
+
             "resetEmail",
-            email.trim().toLowerCase()
+
+            email
+                .trim()
+                .toLowerCase()
+
         );
 
 
         // ==================================================
-        // ================= RESET PAGE ======================
+        // ================= RESET PASSWORD PAGE =============
         // ==================================================
 
         window.location.href =
@@ -621,7 +610,7 @@ async function forgotPassword() {
 
 
     // ==================================================
-    // ================= FORGOT PASSWORD ERROR =============
+    // ================= FORGOT PASSWORD ERROR ==========
     // ==================================================
 
     catch (error) {
@@ -653,5 +642,26 @@ async function forgotPassword() {
         });
 
     }
+
+}
+// ======================================================
+// ============== FORGOT PASSWORD LINK ==================
+// ======================================================
+
+const forgotPasswordLink =
+    document.getElementById("forgotPasswordLink");
+
+if (forgotPasswordLink) {
+
+    forgotPasswordLink.addEventListener(
+        "click",
+        function (e) {
+
+            e.preventDefault();
+
+            forgotPassword();
+
+        }
+    );
 
 }
