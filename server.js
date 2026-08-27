@@ -16,38 +16,32 @@ const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
 // ======================================================
-// ================= CORS ===============================
+// ================= CORS ================================
 // ======================================================
 
 const allowedOrigins = [
-    "https://expense-tracker-pro-production-98cf.up.railway.app",
-    "https://expense-tracker-pro-production-99eb.up.railway.app"
+    "https://expense-tracker-pro-production-98cf.up.railway.app"
 ];
 
 app.use((req, res, next) => {
+
     const origin = req.headers.origin;
 
-    console.log("CORS REQUEST");
-    console.log("Method:", req.method);
-    console.log("Origin:", origin);
-    console.log("URL:", req.originalUrl);
-
-    // Allow known frontend/backend Railway domains
+    // Allow frontend origin
     if (origin && allowedOrigins.includes(origin)) {
         res.header("Access-Control-Allow-Origin", origin);
     }
 
-    // Also allow same-origin/no-origin requests
     res.header("Vary", "Origin");
 
     res.header(
         "Access-Control-Allow-Methods",
-        "GET,POST,PUT,DELETE,OPTIONS"
+        "GET, POST, PUT, DELETE, OPTIONS"
     );
 
     res.header(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization"
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
 
     res.header(
@@ -57,29 +51,11 @@ app.use((req, res, next) => {
 
     // Preflight request
     if (req.method === "OPTIONS") {
-        console.log("✅ OPTIONS / CORS PREFLIGHT");
-
-        if (origin && allowedOrigins.includes(origin)) {
-            return res.status(204).end();
-        }
-
-        // Allow preflight even if origin is not present
-        if (!origin) {
-            return res.status(204).end();
-        }
-
-        console.log("❌ CORS BLOCKED:", origin);
-
-        return res.status(403).json({
-            success: false,
-            message: "CORS origin not allowed",
-            origin: origin
-        });
+        return res.sendStatus(204);
     }
 
     next();
 });
-
 // ======================================================
 // ================= BODY PARSER ========================
 // ======================================================
