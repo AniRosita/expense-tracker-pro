@@ -22,12 +22,6 @@ const PORT = Number(process.env.PORT) || 5000;
 // ================= CORS ================================
 // ======================================================
 
-// Frontend + Backend same Railway service normally
-// uses relative URLs and does not need CORS.
-//
-// CORS is still enabled so another Railway frontend
-// domain can communicate with this backend if required.
-
 app.use(
     cors({
         origin: true,
@@ -44,9 +38,6 @@ app.use(
         ]
     })
 );
-
-// Explicit preflight support
-app.options("*", cors());
 
 
 // ======================================================
@@ -74,14 +65,6 @@ app.use(
 // ======================================================
 // ================= MYSQL CONFIG ========================
 // ======================================================
-
-// Railway MySQL may provide MYSQL_URL.
-//
-// If MYSQL_URL exists, use it directly.
-//
-// Otherwise use individual MYSQL variables.
-//
-// Local fallback is kept for local testing.
 
 let db;
 
