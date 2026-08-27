@@ -9,11 +9,13 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 
+
 // ======================================================
 // ================= PORT ===============================
 // ======================================================
 
 const PORT = Number(process.env.PORT) || 5000;
+
 
 // ======================================================
 // ================= CORS ===============================
@@ -21,18 +23,19 @@ const PORT = Number(process.env.PORT) || 5000;
 
 const allowedOrigins = [
     "https://expense-tracker-pro-production-98cf.up.railway.app",
-    "https://expense-tracker-pro-production-99eb.up.railway.app",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000"
+    "https://expense-tracker-pro-production-99eb.up.railway.app"
 ];
 
 app.use((req, res, next) => {
+
     const origin = req.headers.origin;
 
-    console.log("CORS Request:");
-    console.log("Origin:", origin);
+    console.log("======================================");
+    console.log("REQUEST");
     console.log("Method:", req.method);
     console.log("URL:", req.originalUrl);
+    console.log("Origin:", origin || "NO ORIGIN");
+    console.log("======================================");
 
     if (origin && allowedOrigins.includes(origin)) {
         res.setHeader("Access-Control-Allow-Origin", origin);
@@ -42,7 +45,7 @@ app.use((req, res, next) => {
 
     res.setHeader(
         "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     );
 
     res.setHeader(
@@ -55,14 +58,20 @@ app.use((req, res, next) => {
         "true"
     );
 
+    res.setHeader(
+        "Access-Control-Max-Age",
+        "86400"
+    );
+
     // Browser preflight request
     if (req.method === "OPTIONS") {
-        console.log("✅ CORS Preflight Allowed");
+        console.log("✅ CORS PREFLIGHT ALLOWED");
         return res.status(204).end();
     }
 
     next();
 });
+
 
 // ======================================================
 // ================= BODY PARSER ========================
@@ -71,20 +80,24 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // ======================================================
 // ================= STATIC FILES ========================
 // ======================================================
 
 app.use(express.static(__dirname));
 
+
 // ======================================================
-// ================= MYSQL CONNECTION ====================
+// ================= MYSQL CONNECTION ===================
 // ======================================================
 
 let db;
 
 try {
+
     const dbConfig = {
+
         host:
             process.env.MYSQLHOST ||
             process.env.MYSQL_HOST ||
@@ -105,18 +118,24 @@ try {
             process.env.MYSQL_DATABASE ||
             "expense_tracker",
 
-        port: Number(
-            process.env.MYSQLPORT ||
-            process.env.MYSQL_PORT ||
-            3306
-        ),
+        port:
+            Number(
+                process.env.MYSQLPORT ||
+                process.env.MYSQL_PORT ||
+                3306
+            ),
 
         waitForConnections: true,
+
         connectionLimit: 10,
+
         queueLimit: 0,
+
         enableKeepAlive: true,
+
         keepAliveInitialDelay: 0
     };
+
 
     console.log("======================================");
     console.log("MYSQL CONFIG");
@@ -126,20 +145,24 @@ try {
     console.log("User:", dbConfig.user);
     console.log("======================================");
 
+
     db = mysql.createPool(dbConfig);
 
 } catch (error) {
+
     console.error(
         "❌ MySQL Pool Creation Error:",
         error.message
     );
 }
 
+
 // ======================================================
 // ================= TEST MYSQL ==========================
 // ======================================================
 
 if (db) {
+
     db.query(
         "SELECT DATABASE() AS database_name",
         (err, result) => {
@@ -160,11 +183,11 @@ if (db) {
                     result[0]?.database_name
                 );
                 console.log("======================================");
-
             }
         }
     );
 }
+
 
 // ======================================================
 // ================= DATABASE CHECK ======================
@@ -173,6 +196,7 @@ if (db) {
 function checkDatabase(req, res, next) {
 
     if (!db) {
+
         return res.status(500).json({
             success: false,
             message: "MySQL connection is not available"
@@ -187,6 +211,7 @@ app.use("/expenses", checkDatabase);
 app.use("/income", checkDatabase);
 app.use("/trash", checkDatabase);
 
+
 // ======================================================
 // ================= HOME ROUTE ==========================
 // ======================================================
@@ -196,8 +221,8 @@ app.get("/", (req, res) => {
     res.sendFile(
         path.join(__dirname, "index.html")
     );
-
 });
+
 
 // ======================================================
 // ================= CORS TEST ===========================
@@ -210,8 +235,8 @@ app.get("/api/cors-test", (req, res) => {
         message: "CORS is working ✅",
         origin: req.headers.origin || null
     });
-
 });
+
 
 // ======================================================
 // ================= STATUS ==============================
@@ -231,7 +256,6 @@ app.get("/api/status", (req, res) => {
                     mysql: "disconnected",
                     error: err.message
                 });
-
             }
 
             res.json({
@@ -241,11 +265,10 @@ app.get("/api/status", (req, res) => {
                 database: result[0]?.database_name,
                 message: "Expense Tracker API is working ✅"
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= TEST DATABASE =======================
@@ -263,18 +286,16 @@ app.get("/api/test-db", (req, res) => {
                     success: false,
                     error: err.message
                 });
-
             }
 
             res.json({
                 success: true,
                 database: result[0]?.database_name
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= REGISTER ============================
@@ -288,13 +309,12 @@ function registerUser(req, res) {
 
     const email = String(
         req.body.email || ""
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
 
     const password = String(
         req.body.password || ""
     ).trim();
+
 
     console.log("======================================");
     console.log("REGISTER REQUEST");
@@ -302,14 +322,15 @@ function registerUser(req, res) {
     console.log("Email:", email);
     console.log("======================================");
 
+
     if (!name || !email || !password) {
 
         return res.status(400).json({
             success: false,
             message: "All fields are required"
         });
-
     }
+
 
     // Gmail validation
     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
@@ -318,8 +339,8 @@ function registerUser(req, res) {
             success: false,
             message: "Only Gmail addresses are allowed"
         });
-
     }
+
 
     // Exactly 6 digits
     if (!/^\d{6}$/.test(password)) {
@@ -328,8 +349,8 @@ function registerUser(req, res) {
             success: false,
             message: "Password must contain exactly 6 digits"
         });
-
     }
+
 
     const sql = `
         INSERT INTO users
@@ -340,6 +361,7 @@ function registerUser(req, res) {
         )
         VALUES (?, ?, ?)
     `;
+
 
     db.query(
         sql,
@@ -353,40 +375,47 @@ function registerUser(req, res) {
                     err.message
                 );
 
+
                 if (err.code === "ER_DUP_ENTRY") {
 
                     return res.status(409).json({
                         success: false,
                         message: "Email already exists"
                     });
-
                 }
+
 
                 return res.status(500).json({
                     success: false,
                     message: "Database error",
                     error: err.message
                 });
-
             }
+
 
             console.log(
                 "✅ User registered:",
                 email
             );
 
-            return res.status(201).json({
-                success: true,
-                message: "Registration successful",
-                userId: result.insertId
-            });
 
+            return res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Registration successful",
+
+                userId:
+                    result.insertId
+            });
         }
     );
 }
 
 app.post("/api/register", registerUser);
 app.post("/register", registerUser);
+
 
 // ======================================================
 // ================= LOGIN ==============================
@@ -396,18 +425,18 @@ function loginUser(req, res) {
 
     const email = String(
         req.body.email || ""
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
 
     const password = String(
         req.body.password || ""
     ).trim();
 
+
     console.log("======================================");
     console.log("LOGIN REQUEST");
     console.log("Email:", email);
     console.log("======================================");
+
 
     if (!email || !password) {
 
@@ -415,8 +444,8 @@ function loginUser(req, res) {
             success: false,
             message: "Email and password are required"
         });
-
     }
+
 
     db.query(
         `
@@ -444,8 +473,8 @@ function loginUser(req, res) {
                     message: "Database error",
                     error: err.message
                 });
-
             }
+
 
             if (!results || results.length === 0) {
 
@@ -453,10 +482,11 @@ function loginUser(req, res) {
                     success: false,
                     message: "Invalid email or password"
                 });
-
             }
 
+
             const user = results[0];
+
 
             if (
                 String(user.password) !==
@@ -467,25 +497,28 @@ function loginUser(req, res) {
                     success: false,
                     message: "Invalid email or password"
                 });
-
             }
 
+
             return res.json({
+
                 success: true,
+
                 message: "Login successful",
+
                 user: {
                     id: user.id,
                     name: user.name,
                     email: user.email
                 }
             });
-
         }
     );
 }
 
 app.post("/api/login", loginUser);
 app.post("/login", loginUser);
+
 
 // ======================================================
 // ================= GET USER ============================
@@ -495,9 +528,8 @@ app.get("/api/user/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     db.query(
         `
@@ -519,8 +551,8 @@ app.get("/api/user/:email", (req, res) => {
                     message: "Database error",
                     error: err.message
                 });
-
             }
+
 
             if (results.length === 0) {
 
@@ -528,18 +560,17 @@ app.get("/api/user/:email", (req, res) => {
                     success: false,
                     message: "User not found"
                 });
-
             }
+
 
             res.json({
                 success: true,
                 user: results[0]
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= GET EXPENSES ========================
@@ -549,9 +580,8 @@ app.get("/expenses/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     db.query(
         `
@@ -581,18 +611,17 @@ app.get("/expenses/:email", (req, res) => {
                     message: "Unable to load expenses",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 expenses: results
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= ADD EXPENSE =========================
@@ -608,6 +637,7 @@ app.post("/expenses", (req, res) => {
         date
     } = req.body;
 
+
     if (
         !email ||
         !name ||
@@ -621,8 +651,8 @@ app.post("/expenses", (req, res) => {
             message:
                 "Email, name, amount, category and date are required"
         });
-
     }
+
 
     db.query(
         `
@@ -652,19 +682,18 @@ app.post("/expenses", (req, res) => {
                     message: "Unable to add expense",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 message: "Expense added successfully",
                 expenseId: result.insertId
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= UPDATE EXPENSE ======================
@@ -681,6 +710,7 @@ app.put("/expenses/:id", (req, res) => {
         date
     } = req.body;
 
+
     if (
         !name ||
         amount === undefined ||
@@ -692,8 +722,8 @@ app.put("/expenses/:id", (req, res) => {
             success: false,
             message: "All expense fields are required"
         });
-
     }
+
 
     db.query(
         `
@@ -721,19 +751,18 @@ app.put("/expenses/:id", (req, res) => {
                     message: "Unable to update expense",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 message: "Expense updated successfully",
                 affectedRows: result.affectedRows
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= DELETE EXPENSE ======================
@@ -742,6 +771,7 @@ app.put("/expenses/:id", (req, res) => {
 app.delete("/expenses/:id", (req, res) => {
 
     const id = req.params.id;
+
 
     db.query(
         `
@@ -766,8 +796,8 @@ app.delete("/expenses/:id", (req, res) => {
                     message: "Unable to find expense",
                     error: selectErr.message
                 });
-
             }
+
 
             if (results.length === 0) {
 
@@ -775,10 +805,11 @@ app.delete("/expenses/:id", (req, res) => {
                     success: false,
                     message: "Expense not found"
                 });
-
             }
 
+
             const expense = results[0];
+
 
             db.query(
                 `
@@ -813,8 +844,8 @@ app.delete("/expenses/:id", (req, res) => {
                                 "Unable to save deleted expense history",
                             error: historyErr.message
                         });
-
                     }
+
 
                     db.query(
                         `
@@ -832,8 +863,8 @@ app.delete("/expenses/:id", (req, res) => {
                                         "Unable to delete expense",
                                     error: deleteErr.message
                                 });
-
                             }
+
 
                             res.json({
                                 success: true,
@@ -842,17 +873,14 @@ app.delete("/expenses/:id", (req, res) => {
                                 affectedRows:
                                     result.affectedRows
                             });
-
                         }
                     );
-
                 }
             );
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= GET INCOME ==========================
@@ -862,9 +890,8 @@ app.get("/income/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     db.query(
         `
@@ -887,18 +914,17 @@ app.get("/income/:email", (req, res) => {
                     message: "Unable to load income",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 income: results
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= ADD INCOME ==========================
@@ -912,6 +938,7 @@ app.post("/income", (req, res) => {
         date
     } = req.body;
 
+
     if (
         !email ||
         amount === undefined ||
@@ -920,11 +947,10 @@ app.post("/income", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message:
-                "Email, amount and date are required"
+            message: "Email, amount and date are required"
         });
-
     }
+
 
     db.query(
         `
@@ -950,19 +976,18 @@ app.post("/income", (req, res) => {
                     message: "Unable to add income",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 message: "Income added successfully",
                 incomeId: result.insertId
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= UPDATE INCOME =======================
@@ -977,6 +1002,7 @@ app.put("/income/:id", (req, res) => {
         date
     } = req.body;
 
+
     if (
         amount === undefined ||
         !date
@@ -986,8 +1012,8 @@ app.put("/income/:id", (req, res) => {
             success: false,
             message: "Amount and date are required"
         });
-
     }
+
 
     db.query(
         `
@@ -1011,19 +1037,18 @@ app.put("/income/:id", (req, res) => {
                     message: "Unable to update income",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 message: "Income updated successfully",
                 affectedRows: result.affectedRows
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= DELETE INCOME =======================
@@ -1032,6 +1057,7 @@ app.put("/income/:id", (req, res) => {
 app.delete("/income/:id", (req, res) => {
 
     const id = req.params.id;
+
 
     db.query(
         `
@@ -1054,8 +1080,8 @@ app.delete("/income/:id", (req, res) => {
                     message: "Unable to find income",
                     error: selectErr.message
                 });
-
             }
+
 
             if (results.length === 0) {
 
@@ -1063,10 +1089,11 @@ app.delete("/income/:id", (req, res) => {
                     success: false,
                     message: "Income not found"
                 });
-
             }
 
+
             const income = results[0];
+
 
             db.query(
                 `
@@ -1101,8 +1128,8 @@ app.delete("/income/:id", (req, res) => {
                                 "Unable to save deleted income history",
                             error: historyErr.message
                         });
-
                     }
+
 
                     db.query(
                         `
@@ -1120,8 +1147,8 @@ app.delete("/income/:id", (req, res) => {
                                         "Unable to delete income",
                                     error: deleteErr.message
                                 });
-
                             }
+
 
                             res.json({
                                 success: true,
@@ -1130,29 +1157,25 @@ app.delete("/income/:id", (req, res) => {
                                 affectedRows:
                                     result.affectedRows
                             });
-
                         }
                     );
-
                 }
             );
-
         }
     );
-
 });
 
+
 // ======================================================
-// ================= GET DELETE HISTORY ==================
+// ================= GET DELETE HISTORY =================
 // ======================================================
 
 app.get("/trash/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     db.query(
         `
@@ -1186,18 +1209,17 @@ app.get("/trash/:email", (req, res) => {
                         "Unable to load delete history",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
                 trash: results
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= RESTORE TRASH =======================
@@ -1206,6 +1228,7 @@ app.get("/trash/:email", (req, res) => {
 app.post("/trash/restore/:id", (req, res) => {
 
     const id = req.params.id;
+
 
     db.query(
         `
@@ -1233,8 +1256,8 @@ app.post("/trash/restore/:id", (req, res) => {
                         "Unable to find deleted record",
                     error: selectErr.message
                 });
-
             }
+
 
             if (results.length === 0) {
 
@@ -1243,10 +1266,11 @@ app.post("/trash/restore/:id", (req, res) => {
                     message:
                         "Deleted record not found"
                 });
-
             }
 
+
             const item = results[0];
+
 
             // RESTORE EXPENSE
             if (item.type === "expense") {
@@ -1281,8 +1305,8 @@ app.post("/trash/restore/:id", (req, res) => {
                                 error:
                                     insertErr.message
                             });
-
                         }
+
 
                         db.query(
                             `
@@ -1301,8 +1325,8 @@ app.post("/trash/restore/:id", (req, res) => {
                                         error:
                                             deleteErr.message
                                     });
-
                                 }
+
 
                                 res.json({
                                     success: true,
@@ -1311,15 +1335,14 @@ app.post("/trash/restore/:id", (req, res) => {
                                     expenseId:
                                         insertResult.insertId
                                 });
-
                             }
                         );
-
                     }
                 );
 
                 return;
             }
+
 
             // RESTORE INCOME
             if (item.type === "income") {
@@ -1350,8 +1373,8 @@ app.post("/trash/restore/:id", (req, res) => {
                                 error:
                                     insertErr.message
                             });
-
                         }
+
 
                         db.query(
                             `
@@ -1370,8 +1393,8 @@ app.post("/trash/restore/:id", (req, res) => {
                                         error:
                                             deleteErr.message
                                     });
-
                                 }
+
 
                                 res.json({
                                     success: true,
@@ -1380,26 +1403,24 @@ app.post("/trash/restore/:id", (req, res) => {
                                     incomeId:
                                         insertResult.insertId
                                 });
-
                             }
                         );
-
                     }
                 );
 
                 return;
             }
 
+
             return res.status(400).json({
                 success: false,
                 message:
                     "Unknown history record type"
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= CLEAN HISTORY =======================
@@ -1423,8 +1444,8 @@ app.delete("/trash/cleanup", (req, res) => {
                         "Unable to clean old history",
                     error: err.message
                 });
-
             }
+
 
             res.json({
                 success: true,
@@ -1433,11 +1454,10 @@ app.delete("/trash/cleanup", (req, res) => {
                 deletedRows:
                     result.affectedRows
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= ALL USER DATA =======================
@@ -1447,9 +1467,8 @@ app.get("/api/data/:email", (req, res) => {
 
     const email = decodeURIComponent(
         req.params.email
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     db.query(
         `
@@ -1476,8 +1495,8 @@ app.get("/api/data/:email", (req, res) => {
                     error:
                         expenseErr.message
                 });
-
             }
+
 
             db.query(
                 `
@@ -1502,34 +1521,35 @@ app.get("/api/data/:email", (req, res) => {
                             error:
                                 incomeErr.message
                         });
-
                     }
+
 
                     res.json({
                         success: true,
                         expenses: expenses,
                         income: income
                     });
-
                 }
             );
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= EMAIL CONFIG ========================
 // ======================================================
 
 const transporter = nodemailer.createTransport({
+
     service: "gmail",
+
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
+
 
 // ======================================================
 // ================= OTP STORAGE =========================
@@ -1537,13 +1557,14 @@ const transporter = nodemailer.createTransport({
 
 const resetOTPs = new Map();
 
+
 function generateOTP() {
 
     return Math.floor(
         100000 + Math.random() * 900000
     ).toString();
-
 }
+
 
 // ======================================================
 // ================= FORGOT PASSWORD ====================
@@ -1553,9 +1574,8 @@ app.post("/forgot-password", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
+
 
     if (!email) {
 
@@ -1563,8 +1583,8 @@ app.post("/forgot-password", (req, res) => {
             success: false,
             message: "Email is required"
         });
-
     }
+
 
     db.query(
         `
@@ -1586,8 +1606,8 @@ app.post("/forgot-password", (req, res) => {
                     message: "Database error",
                     error: err.message
                 });
-
             }
+
 
             if (results.length === 0) {
 
@@ -1595,8 +1615,8 @@ app.post("/forgot-password", (req, res) => {
                     success: false,
                     message: "Email not registered"
                 });
-
             }
+
 
             const user = results[0];
 
@@ -1605,10 +1625,12 @@ app.post("/forgot-password", (req, res) => {
             const expiresAt =
                 Date.now() + 10 * 60 * 1000;
 
+
             resetOTPs.set(email, {
                 otp,
                 expiresAt
             });
+
 
             try {
 
@@ -1620,8 +1642,8 @@ app.post("/forgot-password", (req, res) => {
                     throw new Error(
                         "EMAIL_USER or EMAIL_PASS is missing"
                     );
-
                 }
+
 
                 await transporter.sendMail({
 
@@ -1681,13 +1703,14 @@ app.post("/forgot-password", (req, res) => {
 
                         </div>
                     `
-
                 });
+
 
                 console.log(
                     "✅ OTP sent:",
                     email
                 );
+
 
                 res.json({
                     success: true,
@@ -1702,7 +1725,9 @@ app.post("/forgot-password", (req, res) => {
                     mailError.message
                 );
 
+
                 resetOTPs.delete(email);
+
 
                 res.status(500).json({
                     success: false,
@@ -1711,13 +1736,11 @@ app.post("/forgot-password", (req, res) => {
                     error:
                         mailError.message
                 });
-
             }
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= VERIFY OTP ==========================
@@ -1727,13 +1750,12 @@ app.post("/verify-reset-otp", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
 
     const otp = String(
         req.body.otp || ""
     ).trim();
+
 
     if (!email || !otp) {
 
@@ -1742,11 +1764,12 @@ app.post("/verify-reset-otp", (req, res) => {
             message:
                 "Email and OTP are required"
         });
-
     }
+
 
     const resetData =
         resetOTPs.get(email);
+
 
     if (!resetData) {
 
@@ -1755,8 +1778,8 @@ app.post("/verify-reset-otp", (req, res) => {
             message:
                 "OTP not found. Please request a new OTP."
         });
-
     }
+
 
     if (Date.now() > resetData.expiresAt) {
 
@@ -1767,8 +1790,8 @@ app.post("/verify-reset-otp", (req, res) => {
             message:
                 "OTP expired. Please request a new OTP."
         });
-
     }
+
 
     if (resetData.otp !== otp) {
 
@@ -1776,16 +1799,16 @@ app.post("/verify-reset-otp", (req, res) => {
             success: false,
             message: "Invalid OTP"
         });
-
     }
+
 
     res.json({
         success: true,
         message:
             "OTP verified successfully"
     });
-
 });
+
 
 // ======================================================
 // ================= RESET PASSWORD ======================
@@ -1795,9 +1818,7 @@ app.post("/reset-password", (req, res) => {
 
     const email = String(
         req.body.email || ""
-    )
-        .trim()
-        .toLowerCase();
+    ).trim().toLowerCase();
 
     const otp = String(
         req.body.otp || ""
@@ -1806,6 +1827,7 @@ app.post("/reset-password", (req, res) => {
     const newPassword = String(
         req.body.newPassword || ""
     ).trim();
+
 
     if (
         !email ||
@@ -1818,8 +1840,8 @@ app.post("/reset-password", (req, res) => {
             message:
                 "Email, OTP and new password are required"
         });
-
     }
+
 
     if (!/^\d{6}$/.test(newPassword)) {
 
@@ -1828,11 +1850,12 @@ app.post("/reset-password", (req, res) => {
             message:
                 "Password must contain exactly 6 digits"
         });
-
     }
+
 
     const resetData =
         resetOTPs.get(email);
+
 
     if (!resetData) {
 
@@ -1841,8 +1864,8 @@ app.post("/reset-password", (req, res) => {
             message:
                 "OTP not found. Please request a new OTP."
         });
-
     }
+
 
     if (Date.now() > resetData.expiresAt) {
 
@@ -1850,21 +1873,19 @@ app.post("/reset-password", (req, res) => {
 
         return res.status(400).json({
             success: false,
-            message:
-                "OTP expired"
+            message: "OTP expired"
         });
-
     }
+
 
     if (resetData.otp !== otp) {
 
         return res.status(400).json({
             success: false,
-            message:
-                "Invalid OTP"
+            message: "Invalid OTP"
         });
-
     }
+
 
     db.query(
         `
@@ -1888,8 +1909,8 @@ app.post("/reset-password", (req, res) => {
                     error:
                         err.message
                 });
-
             }
+
 
             if (result.affectedRows === 0) {
 
@@ -1898,21 +1919,21 @@ app.post("/reset-password", (req, res) => {
                     message:
                         "User not found"
                 });
-
             }
 
+
             resetOTPs.delete(email);
+
 
             res.json({
                 success: true,
                 message:
                     "Password reset successfully"
             });
-
         }
     );
-
 });
+
 
 // ======================================================
 // ================= 404 HANDLER =========================
@@ -1926,15 +1947,14 @@ app.use((req, res) => {
         req.originalUrl
     );
 
+
     res.status(404).json({
         success: false,
-        message:
-            "API route not found",
-        route:
-            req.originalUrl
+        message: "API route not found",
+        route: req.originalUrl
     });
-
 });
+
 
 // ======================================================
 // ================= ERROR HANDLER =======================
@@ -1947,15 +1967,14 @@ app.use((err, req, res, next) => {
         err.message
     );
 
+
     res.status(500).json({
         success: false,
-        message:
-            "Internal Server Error",
-        error:
-            err.message
+        message: "Internal Server Error",
+        error: err.message
     });
-
 });
+
 
 // ======================================================
 // ================= START SERVER ========================
@@ -1981,7 +2000,14 @@ app.listen(
             PORT
         );
 
-        console.log("======================================");
+        console.log(
+            "Allowed CORS Origins:"
+        );
 
+        console.log(
+            allowedOrigins
+        );
+
+        console.log("======================================");
     }
 );
