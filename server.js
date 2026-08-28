@@ -135,18 +135,22 @@ const BREVO_FROM_NAME =
 
 console.log("======================================");
 console.log("BREVO EMAIL CONFIG");
+
 console.log(
     "Brevo API Key:",
     BREVO_API_KEY ? "configured OK" : "MISSING"
 );
+
 console.log(
     "Brevo From Email:",
     BREVO_FROM_EMAIL || "MISSING"
 );
+
 console.log(
     "Brevo From Name:",
     BREVO_FROM_NAME
 );
+
 console.log("======================================");
 
 // ======================================================
@@ -428,8 +432,7 @@ async function registerUser(req, res) {
 
             return res.status(400).json({
                 success: false,
-                message:
-                    "All fields are required"
+                message: "All fields are required"
             });
         }
 
@@ -667,10 +670,8 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                message:
-                    "Database error",
-                error:
-                    error.message
+                message: "Database error",
+                error: error.message
             });
         }
     }
@@ -1200,7 +1201,9 @@ app.put(
                 await db.promise().query(
                     `
                     UPDATE income
-                    SET amount = ?, date = ?
+                    SET
+                        amount = ?,
+                        date = ?
                     WHERE id = ?
                     `,
                     [
@@ -1628,12 +1631,14 @@ async function sendOTPEmail(
 ) {
 
     if (!BREVO_API_KEY) {
+
         throw new Error(
             "BREVO_API_KEY is missing in Railway Variables"
         );
     }
 
     if (!BREVO_FROM_EMAIL) {
+
         throw new Error(
             "BREVO_FROM_EMAIL is missing in Railway Variables"
         );
@@ -1711,6 +1716,7 @@ Expense Tracker Pro
 </p>
 
 </div>
+
 </body>
 </html>
 `;
@@ -1842,6 +1848,7 @@ async function forgotPassword(req, res) {
                 10 * 60 * 1000
             );
 
+        // Delete previous OTP
         await db.promise().query(
             `
             DELETE FROM password_resets
@@ -1850,6 +1857,7 @@ async function forgotPassword(req, res) {
             [email]
         );
 
+        // Save new OTP
         const [result] =
             await db.promise().query(
                 `
