@@ -1,2490 +1,2422 @@
 // ======================================================
-// ================= EXPENSE TRACKER PRO =================
-// ===================== REPORTS JS ======================
+// ============== EXPENSE TRACKER PRO SERVER ============
+// ============== BREVO OTP VERSION =====================
 // ======================================================
 
 "use strict";
 
-// ======================================================
-// ================= GLOBAL DATA =========================
-// ======================================================
+const express = require("express");
+const mysql = require("mysql2");
+const path = require("path");
 
-let allExpenses = [];
-let allIncome = [];
-
-let pieChart = null;
-let monthlyChart = null;
-let savingChart = null;
-let incomeExpenseChart = null;
-
+const app = express();
 
 // ======================================================
-// ================= API BASE URL ========================
+// PORT
 // ======================================================
 
-// Frontend + Backend are on same Railway domain
-const API_BASE = "";
-
+const PORT = Number(process.env.PORT) || 5000;
 
 // ======================================================
-// ================= LOGIN CHECK =========================
+// CORS
 // ======================================================
 
-function checkReportLogin() {
+const allowedOrigins = [
+    "https://expense-tracker-pro-production-98cf.up.railway.app",
+    "https://expense-tracker-pro-production-b745.up.railway.app",
+    "https://expense-tracker-pro-production-99eb.up.railway.app",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000"
+];
 
-    const email = localStorage.getItem("userEmail");
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
 
-    if (!email) {
-
-        if (typeof Swal !== "undefined") {
-
-            Swal.fire({
-                icon: "warning",
-                title: "Login Required",
-                text: "Please login first."
-            });
-
-        } else {
-
-            alert("Please login first.");
-
-        }
-
-        window.location.href = "index.html";
-
-        return false;
+    if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
-    return true;
-}
+    res.setHeader("Vary", "Origin");
 
-
-// ======================================================
-// ================= CHART THEME =========================
-// ======================================================
-
-function getChartTextColor() {
-
-    return document.body.classList.contains("dark-mode")
-        ? "#ffffff"
-        : "#374151";
-
-}
-
-
-function getChartGridColor() {
-
-    return document.body.classList.contains("dark-mode")
-        ? "rgba(255,255,255,0.15)"
-        : "rgba(0,0,0,0.1)";
-
-}
-
-
-// ======================================================
-// ================= CURRENCY =============================
-// ======================================================
-
-function reportCurrency(value) {
-
-    const amount = Number(value) || 0;
-
-    if (typeof formatCurrency === "function") {
-
-        return formatCurrency(amount);
-
-    }
-
-    return (
-        "₹" +
-        amount.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })
+    res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     );
 
-}
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
 
-
-// ======================================================
-// ================= SAFE DATE ============================
-// ======================================================
-
-function getDateString(value) {
-
-    if (!value) {
-        return "";
+    if (req.method === "OPTIONS") {
+        return res.status(204).end();
     }
 
-    return String(value).substring(0, 10);
-
-}
-
+    next();
+});
 
 // ======================================================
-// ================= PAGE LOAD ============================
+// BODY PARSER
 // ======================================================
 
-window.addEventListener(
-    "DOMContentLoaded",
-    function () {
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-        console.log("Reports Page Loading...");
+// ======================================================
+// STATIC FILES
+// ======================================================
 
-        if (!checkReportLogin()) {
-            return;
-        }
+app.use(express.static(__dirname));
 
-        loadReportData();
+// ======================================================
+// MYSQL CONFIG
+// ======================================================
 
-    }
+const dbConfig = {
+    host:
+        process.env.MYSQLHOST ||
+        process.env.MYSQL_HOST ||
+        "localhost",
+
+    user:
+        process.env.MYSQLUSER ||
+        process.env.MYSQL_USER ||
+        "root",
+
+    password:
+        process.env.MYSQLPASSWORD ||
+        process.env.MYSQL_PASSWORD ||
+        "",
+
+    database:
+        process.env.MYSQLDATABASE ||
+        process.env.MYSQL_DATABASE ||
+        "expense_tracker",
+
+    port: Number(
+        process.env.MYSQLPORT ||
+        process.env.MYSQL_PORT ||
+        3306
+    ),
+
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true
+};
+
+console.log("======================================");
+console.log("MYSQL CONFIG");
+console.log("Host:", dbConfig.host);
+console.log("Port:", dbConfig.port);
+console.log("Database:", dbConfig.database);
+console.log("User:", dbConfig.user);
+console.log("======================================");
+
+// ======================================================
+// MYSQL POOL
+// ======================================================
+
+const db = mysql.createPool(dbConfig);
+
+// ======================================================
+// BREVO CONFIG
+// ======================================================
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
+const BREVO_FROM_EMAIL =
+    process.env.BREVO_FROM_EMAIL;
+
+const BREVO_FROM_NAME =
+    process.env.BREVO_FROM_NAME ||
+    "Expense Tracker Pro";
+
+console.log("======================================");
+console.log("BREVO EMAIL CONFIG");
+console.log(
+    "Brevo API Key:",
+    BREVO_API_KEY ? "configured OK" : "MISSING"
 );
-
+console.log(
+    "Brevo From Email:",
+    BREVO_FROM_EMAIL || "MISSING"
+);
+console.log(
+    "Brevo From Name:",
+    BREVO_FROM_NAME
+);
+console.log("======================================");
 
 // ======================================================
-// ================= LOAD REPORT DATA ====================
+// HELPERS
 // ======================================================
 
-async function loadReportData() {
+function normalizeEmail(email) {
+    return String(email || "")
+        .trim()
+        .toLowerCase();
+}
 
-    const email = localStorage.getItem("userEmail");
+function generateOTP() {
+    return Math.floor(
+        100000 + Math.random() * 900000
+    ).toString();
+}
 
-    if (!email) {
+// ======================================================
+// VALIDATION
+// ======================================================
 
-        checkReportLogin();
-        return;
+const gmailRegex =
+    /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
-    }
+const passwordRegex =
+    /^\d{6}$/;
+
+// ======================================================
+// CREATE REQUIRED TABLES
+// ======================================================
+
+async function createRequiredTables() {
+
+    const usersSQL = `
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL
+        )
+    `;
+
+    const expensesSQL = `
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    const incomeSQL = `
+        CREATE TABLE IF NOT EXISTS income (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    const historySQL = `
+        CREATE TABLE IF NOT EXISTS deleted_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            original_id INT,
+            type VARCHAR(50) NOT NULL,
+            name VARCHAR(255),
+            amount DECIMAL(10,2),
+            category VARCHAR(100),
+            date DATE,
+            deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    const passwordResetSQL = `
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            otp VARCHAR(10) NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_password_reset_email (email)
+        )
+    `;
+
+    await db.promise().query(usersSQL);
+    console.log("users table ready");
+
+    await db.promise().query(expensesSQL);
+    console.log("expenses table ready");
+
+    await db.promise().query(incomeSQL);
+    console.log("income table ready");
+
+    await db.promise().query(historySQL);
+    console.log("deleted_history table ready");
+
+    await db.promise().query(passwordResetSQL);
+    console.log("password_resets table ready");
+}
+
+// ======================================================
+// DATABASE INIT
+// ======================================================
+
+let databaseReady = false;
+
+async function initializeDatabase() {
 
     try {
 
-        console.log("======================================");
-        console.log("Loading report data...");
-        console.log("User Email:", email);
-
-
-        // ==================================================
-        // ================= EXPENSE ========================
-        // ==================================================
-
-        const expenseUrl =
-            API_BASE +
-            "/api/expenses/" +
-            encodeURIComponent(email);
-
-        console.log("Expense API URL:", expenseUrl);
-
-        const expenseRes =
-            await fetch(
-                expenseUrl,
-                {
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
+        const [result] =
+            await db.promise().query(
+                "SELECT DATABASE() AS database_name"
             );
-
-        console.log(
-            "Expense API Status:",
-            expenseRes.status
-        );
-
-
-        if (!expenseRes.ok) {
-
-            const errorText =
-                await expenseRes.text();
-
-            console.error(
-                "Expense API Response:",
-                errorText
-            );
-
-            throw new Error(
-                "Expense API Error: " +
-                expenseRes.status
-            );
-
-        }
-
-
-        const expenseData =
-            await expenseRes.json();
-
-        console.log(
-            "Expense API Data:",
-            expenseData
-        );
-
-
-        if (
-            expenseData &&
-            expenseData.success &&
-            Array.isArray(
-                expenseData.expenses
-            )
-        ) {
-
-            allExpenses =
-                expenseData.expenses;
-
-        } else {
-
-            allExpenses = [];
-
-        }
-
-
-        console.log(
-            "Expenses Loaded:",
-            allExpenses.length
-        );
-
-
-        // ==================================================
-        // ================= INCOME =========================
-        // ==================================================
-
-        const incomeUrl =
-            API_BASE +
-            "/api/income/" +
-            encodeURIComponent(email);
-
-        console.log("Income API URL:", incomeUrl);
-
-
-        const incomeRes =
-            await fetch(
-                incomeUrl,
-                {
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
-            );
-
-
-        console.log(
-            "Income API Status:",
-            incomeRes.status
-        );
-
-
-        if (!incomeRes.ok) {
-
-            const errorText =
-                await incomeRes.text();
-
-            console.error(
-                "Income API Response:",
-                errorText
-            );
-
-            throw new Error(
-                "Income API Error: " +
-                incomeRes.status
-            );
-
-        }
-
-
-        const incomeData =
-            await incomeRes.json();
-
-
-        console.log(
-            "Income API Data:",
-            incomeData
-        );
-
-
-        if (
-            incomeData &&
-            incomeData.success &&
-            Array.isArray(
-                incomeData.income
-            )
-        ) {
-
-            allIncome =
-                incomeData.income;
-
-        } else {
-
-            allIncome = [];
-
-        }
-
-
-        console.log(
-            "Income Loaded:",
-            allIncome.length
-        );
-
-
-        // ==================================================
-        // ================= LOAD FILTERS ===================
-        // ==================================================
-
-        loadAvailableYears();
-
-        loadAvailableMonths();
-
-
-        // ==================================================
-        // ================= GENERATE REPORT ===============
-        // ==================================================
-
-        generateReport();
-
-
-        console.log(
-            "Reports loaded successfully ✅"
-        );
 
         console.log("======================================");
+        console.log("MySQL Connected");
+        console.log(
+            "Database:",
+            result[0]?.database_name
+        );
+        console.log("======================================");
 
-    }
+        await createRequiredTables();
 
-    catch (error) {
+        databaseReady = true;
 
-        console.error("======================================");
+        console.log("======================================");
+        console.log("DATABASE READY");
+        console.log("======================================");
+
+    } catch (error) {
+
+        databaseReady = false;
 
         console.error(
-            "REPORT LOAD ERROR:",
-            error
+            "MySQL Connection Failed:",
+            error.message
         );
 
-        console.error("======================================");
+        setTimeout(
+            initializeDatabase,
+            5000
+        );
+    }
+}
 
+// ======================================================
+// DATABASE MIDDLEWARE
+// ======================================================
 
-        allExpenses = [];
-        allIncome = [];
+function checkDatabase(req, res, next) {
 
+    if (!databaseReady) {
 
-        if (typeof Swal !== "undefined") {
+        return res.status(503).json({
+            success: false,
+            message:
+                "Database is not ready yet. Please try again."
+        });
+    }
 
-            Swal.fire({
+    next();
+}
 
-                icon: "error",
+// ======================================================
+// HOME
+// ======================================================
 
-                title: "Report Error",
+app.get("/", (req, res) => {
 
-                text:
-                    "Unable to load report. Please check the server connection."
+    res.sendFile(
+        path.join(__dirname, "index.html")
+    );
+});
 
+// ======================================================
+// STATUS
+// ======================================================
+
+app.get("/api/status", async (req, res) => {
+
+    try {
+
+        const [result] =
+            await db.promise().query(
+                "SELECT DATABASE() AS database_name"
+            );
+
+        res.json({
+            success: true,
+            server: "running",
+            mysql: "connected",
+            database:
+                result[0]?.database_name,
+            databaseReady,
+            message:
+                "Expense Tracker API is working"
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            server: "running",
+            mysql: "disconnected",
+            databaseReady: false,
+            error: error.message
+        });
+    }
+});
+
+// ======================================================
+// CORS TEST
+// ======================================================
+
+app.get("/api/cors-test", (req, res) => {
+
+    res.json({
+        success: true,
+        message: "CORS is working",
+        origin:
+            req.headers.origin || null
+    });
+});
+
+// ======================================================
+// DB TEST
+// ======================================================
+
+app.get("/api/test-db", async (req, res) => {
+
+    try {
+
+        const [result] =
+            await db.promise().query(
+                "SELECT DATABASE() AS database_name"
+            );
+
+        res.json({
+            success: true,
+            database:
+                result[0]?.database_name
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// ======================================================
+// REGISTER
+// ======================================================
+
+async function registerUser(req, res) {
+
+    try {
+
+        const name =
+            String(req.body.name || "").trim();
+
+        const email =
+            normalizeEmail(req.body.email);
+
+        const password =
+            String(req.body.password || "").trim();
+
+        if (!name || !email || !password) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "All fields are required"
+            });
+        }
+
+        if (!gmailRegex.test(email)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Only Gmail addresses are allowed"
+            });
+        }
+
+        if (!passwordRegex.test(password)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain exactly 6 digits"
+            });
+        }
+
+        const [result] =
+            await db.promise().query(
+                `
+                INSERT INTO users
+                (name, email, password)
+                VALUES (?, ?, ?)
+                `,
+                [
+                    name,
+                    email,
+                    password
+                ]
+            );
+
+        console.log(
+            "USER REGISTERED:",
+            email
+        );
+
+        res.status(201).json({
+            success: true,
+            message:
+                "Registration successful",
+            userId:
+                result.insertId
+        });
+
+    } catch (error) {
+
+        console.error(
+            "REGISTER DATABASE ERROR:",
+            error.message
+        );
+
+        if (error.code === "ER_DUP_ENTRY") {
+
+            return res.status(409).json({
+                success: false,
+                message:
+                    "Email already exists"
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Database error",
+            error: error.message
+        });
+    }
+}
+
+app.post(
+    "/api/register",
+    checkDatabase,
+    registerUser
+);
+
+app.post(
+    "/register",
+    checkDatabase,
+    registerUser
+);
+
+// ======================================================
+// LOGIN
+// ======================================================
+
+async function loginUser(req, res) {
+
+    try {
+
+        const email =
+            normalizeEmail(req.body.email);
+
+        const password =
+            String(req.body.password || "").trim();
+
+        console.log("======================================");
+        console.log("LOGIN REQUEST");
+        console.log("Email:", email);
+        console.log("======================================");
+
+        if (!email || !password) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email and password are required"
+            });
+        }
+
+        const [results] =
+            await db.promise().query(
+                `
+                SELECT id, name, email, password
+                FROM users
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+        if (!results.length) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Invalid email or password"
+            });
+        }
+
+        const user = results[0];
+
+        if (
+            String(user.password) !==
+            String(password)
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Invalid email or password"
+            });
+        }
+
+        console.log(
+            "LOGIN SUCCESS:",
+            email
+        );
+
+        res.json({
+            success: true,
+            message:
+                "Login successful",
+
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+
+        console.error(
+            "LOGIN DATABASE ERROR:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Database error",
+            error: error.message
+        });
+    }
+}
+
+app.post(
+    "/api/login",
+    checkDatabase,
+    loginUser
+);
+
+app.post(
+    "/login",
+    checkDatabase,
+    loginUser
+);
+
+// ======================================================
+// GET USER
+// ======================================================
+
+app.get(
+    "/api/user/:email",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
+                    )
+                );
+
+            const [results] =
+                await db.promise().query(
+                    `
+                    SELECT id, name, email
+                    FROM users
+                    WHERE LOWER(TRIM(email)) = ?
+                    LIMIT 1
+                    `,
+                    [email]
+                );
+
+            if (!results.length) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User not found"
+                });
+            }
+
+            res.json({
+                success: true,
+                user: results[0]
             });
 
-        } else {
+        } catch (error) {
 
-            alert(
-                "Unable to load report. Please check the server connection."
-            );
-
+            res.status(500).json({
+                success: false,
+                message:
+                    "Database error",
+                error:
+                    error.message
+            });
         }
-
-    }
-
-}
-
-
-// ======================================================
-// ================= YEAR DROPDOWN =======================
-// ======================================================
-
-function loadAvailableYears() {
-
-    const reportYear =
-        document.getElementById("reportYear");
-
-    if (!reportYear) {
-        return;
-    }
-
-
-    const years = new Set();
-
-
-    // ==================================================
-    // ================= EXPENSE YEARS ==================
-    // ==================================================
-
-    allExpenses.forEach(
-        function (expense) {
-
-            const date =
-                getDateString(
-                    expense.date
-                );
-
-            if (!date) {
-                return;
-            }
-
-
-            const year =
-                date.substring(0, 4);
-
-
-            if (/^\d{4}$/.test(year)) {
-                years.add(year);
-            }
-
-        }
-    );
-
-
-    // ==================================================
-    // ================= INCOME YEARS ===================
-    // ==================================================
-
-    allIncome.forEach(
-        function (income) {
-
-            const date =
-                getDateString(
-                    income.date ||
-                    income.created_at
-                );
-
-            if (!date) {
-                return;
-            }
-
-
-            const year =
-                date.substring(0, 4);
-
-
-            if (/^\d{4}$/.test(year)) {
-                years.add(year);
-            }
-
-        }
-    );
-
-
-    // ==================================================
-    // ================= UPDATE SELECT ==================
-    // ==================================================
-
-    reportYear.innerHTML = "";
-
-
-    const sortedYears =
-        Array.from(years).sort(
-            function (a, b) {
-
-                return (
-                    Number(a) -
-                    Number(b)
-                );
-
-            }
-        );
-
-
-    // ==================================================
-    // ================= NO DATA ========================
-    // ==================================================
-
-    if (sortedYears.length === 0) {
-
-        const currentYear =
-            String(
-                new Date().getFullYear()
-            );
-
-
-        const option =
-            document.createElement("option");
-
-
-        option.value =
-            currentYear;
-
-        option.textContent =
-            currentYear;
-
-
-        reportYear.appendChild(option);
-
-        reportYear.value =
-            currentYear;
-
-        return;
-
-    }
-
-
-    // ==================================================
-    // ================= ADD YEARS ======================
-    // ==================================================
-
-    sortedYears.forEach(
-        function (year) {
-
-            const option =
-                document.createElement("option");
-
-
-            option.value =
-                year;
-
-            option.textContent =
-                year;
-
-
-            reportYear.appendChild(option);
-
-        }
-    );
-
-
-    reportYear.value =
-        sortedYears[
-            sortedYears.length - 1
-        ];
-
-}
-
-
-// ======================================================
-// ================= MONTH DROPDOWN ======================
-// ======================================================
-
-function loadAvailableMonths() {
-
-    const reportYear =
-        document.getElementById("reportYear");
-
-    const reportMonth =
-        document.getElementById("reportMonth");
-
-
-    if (
-        !reportYear ||
-        !reportMonth
-    ) {
-
-        return;
-
-    }
-
-
-    const selectedYear =
-        reportYear.value;
-
-
-    if (!selectedYear) {
-        return;
-    }
-
-
-    const months = new Set();
-
-
-    // ==================================================
-    // ================= EXPENSE MONTHS =================
-    // ==================================================
-
-    allExpenses.forEach(
-        function (expense) {
-
-            const date =
-                getDateString(
-                    expense.date
-                );
-
-
-            if (!date) {
-                return;
-            }
-
-
-            if (
-                date.substring(0, 4) ===
-                selectedYear
-            ) {
-
-                const month =
-                    date.substring(5, 7);
-
-
-                if (/^\d{2}$/.test(month)) {
-
-                    months.add(month);
-
-                }
-
-            }
-
-        }
-    );
-
-
-    // ==================================================
-    // ================= INCOME MONTHS ==================
-    // ==================================================
-
-    allIncome.forEach(
-        function (income) {
-
-            const date =
-                getDateString(
-                    income.date ||
-                    income.created_at
-                );
-
-
-            if (!date) {
-                return;
-            }
-
-
-            if (
-                date.substring(0, 4) ===
-                selectedYear
-            ) {
-
-                const month =
-                    date.substring(5, 7);
-
-
-                if (/^\d{2}$/.test(month)) {
-
-                    months.add(month);
-
-                }
-
-            }
-
-        }
-    );
-
-
-    reportMonth.innerHTML = "";
-
-
-    const sortedMonths =
-        Array.from(months).sort();
-
-
-    // ==================================================
-    // ================= NO DATA ========================
-    // ==================================================
-
-    if (sortedMonths.length === 0) {
-
-        const currentMonth =
-            String(
-                new Date().getMonth() + 1
-            ).padStart(2, "0");
-
-
-        const option =
-            document.createElement("option");
-
-
-        option.value =
-            currentMonth;
-
-
-        option.textContent =
-            new Date(
-                Number(selectedYear),
-                Number(currentMonth) - 1,
-                1
-            ).toLocaleString(
-                "en-US",
-                {
-                    month: "long"
-                }
-            );
-
-
-        reportMonth.appendChild(option);
-
-        reportMonth.value =
-            currentMonth;
-
-        return;
-
-    }
-
-
-    // ==================================================
-    // ================= ADD MONTHS =====================
-    // ==================================================
-
-    sortedMonths.forEach(
-        function (month) {
-
-            const monthName =
-                new Date(
-                    Number(selectedYear),
-                    Number(month) - 1,
-                    1
-                ).toLocaleString(
-                    "en-US",
-                    {
-                        month: "long"
-                    }
-                );
-
-
-            const option =
-                document.createElement("option");
-
-
-            option.value =
-                month;
-
-            option.textContent =
-                monthName;
-
-
-            reportMonth.appendChild(option);
-
-        }
-    );
-
-
-    reportMonth.value =
-        sortedMonths[
-            sortedMonths.length - 1
-        ];
-
-}
-
-
-// ======================================================
-// ================= FILTER EVENTS =======================
-// ======================================================
-
-document.addEventListener(
-    "change",
-    function (event) {
-
-        if (
-            event.target &&
-            event.target.id ===
-            "reportYear"
-        ) {
-
-            loadAvailableMonths();
-
-            generateReport();
-
-        }
-
-
-        if (
-            event.target &&
-            event.target.id ===
-            "reportMonth"
-        ) {
-
-            generateReport();
-
-        }
-
     }
 );
 
-
 // ======================================================
-// ================= GENERATE REPORT =====================
+// EXPENSES GET
 // ======================================================
 
-function generateReport() {
+app.get(
+    "/expenses/:email",
+    checkDatabase,
+    async (req, res) => {
 
-    const yearElement =
-        document.getElementById("reportYear");
+        try {
 
-    const monthElement =
-        document.getElementById("reportMonth");
-
-
-    if (
-        !yearElement ||
-        !monthElement
-    ) {
-
-        return;
-
-    }
-
-
-    const year =
-        yearElement.value;
-
-    const month =
-        monthElement.value;
-
-
-    if (
-        !year ||
-        !month
-    ) {
-
-        return;
-
-    }
-
-
-    const selectedMonth =
-        `${year}-${month}`;
-
-
-    console.log(
-        "Generating report for:",
-        selectedMonth
-    );
-
-
-    // ==================================================
-    // ================= EXPENSE FILTER =================
-    // ==================================================
-
-    const monthExpenses =
-        allExpenses.filter(
-            function (expense) {
-
-                const date =
-                    getDateString(
-                        expense.date
-                    );
-
-
-                if (!date) {
-                    return false;
-                }
-
-
-                return (
-                    date.substring(0, 7) ===
-                    selectedMonth
-                );
-
-            }
-        );
-
-
-    // ==================================================
-    // ================= INCOME FILTER ==================
-    // ==================================================
-
-    const monthIncome =
-        allIncome.filter(
-            function (income) {
-
-                const date =
-                    getDateString(
-                        income.date ||
-                        income.created_at
-                    );
-
-
-                if (!date) {
-                    return false;
-                }
-
-
-                return (
-                    date.substring(0, 7) ===
-                    selectedMonth
-                );
-
-            }
-        );
-
-
-    console.log(
-        "Selected Month Expenses:",
-        monthExpenses
-    );
-
-    console.log(
-        "Selected Month Income:",
-        monthIncome
-    );
-
-
-    // ==================================================
-    // ================= TOTAL EXPENSE ==================
-    // ==================================================
-
-    const totalExpense =
-        monthExpenses.reduce(
-            function (sum, item) {
-
-                return (
-                    sum +
-                    (
-                        Number(item.amount) ||
-                        0
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
                     )
                 );
 
-            },
-            0
-        );
+            console.log(
+                "GET EXPENSES:",
+                email
+            );
 
-
-    // ==================================================
-    // ================= TOTAL INCOME ===================
-    // ==================================================
-
-    const totalIncome =
-        monthIncome.reduce(
-            function (sum, item) {
-
-                return (
-                    sum +
-                    (
-                        Number(item.amount) ||
-                        0
-                    )
+            const [results] =
+                await db.promise().query(
+                    `
+                    SELECT
+                        id,
+                        email,
+                        name,
+                        amount,
+                        category,
+                        date
+                    FROM expenses
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY date DESC, id DESC
+                    `,
+                    [email]
                 );
 
-            },
-            0
-        );
+            res.json({
+                success: true,
+                expenses: results
+            });
 
+        } catch (error) {
 
-    // ==================================================
-    // ================= BALANCE ========================
-    // ==================================================
-
-    const balance =
-        totalIncome -
-        totalExpense;
-
-
-    // ==================================================
-    // ================= UPDATE CARDS ===================
-    // ==================================================
-
-    const reportIncome =
-        document.getElementById(
-            "reportIncome"
-        );
-
-    const reportExpense =
-        document.getElementById(
-            "reportExpense"
-        );
-
-    const reportBalance =
-        document.getElementById(
-            "reportBalance"
-        );
-
-    const totalSavings =
-        document.getElementById(
-            "totalSavings"
-        );
-
-
-    if (reportIncome) {
-
-        reportIncome.innerText =
-            reportCurrency(
-                totalIncome
+            console.error(
+                "GET EXPENSE ERROR:",
+                error.message
             );
 
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load expenses",
+                error:
+                    error.message
+            });
+        }
     }
+);
 
+// ======================================================
+// EXPENSE POST
+// ======================================================
 
-    if (reportExpense) {
+app.post(
+    "/expenses",
+    checkDatabase,
+    async (req, res) => {
 
-        reportExpense.innerText =
-            reportCurrency(
-                totalExpense
-            );
+        try {
 
-    }
+            const email =
+                normalizeEmail(
+                    req.body.email
+                );
 
-
-    if (reportBalance) {
-
-        reportBalance.innerText =
-            reportCurrency(
-                balance
-            );
-
-    }
-
-
-    if (totalSavings) {
-
-        totalSavings.innerText =
-            reportCurrency(
-                balance
-            );
-
-    }
-
-
-    // ==================================================
-    // ================= HIGHEST EXPENSE ================
-    // ==================================================
-
-    let highestExpense = 0;
-
-
-    monthExpenses.forEach(
-        function (item) {
+            const name =
+                String(
+                    req.body.name || ""
+                ).trim();
 
             const amount =
-                Number(item.amount) || 0;
-
-
-            if (
-                amount >
-                highestExpense
-            ) {
-
-                highestExpense =
-                    amount;
-
-            }
-
-        }
-    );
-
-
-    const highestExpenseElement =
-        document.getElementById(
-            "highestExpense"
-        );
-
-
-    if (highestExpenseElement) {
-
-        highestExpenseElement.innerText =
-            reportCurrency(
-                highestExpense
-            );
-
-    }
-
-
-    // ==================================================
-    // ================= TOP CATEGORY ===================
-    // ==================================================
-
-    const categoryCount = {};
-
-
-    monthExpenses.forEach(
-        function (expense) {
+                Number(req.body.amount);
 
             const category =
-                expense.category ||
-                "Others";
+                String(
+                    req.body.category || ""
+                ).trim();
 
-
-            categoryCount[category] =
-                (
-                    categoryCount[category] ||
-                    0
-                ) + 1;
-
-        }
-    );
-
-
-    let topCategory = "-";
-
-    let maxCount = 0;
-
-
-    Object.keys(categoryCount).forEach(
-        function (category) {
+            const date =
+                String(
+                    req.body.date || ""
+                ).trim();
 
             if (
-                categoryCount[category] >
-                maxCount
+                !email ||
+                !name ||
+                !Number.isFinite(amount) ||
+                !category ||
+                !date
             ) {
 
-                maxCount =
-                    categoryCount[category];
-
-                topCategory =
-                    category;
-
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Email, name, amount, category and date are required"
+                });
             }
 
+            const [result] =
+                await db.promise().query(
+                    `
+                    INSERT INTO expenses
+                    (email, name, amount, category, date)
+                    VALUES (?, ?, ?, ?, ?)
+                    `,
+                    [
+                        email,
+                        name,
+                        amount,
+                        category,
+                        date
+                    ]
+                );
+
+            console.log(
+                "EXPENSE SAVED:",
+                result.insertId,
+                email
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "Expense added successfully",
+                expenseId:
+                    result.insertId
+            });
+
+        } catch (error) {
+
+            console.error(
+                "ADD EXPENSE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to add expense",
+                error:
+                    error.message
+            });
         }
-    );
-
-
-    const topCategoryElement =
-        document.getElementById(
-            "topCategory"
-        );
-
-
-    if (topCategoryElement) {
-
-        topCategoryElement.innerText =
-            topCategory;
-
     }
+);
 
+// ======================================================
+// EXPENSE PUT
+// ======================================================
 
-    // ==================================================
-    // ================= TRANSACTIONS ===================
-    // ==================================================
+app.put(
+    "/expenses/:id",
+    checkDatabase,
+    async (req, res) => {
 
-    const transactions =
-        document.getElementById(
-            "reportTransactions"
-        );
+        try {
 
+            const id =
+                Number(req.params.id);
 
-    if (transactions) {
+            const name =
+                String(
+                    req.body.name || ""
+                ).trim();
 
-        transactions.innerText =
-            monthExpenses.length;
+            const amount =
+                Number(req.body.amount);
 
+            const category =
+                String(
+                    req.body.category || ""
+                ).trim();
+
+            const date =
+                String(
+                    req.body.date || ""
+                ).trim();
+
+            if (
+                !id ||
+                !name ||
+                !Number.isFinite(amount) ||
+                !category ||
+                !date
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "All expense fields are required"
+                });
+            }
+
+            const [result] =
+                await db.promise().query(
+                    `
+                    UPDATE expenses
+                    SET
+                        name = ?,
+                        amount = ?,
+                        category = ?,
+                        date = ?
+                    WHERE id = ?
+                    `,
+                    [
+                        name,
+                        amount,
+                        category,
+                        date,
+                        id
+                    ]
+                );
+
+            res.json({
+                success: true,
+                message:
+                    "Expense updated successfully",
+                affectedRows:
+                    result.affectedRows
+            });
+
+        } catch (error) {
+
+            console.error(
+                "UPDATE EXPENSE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to update expense",
+                error:
+                    error.message
+            });
+        }
     }
+);
 
+// ======================================================
+// EXPENSE DELETE
+// ======================================================
 
-    // ==================================================
-    // ================= FINANCIAL SCORE ================
-    // ==================================================
+app.delete(
+    "/expenses/:id",
+    checkDatabase,
+    async (req, res) => {
 
-    let score = 100;
+        try {
 
+            const id =
+                Number(req.params.id);
 
-    if (totalIncome > 0) {
+            const [rows] =
+                await db.promise().query(
+                    `
+                    SELECT *
+                    FROM expenses
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [id]
+                );
 
-        score =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    Math.round(
-                        100 -
-                        (
-                            totalExpense /
-                            totalIncome
-                        ) * 100
-                    )
+            if (!rows.length) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Expense not found"
+                });
+            }
+
+            const expense = rows[0];
+
+            await db.promise().query(
+                `
+                INSERT INTO deleted_history
+                (
+                    email,
+                    original_id,
+                    type,
+                    name,
+                    amount,
+                    category,
+                    date
                 )
-            );
-
-    }
-
-
-    if (
-        totalIncome === 0 &&
-        totalExpense > 0
-    ) {
-
-        score = 0;
-
-    }
-
-
-    const financialScore =
-        document.getElementById(
-            "financialScore"
-        );
-
-
-    if (financialScore) {
-
-        financialScore.innerText =
-            score + "/100";
-
-    }
-
-
-    // ==================================================
-    // ================= SMART SUGGESTION ===============
-    // ==================================================
-
-    const suggestion =
-        document.getElementById(
-            "smartSuggestion"
-        );
-
-
-    if (suggestion) {
-
-        if (
-            totalIncome === 0 &&
-            totalExpense === 0
-        ) {
-
-            suggestion.innerText =
-                "No transactions for this month.";
-
-        }
-
-        else if (score >= 80) {
-
-            suggestion.innerText =
-                "Excellent saving habit 🏆";
-
-        }
-
-        else if (score >= 60) {
-
-            suggestion.innerText =
-                "Good financial control 👍";
-
-        }
-
-        else if (score >= 40) {
-
-            suggestion.innerText =
-                "Reduce unnecessary expenses ⚠️";
-
-        }
-
-        else {
-
-            suggestion.innerText =
-                "High spending detected 🚨";
-
-        }
-
-    }
-
-
-    // ==================================================
-    // ================= LOAD CHARTS =====================
-    // ==================================================
-
-    loadExpensePieChart(
-        monthExpenses
-    );
-
-
-    loadMonthlyExpenseChart(
-        totalExpense
-    );
-
-
-    loadSavingTrendChart();
-
-
-    loadIncomeExpenseChart(
-        totalIncome,
-        totalExpense
-    );
-
-}
-
-
-// ======================================================
-// ================= EXPENSE PIE CHART ===================
-// ======================================================
-
-function loadExpensePieChart(monthExpenses) {
-
-    const canvas =
-        document.getElementById(
-            "expensePieChart"
-        );
-
-
-    if (!canvas) {
-        return;
-    }
-
-
-    if (typeof Chart === "undefined") {
-
-        console.error(
-            "Chart.js is not loaded."
-        );
-
-        return;
-
-    }
-
-
-    if (pieChart) {
-
-        pieChart.destroy();
-        pieChart = null;
-
-    }
-
-
-    const categoryTotal = {};
-
-
-    monthExpenses.forEach(
-        function (expense) {
-
-            const category =
-                expense.category ||
-                "Others";
-
-
-            categoryTotal[category] =
-                (
-                    categoryTotal[category] ||
-                    0
-                ) +
-                (
-                    Number(
-                        expense.amount
-                    ) || 0
-                );
-
-        }
-    );
-
-
-    const labels =
-        Object.keys(categoryTotal);
-
-    const values =
-        Object.values(categoryTotal);
-
-
-    // ==================================================
-    // ================= NO EXPENSE =====================
-    // ==================================================
-
-    if (labels.length === 0) {
-
-        pieChart =
-            new Chart(
-                canvas,
-                {
-
-                    type: "doughnut",
-
-                    data: {
-
-                        labels: [
-                            "No Expense"
-                        ],
-
-                        datasets: [{
-
-                            data: [1],
-
-                            backgroundColor: [
-                                "#6b7280"
-                            ],
-
-                            borderWidth: 0
-
-                        }]
-
-                    },
-
-                    options: {
-
-                        responsive: true,
-
-                        maintainAspectRatio:
-                            false,
-
-                        cutout: "72%",
-
-                        plugins: {
-
-                            legend: {
-
-                                position:
-                                    "bottom",
-
-                                labels: {
-
-                                    color:
-                                        getChartTextColor()
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-            );
-
-        return;
-
-    }
-
-
-    // ==================================================
-    // ================= EXPENSE CHART ==================
-    // ==================================================
-
-    pieChart =
-        new Chart(
-            canvas,
-            {
-
-                type: "doughnut",
-
-                data: {
-
-                    labels: labels,
-
-                    datasets: [{
-
-                        data: values,
-
-                        backgroundColor: [
-
-                            "#6366F1",
-                            "#22C55E",
-                            "#F59E0B",
-                            "#EF4444",
-                            "#06B6D4",
-                            "#EC4899",
-                            "#8B5CF6",
-                            "#14B8A6"
-
-                        ],
-
-                        borderWidth: 2,
-
-                        borderColor:
-                            "#111827",
-
-                        hoverOffset: 20
-
-                    }]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    cutout: "68%",
-
-                    animation: {
-
-                        animateRotate: true,
-
-                        duration: 1200
-
-                    },
-
-                    plugins: {
-
-                        legend: {
-
-                            position: "bottom",
-
-                            labels: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                font: {
-
-                                    size: 12,
-
-                                    weight:
-                                        "bold"
-
-                                },
-
-                                padding: 15
-
-                            }
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    function (context) {
-
-                                        const total =
-                                            context
-                                                .dataset
-                                                .data
-                                                .reduce(
-                                                    function (
-                                                        a,
-                                                        b
-                                                    ) {
-
-                                                        return (
-                                                            a +
-                                                            b
-                                                        );
-
-                                                    },
-                                                    0
-                                                );
-
-
-                                        const value =
-                                            Number(
-                                                context.raw
-                                            ) || 0;
-
-
-                                        const percent =
-                                            total > 0
-                                                ? (
-                                                    value /
-                                                    total *
-                                                    100
-                                                ).toFixed(1)
-                                                : "0.0";
-
-
-                                        return (
-                                            context.label +
-                                            " : " +
-                                            reportCurrency(
-                                                value
-                                            ) +
-                                            " (" +
-                                            percent +
-                                            "%)"
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-
-}
-
-
-// ======================================================
-// ================= MONTHLY EXPENSE CHART ==============
-// ======================================================
-
-function loadMonthlyExpenseChart(totalExpense) {
-
-    const canvas =
-        document.getElementById(
-            "monthlyExpenseChart"
-        );
-
-
-    if (!canvas) {
-        return;
-    }
-
-
-    if (typeof Chart === "undefined") {
-        return;
-    }
-
-
-    if (monthlyChart) {
-
-        monthlyChart.destroy();
-        monthlyChart = null;
-
-    }
-
-
-    const monthSelect =
-        document.getElementById(
-            "reportMonth"
-        );
-
-
-    let monthName = "Month";
-
-
-    if (
-        monthSelect &&
-        monthSelect.selectedIndex >= 0
-    ) {
-
-        const selectedOption =
-            monthSelect.options[
-                monthSelect.selectedIndex
-            ];
-
-
-        if (selectedOption) {
-
-            monthName =
-                selectedOption.text;
-
-        }
-
-    }
-
-
-    const ctx =
-        canvas.getContext("2d");
-
-
-    if (!ctx) {
-        return;
-    }
-
-
-    const gradient =
-        ctx.createLinearGradient(
-            0,
-            0,
-            0,
-            350
-        );
-
-
-    gradient.addColorStop(
-        0,
-        "#8B5CF6"
-    );
-
-    gradient.addColorStop(
-        1,
-        "#6366F1"
-    );
-
-
-    monthlyChart =
-        new Chart(
-            ctx,
-            {
-
-                type: "bar",
-
-                data: {
-
-                    labels: [
-                        monthName
-                    ],
-
-                    datasets: [{
-
-                        label:
-                            "This Month Expense",
-
-                        data: [
-                            Number(
-                                totalExpense
-                            ) || 0
-                        ],
-
-                        backgroundColor:
-                            gradient,
-
-                        borderRadius: 15,
-
-                        borderSkipped: false,
-
-                        barThickness: 70
-
-                    }]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    animation: {
-
-                        duration: 1500,
-
-                        easing:
-                            "easeOutQuart"
-
-                    },
-
-                    plugins: {
-
-                        legend: {
-
-                            display: false
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    function (context) {
-
-                                        return (
-                                            "Expense : " +
-                                            reportCurrency(
-                                                context.raw
-                                            )
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            grid: {
-
-                                display: false
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                font: {
-
-                                    size: 13,
-
-                                    weight:
-                                        "bold"
-
-                                }
-
-                            }
-
-                        },
-
-                        y: {
-
-                            beginAtZero: true,
-
-                            suggestedMax:
-                                totalExpense > 0
-                                    ? totalExpense * 1.25
-                                    : 1000,
-
-                            grid: {
-
-                                color:
-                                    getChartGridColor()
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                callback:
-                                    function (value) {
-
-                                        return formatAxisValue(
-                                            value
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-
-}
-
-
-// ======================================================
-// ================= SAVING TREND ========================
-// ======================================================
-
-function loadSavingTrendChart() {
-
-    const canvas =
-        document.getElementById(
-            "savingTrendChart"
-        );
-
-
-    if (!canvas) {
-        return;
-    }
-
-
-    if (typeof Chart === "undefined") {
-        return;
-    }
-
-
-    if (savingChart) {
-
-        savingChart.destroy();
-        savingChart = null;
-
-    }
-
-
-    const monthData = {};
-
-
-    // ==================================================
-    // ================= INCOME =========================
-    // ==================================================
-
-    allIncome.forEach(
-        function (income) {
-
-            const date =
-                getDateString(
-                    income.date ||
-                    income.created_at
-                );
-
-
-            if (!date) {
-                return;
-            }
-
-
-            const month =
-                date.substring(0, 7);
-
-
-            if (!monthData[month]) {
-
-                monthData[month] = {
-
-                    income: 0,
-
-                    expense: 0
-
-                };
-
-            }
-
-
-            monthData[month].income +=
-                Number(
-                    income.amount
-                ) || 0;
-
-        }
-    );
-
-
-    // ==================================================
-    // ================= EXPENSE ========================
-    // ==================================================
-
-    allExpenses.forEach(
-        function (expense) {
-
-            const date =
-                getDateString(
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    expense.email,
+                    expense.id,
+                    "expense",
+                    expense.name,
+                    expense.amount,
+                    expense.category,
                     expense.date
-                );
-
-
-            if (!date) {
-                return;
-            }
-
-
-            const month =
-                date.substring(0, 7);
-
-
-            if (!monthData[month]) {
-
-                monthData[month] = {
-
-                    income: 0,
-
-                    expense: 0
-
-                };
-
-            }
-
-
-            monthData[month].expense +=
-                Number(
-                    expense.amount
-                ) || 0;
-
-        }
-    );
-
-
-    // ==================================================
-    // ================= LAST 3 MONTHS ==================
-    // ==================================================
-
-    const months =
-        Object.keys(monthData)
-            .sort()
-            .slice(-3);
-
-
-    const labels = [];
-
-    const values = [];
-
-
-    months.forEach(
-        function (month) {
-
-            const saving =
-                monthData[month].income -
-                monthData[month].expense;
-
-
-            const parts =
-                month.split("-");
-
-
-            const year =
-                Number(parts[0]);
-
-
-            const monthNumber =
-                Number(parts[1]);
-
-
-            labels.push(
-                new Date(
-                    year,
-                    monthNumber - 1,
-                    1
-                ).toLocaleString(
-                    "en-US",
-                    {
-                        month: "short"
-                    }
-                )
+                ]
             );
 
+            const [result] =
+                await db.promise().query(
+                    "DELETE FROM expenses WHERE id = ?",
+                    [id]
+                );
 
-            values.push(saving);
+            res.json({
+                success: true,
+                message:
+                    "Expense deleted successfully",
+                affectedRows:
+                    result.affectedRows
+            });
 
+        } catch (error) {
+
+            console.error(
+                "DELETE EXPENSE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to delete expense",
+                error:
+                    error.message
+            });
         }
-    );
-
-
-    if (values.length === 0) {
-
-        labels.push("No Data");
-
-        values.push(0);
-
     }
+);
 
+// ======================================================
+// INCOME GET
+// ======================================================
 
-    const ctx =
-        canvas.getContext("2d");
+app.get(
+    "/income/:email",
+    checkDatabase,
+    async (req, res) => {
 
+        try {
 
-    if (!ctx) {
-        return;
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
+                    )
+                );
+
+            const [results] =
+                await db.promise().query(
+                    `
+                    SELECT
+                        id,
+                        email,
+                        amount,
+                        date
+                    FROM income
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY date DESC, id DESC
+                    `,
+                    [email]
+                );
+
+            res.json({
+                success: true,
+                income: results
+            });
+
+        } catch (error) {
+
+            console.error(
+                "GET INCOME ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load income",
+                error:
+                    error.message
+            });
+        }
     }
-
-
-    const gradient =
-        ctx.createLinearGradient(
-            0,
-            0,
-            0,
-            350
-        );
-
-
-    gradient.addColorStop(
-        0,
-        "rgba(34,197,94,0.45)"
-    );
-
-    gradient.addColorStop(
-        1,
-        "rgba(34,197,94,0)"
-    );
-
-
-    const maxValue =
-        Math.max(...values);
-
-
-    savingChart =
-        new Chart(
-            ctx,
-            {
-
-                type: "line",
-
-                data: {
-
-                    labels: labels,
-
-                    datasets: [{
-
-                        label:
-                            "Monthly Saving",
-
-                        data: values,
-
-                        borderColor:
-                            "#22C55E",
-
-                        backgroundColor:
-                            gradient,
-
-                        fill: true,
-
-                        tension: 0.4,
-
-                        pointRadius: 7,
-
-                        pointHoverRadius: 10,
-
-                        pointBackgroundColor:
-                            "#22C55E",
-
-                        pointBorderColor:
-                            "#ffffff",
-
-                        pointBorderWidth: 3
-
-                    }]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    animation: {
-
-                        duration: 1500
-
-                    },
-
-                    plugins: {
-
-                        legend: {
-
-                            display: false
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    function (context) {
-
-                                        return (
-                                            " Saving : " +
-                                            reportCurrency(
-                                                context.raw
-                                            )
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            grid: {
-
-                                display: false
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                font: {
-
-                                    weight:
-                                        "bold"
-
-                                }
-
-                            }
-
-                        },
-
-                        y: {
-
-                            beginAtZero: true,
-
-                            suggestedMax:
-                                maxValue > 0
-                                    ? Math.ceil(
-                                        maxValue / 1000
-                                    ) *
-                                      1000 +
-                                      2000
-                                    : 5000,
-
-                            grid: {
-
-                                color:
-                                    getChartGridColor()
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                callback:
-                                    function (value) {
-
-                                        return formatAxisValue(
-                                            value
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
+);
+
+// ======================================================
+// INCOME POST
+// ======================================================
+
+app.post(
+    "/income",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email =
+                normalizeEmail(
+                    req.body.email
+                );
+
+            const amount =
+                Number(req.body.amount);
+
+            const date =
+                String(
+                    req.body.date || ""
+                ).trim();
+
+            if (
+                !email ||
+                !Number.isFinite(amount) ||
+                !date
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Email, amount and date are required"
+                });
             }
-        );
 
-}
+            const [result] =
+                await db.promise().query(
+                    `
+                    INSERT INTO income
+                    (email, amount, date)
+                    VALUES (?, ?, ?)
+                    `,
+                    [
+                        email,
+                        amount,
+                        date
+                    ]
+                );
 
+            console.log(
+                "INCOME SAVED:",
+                result.insertId,
+                email
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "Income added successfully",
+                incomeId:
+                    result.insertId
+            });
+
+        } catch (error) {
+
+            console.error(
+                "ADD INCOME ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to add income",
+                error:
+                    error.message
+            });
+        }
+    }
+);
 
 // ======================================================
-// ================= INCOME VS EXPENSE ==================
+// INCOME PUT
 // ======================================================
 
-function loadIncomeExpenseChart(
-    totalIncome,
-    totalExpense
+app.put(
+    "/income/:id",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            const amount =
+                Number(req.body.amount);
+
+            const date =
+                String(
+                    req.body.date || ""
+                ).trim();
+
+            if (
+                !id ||
+                !Number.isFinite(amount) ||
+                !date
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Amount and date are required"
+                });
+            }
+
+            const [result] =
+                await db.promise().query(
+                    `
+                    UPDATE income
+                    SET amount = ?, date = ?
+                    WHERE id = ?
+                    `,
+                    [
+                        amount,
+                        date,
+                        id
+                    ]
+                );
+
+            res.json({
+                success: true,
+                message:
+                    "Income updated successfully",
+                affectedRows:
+                    result.affectedRows
+            });
+
+        } catch (error) {
+
+            console.error(
+                "UPDATE INCOME ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to update income",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// INCOME DELETE
+// ======================================================
+
+app.delete(
+    "/income/:id",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            const [rows] =
+                await db.promise().query(
+                    `
+                    SELECT *
+                    FROM income
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [id]
+                );
+
+            if (!rows.length) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Income not found"
+                });
+            }
+
+            const income = rows[0];
+
+            await db.promise().query(
+                `
+                INSERT INTO deleted_history
+                (
+                    email,
+                    original_id,
+                    type,
+                    name,
+                    amount,
+                    category,
+                    date
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    income.email,
+                    income.id,
+                    "income",
+                    null,
+                    income.amount,
+                    null,
+                    income.date
+                ]
+            );
+
+            const [result] =
+                await db.promise().query(
+                    "DELETE FROM income WHERE id = ?",
+                    [id]
+                );
+
+            res.json({
+                success: true,
+                message:
+                    "Income deleted successfully",
+                affectedRows:
+                    result.affectedRows
+            });
+
+        } catch (error) {
+
+            console.error(
+                "DELETE INCOME ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to delete income",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// TRASH GET
+// ======================================================
+
+app.get(
+    "/trash/:email",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
+                    )
+                );
+
+            const [results] =
+                await db.promise().query(
+                    `
+                    SELECT
+                        id,
+                        email,
+                        original_id,
+                        type,
+                        name,
+                        amount,
+                        category,
+                        date,
+                        deleted_at
+                    FROM deleted_history
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY deleted_at DESC, id DESC
+                    `,
+                    [email]
+                );
+
+            res.json({
+                success: true,
+                trash: results
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load delete history",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// TRASH RESTORE
+// ======================================================
+
+app.post(
+    "/trash/restore/:id",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            const [rows] =
+                await db.promise().query(
+                    `
+                    SELECT *
+                    FROM deleted_history
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [id]
+                );
+
+            if (!rows.length) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Deleted record not found"
+                });
+            }
+
+            const item = rows[0];
+
+            if (item.type === "expense") {
+
+                const [result] =
+                    await db.promise().query(
+                        `
+                        INSERT INTO expenses
+                        (email, name, amount, category, date)
+                        VALUES (?, ?, ?, ?, ?)
+                        `,
+                        [
+                            item.email,
+                            item.name,
+                            item.amount,
+                            item.category,
+                            item.date
+                        ]
+                    );
+
+                await db.promise().query(
+                    "DELETE FROM deleted_history WHERE id = ?",
+                    [id]
+                );
+
+                return res.json({
+                    success: true,
+                    message:
+                        "Expense restored successfully",
+                    expenseId:
+                        result.insertId
+                });
+            }
+
+            if (item.type === "income") {
+
+                const [result] =
+                    await db.promise().query(
+                        `
+                        INSERT INTO income
+                        (email, amount, date)
+                        VALUES (?, ?, ?)
+                        `,
+                        [
+                            item.email,
+                            item.amount,
+                            item.date
+                        ]
+                    );
+
+                await db.promise().query(
+                    "DELETE FROM deleted_history WHERE id = ?",
+                    [id]
+                );
+
+                return res.json({
+                    success: true,
+                    message:
+                        "Income restored successfully",
+                    incomeId:
+                        result.insertId
+                });
+            }
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Unknown history record type"
+            });
+
+        } catch (error) {
+
+            console.error(
+                "RESTORE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to restore record",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// TRASH CLEANUP
+// ======================================================
+
+app.delete(
+    "/trash/cleanup",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const [result] =
+                await db.promise().query(
+                    `
+                    DELETE FROM deleted_history
+                    WHERE deleted_at <
+                    NOW() - INTERVAL 60 DAY
+                    `
+                );
+
+            res.json({
+                success: true,
+                message:
+                    "Old deleted records cleaned successfully",
+                deletedRows:
+                    result.affectedRows
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to clean old history",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// ALL USER DATA
+// ======================================================
+
+app.get(
+    "/api/data/:email",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
+                    )
+                );
+
+            const [expenses] =
+                await db.promise().query(
+                    `
+                    SELECT
+                        id,
+                        email,
+                        name,
+                        amount,
+                        category,
+                        date
+                    FROM expenses
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY date DESC, id DESC
+                    `,
+                    [email]
+                );
+
+            const [income] =
+                await db.promise().query(
+                    `
+                    SELECT
+                        id,
+                        email,
+                        amount,
+                        date
+                    FROM income
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY date DESC, id DESC
+                    `,
+                    [email]
+                );
+
+            res.json({
+                success: true,
+                expenses,
+                income
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load user data",
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// BREVO SEND OTP EMAIL
+// ======================================================
+
+async function sendOTPEmail(
+    email,
+    userName,
+    otp
 ) {
 
-    const canvas =
-        document.getElementById(
-            "incomeExpenseChart"
+    if (!BREVO_API_KEY) {
+        throw new Error(
+            "BREVO_API_KEY is missing in Railway Variables"
         );
-
-
-    if (!canvas) {
-        return;
     }
 
-
-    if (typeof Chart === "undefined") {
-        return;
+    if (!BREVO_FROM_EMAIL) {
+        throw new Error(
+            "BREVO_FROM_EMAIL is missing in Railway Variables"
+        );
     }
 
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Password Reset OTP</title>
+</head>
 
-    if (incomeExpenseChart) {
+<body style="
+margin:0;
+padding:30px;
+background:#f5f5f5;
+font-family:Arial,sans-serif;
+">
 
-        incomeExpenseChart.destroy();
-        incomeExpenseChart = null;
+<div style="
+max-width:500px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:16px;
+">
 
-    }
+<h2 style="text-align:center;">
+Expense Tracker Pro
+</h2>
 
+<p>
+Hello ${userName || "User"},
+</p>
 
-    const ctx =
-        canvas.getContext("2d");
+<p>
+Your password reset OTP is:
+</p>
 
+<div style="
+font-size:34px;
+font-weight:bold;
+letter-spacing:8px;
+text-align:center;
+background:#f5f5f5;
+padding:20px;
+border-radius:12px;
+margin:25px 0;
+">
 
-    if (!ctx) {
-        return;
-    }
+${otp}
 
+</div>
 
-    const values = [
+<p>
+This OTP is valid for
+<strong>10 minutes</strong>.
+</p>
 
-        Number(totalIncome) || 0,
+<p>
+If you did not request this password reset,
+please ignore this email.
+</p>
 
-        Number(totalExpense) || 0
+<hr>
 
-    ];
+<p style="
+color:#777;
+font-size:13px;
+">
 
+Expense Tracker Pro
 
-    const maxValue =
-        Math.max(...values);
+</p>
 
+</div>
+</body>
+</html>
+`;
 
-    incomeExpenseChart =
-        new Chart(
-            ctx,
-            {
+    const response = await fetch(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+            method: "POST",
 
-                type: "bar",
+            headers: {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "api-key": BREVO_API_KEY
+            },
 
-                data: {
-
-                    labels: [
-
-                        "Income",
-
-                        "Expense"
-
-                    ],
-
-                    datasets: [{
-
-                        label:
-                            "Amount",
-
-                        data: values,
-
-                        backgroundColor: [
-
-                            "rgba(34,197,94,0.75)",
-
-                            "rgba(239,68,68,0.75)"
-
-                        ],
-
-                        borderRadius: 18,
-
-                        borderSkipped: false,
-
-                        barThickness: 38
-
-                    }]
-
+            body: JSON.stringify({
+                sender: {
+                    name: BREVO_FROM_NAME,
+                    email: BREVO_FROM_EMAIL
                 },
 
-                options: {
-
-                    indexAxis: "y",
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    animation: {
-
-                        duration: 1400,
-
-                        easing:
-                            "easeOutQuart"
-
-                    },
-
-                    plugins: {
-
-                        legend: {
-
-                            display: false
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    function (context) {
-
-                                        return (
-                                            " " +
-                                            reportCurrency(
-                                                context.raw
-                                            )
-                                        );
-
-                                    }
-
-                            }
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            beginAtZero: true,
-
-                            suggestedMax:
-                                maxValue > 0
-                                    ? maxValue * 1.25
-                                    : 1000,
-
-                            grid: {
-
-                                color:
-                                    getChartGridColor()
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                callback:
-                                    function (value) {
-
-                                        return formatAxisValue(
-                                            value
-                                        );
-
-                                    }
-
-                            }
-
-                        },
-
-                        y: {
-
-                            grid: {
-
-                                display: false
-
-                            },
-
-                            ticks: {
-
-                                color:
-                                    getChartTextColor(),
-
-                                font: {
-
-                                    size: 14,
-
-                                    weight:
-                                        "bold"
-
-                                }
-
-                            }
-
-                        }
-
+                to: [
+                    {
+                        email: email,
+                        name: userName || "User"
                     }
+                ],
 
-                }
+                subject:
+                    "Expense Tracker Pro - Password Reset OTP",
 
-            }
-        );
+                htmlContent: html,
 
-}
-
-
-// ======================================================
-// ================= AXIS VALUE FORMAT ==================
-// ======================================================
-
-function formatAxisValue(value) {
-
-    const number =
-        Number(value) || 0;
-
-
-    if (number >= 10000000) {
-
-        return (
-            "₹" +
-            (
-                number / 10000000
-            ).toFixed(1) +
-            "Cr"
-        );
-
-    }
-
-
-    if (number >= 100000) {
-
-        return (
-            "₹" +
-            (
-                number / 100000
-            ).toFixed(1) +
-            "L"
-        );
-
-    }
-
-
-    if (number >= 1000) {
-
-        return (
-            "₹" +
-            (
-                number / 1000
-            ).toFixed(1) +
-            "K"
-        );
-
-    }
-
-
-    return (
-        "₹" +
-        number
+                textContent:
+                    `Your Expense Tracker Pro password reset OTP is ${otp}. This OTP is valid for 10 minutes.`
+            })
+        }
     );
 
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+
+        console.error(
+            "Brevo API Error:",
+            data
+        );
+
+        throw new Error(
+            data?.message ||
+            data?.code ||
+            "Brevo email failed"
+        );
+    }
+
+    console.log(
+        "Brevo Email Sent:",
+        data.messageId
+    );
+
+    return data;
 }
 
+// ======================================================
+// FORGOT PASSWORD
+// ======================================================
+
+async function forgotPassword(req, res) {
+
+    try {
+
+        const email =
+            normalizeEmail(
+                req.body.email
+            );
+
+        console.log(
+            "FORGOT PASSWORD REQUEST:",
+            email
+        );
+
+        if (!email) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email is required"
+            });
+        }
+
+        if (!gmailRegex.test(email)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Only Gmail addresses are allowed"
+            });
+        }
+
+        const [users] =
+            await db.promise().query(
+                `
+                SELECT id, name, email
+                FROM users
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+        if (!users.length) {
+
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Email not registered"
+            });
+        }
+
+        const user = users[0];
+
+        const otp =
+            generateOTP();
+
+        const expiresAt =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
+
+        await db.promise().query(
+            `
+            DELETE FROM password_resets
+            WHERE LOWER(TRIM(email)) = ?
+            `,
+            [email]
+        );
+
+        const [result] =
+            await db.promise().query(
+                `
+                INSERT INTO password_resets
+                (email, otp, expires_at)
+                VALUES (?, ?, ?)
+                `,
+                [
+                    email,
+                    otp,
+                    expiresAt
+                ]
+            );
+
+        console.log(
+            "OTP SAVED:",
+            result.insertId,
+            "FOR:",
+            email
+        );
+
+        try {
+
+            console.log(
+                "Sending OTP through Brevo..."
+            );
+
+            await sendOTPEmail(
+                email,
+                user.name,
+                otp
+            );
+
+            console.log(
+                "OTP SENT SUCCESSFULLY:",
+                email
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "OTP sent successfully to your email"
+            });
+
+        } catch (emailError) {
+
+            console.error(
+                "EMAIL ERROR:",
+                emailError.message
+            );
+
+            await db.promise().query(
+                `
+                DELETE FROM password_resets
+                WHERE id = ?
+                `,
+                [result.insertId]
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to send OTP email",
+                error:
+                    emailError.message
+            });
+        }
+
+    } catch (error) {
+
+        console.error(
+            "FORGOT PASSWORD ERROR:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Database error",
+            error:
+                error.message
+        });
+    }
+}
+
+app.post(
+    "/forgot-password",
+    checkDatabase,
+    forgotPassword
+);
+
+app.post(
+    "/api/forgot-password",
+    checkDatabase,
+    forgotPassword
+);
 
 // ======================================================
-// ================= DARK MODE REFRESH ==================
+// VERIFY OTP
 // ======================================================
 
-document.addEventListener(
-    "themeChanged",
-    function () {
+async function verifyResetOTP(req, res) {
 
-        generateReport();
+    try {
 
+        const email =
+            normalizeEmail(
+                req.body.email
+            );
+
+        const otp =
+            String(
+                req.body.otp || ""
+            ).trim();
+
+        if (!email || !otp) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email and OTP are required"
+            });
+        }
+
+        const [results] =
+            await db.promise().query(
+                `
+                SELECT
+                    id,
+                    email,
+                    otp,
+                    expires_at
+                FROM password_resets
+                WHERE LOWER(TRIM(email)) = ?
+                ORDER BY id DESC
+                LIMIT 1
+                `,
+                [email]
+            );
+
+        if (!results.length) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP not found. Please request a new OTP."
+            });
+        }
+
+        const resetData =
+            results[0];
+
+        const expiresAt =
+            new Date(
+                resetData.expires_at
+            ).getTime();
+
+        if (Date.now() > expiresAt) {
+
+            await db.promise().query(
+                `
+                DELETE FROM password_resets
+                WHERE id = ?
+                `,
+                [resetData.id]
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP expired. Please request a new OTP."
+            });
+        }
+
+        if (
+            String(resetData.otp) !==
+            String(otp)
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid OTP"
+            });
+        }
+
+        console.log(
+            "OTP VERIFIED:",
+            email
+        );
+
+        res.json({
+            success: true,
+            message:
+                "OTP verified successfully"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "VERIFY OTP ERROR:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Database error",
+            error:
+                error.message
+        });
+    }
+}
+
+app.post(
+    "/verify-reset-otp",
+    checkDatabase,
+    verifyResetOTP
+);
+
+app.post(
+    "/api/verify-reset-otp",
+    checkDatabase,
+    verifyResetOTP
+);
+
+// ======================================================
+// RESET PASSWORD
+// ======================================================
+
+async function resetPassword(req, res) {
+
+    try {
+
+        const email =
+            normalizeEmail(
+                req.body.email
+            );
+
+        const otp =
+            String(
+                req.body.otp || ""
+            ).trim();
+
+        const newPassword =
+            String(
+                req.body.newPassword || ""
+            ).trim();
+
+        if (
+            !email ||
+            !otp ||
+            !newPassword
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email, OTP and new password are required"
+            });
+        }
+
+        if (!gmailRegex.test(email)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Only Gmail addresses are allowed"
+            });
+        }
+
+        if (
+            !passwordRegex.test(
+                newPassword
+            )
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain exactly 6 digits"
+            });
+        }
+
+        const [results] =
+            await db.promise().query(
+                `
+                SELECT
+                    id,
+                    email,
+                    otp,
+                    expires_at
+                FROM password_resets
+                WHERE LOWER(TRIM(email)) = ?
+                ORDER BY id DESC
+                LIMIT 1
+                `,
+                [email]
+            );
+
+        if (!results.length) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP not found. Please request a new OTP."
+            });
+        }
+
+        const resetData =
+            results[0];
+
+        if (
+            Date.now() >
+            new Date(
+                resetData.expires_at
+            ).getTime()
+        ) {
+
+            await db.promise().query(
+                `
+                DELETE FROM password_resets
+                WHERE id = ?
+                `,
+                [resetData.id]
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP expired. Please request a new OTP."
+            });
+        }
+
+        if (
+            String(resetData.otp) !==
+            String(otp)
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid OTP"
+            });
+        }
+
+        const [result] =
+            await db.promise().query(
+                `
+                UPDATE users
+                SET password = ?
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [
+                    newPassword,
+                    email
+                ]
+            );
+
+        if (
+            result.affectedRows === 0
+        ) {
+
+            return res.status(404).json({
+                success: false,
+                message:
+                    "User not found"
+            });
+        }
+
+        await db.promise().query(
+            `
+            DELETE FROM password_resets
+            WHERE id = ?
+            `,
+            [resetData.id]
+        );
+
+        console.log(
+            "PASSWORD RESET SUCCESS:",
+            email
+        );
+
+        res.json({
+            success: true,
+            message:
+                "Password reset successfully"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "RESET PASSWORD ERROR:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Unable to reset password",
+            error:
+                error.message
+        });
+    }
+}
+
+app.post(
+    "/reset-password",
+    checkDatabase,
+    resetPassword
+);
+
+app.post(
+    "/api/reset-password",
+    checkDatabase,
+    resetPassword
+);
+
+// ======================================================
+// DEBUG USER DATA
+// ======================================================
+
+app.get(
+    "/api/debug/user/:email",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email =
+                normalizeEmail(
+                    decodeURIComponent(
+                        req.params.email
+                    )
+                );
+
+            const [users] =
+                await db.promise().query(
+                    `
+                    SELECT id, name, email
+                    FROM users
+                    WHERE LOWER(TRIM(email)) = ?
+                    `,
+                    [email]
+                );
+
+            const [expenses] =
+                await db.promise().query(
+                    `
+                    SELECT *
+                    FROM expenses
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY id DESC
+                    `,
+                    [email]
+                );
+
+            const [income] =
+                await db.promise().query(
+                    `
+                    SELECT *
+                    FROM income
+                    WHERE LOWER(TRIM(email)) = ?
+                    ORDER BY id DESC
+                    `,
+                    [email]
+                );
+
+            res.json({
+                success: true,
+                email,
+                users,
+                expenses,
+                income,
+
+                counts: {
+                    users: users.length,
+                    expenses: expenses.length,
+                    income: income.length
+                }
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ======================================================
+// 404
+// ======================================================
+
+app.use((req, res) => {
+
+    console.log(
+        "404:",
+        req.method,
+        req.originalUrl
+    );
+
+    res.status(404).json({
+        success: false,
+        message:
+            "API route not found",
+        route:
+            req.originalUrl
+    });
+});
+
+// ======================================================
+// ERROR HANDLER
+// ======================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            "SERVER ERROR:",
+            err.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Internal Server Error",
+            error:
+                err.message
+        });
+    }
+);
+
+// ======================================================
+// START SERVER
+// ======================================================
+
+app.listen(
+    PORT,
+    "0.0.0.0",
+    async () => {
+
+        console.log(
+            "======================================"
+        );
+
+        console.log(
+            "Expense Tracker Server Started"
+        );
+
+        console.log(
+            "Express Backend Ready"
+        );
+
+        console.log(
+            "Server running on port:",
+            PORT
+        );
+
+        console.log(
+            "======================================"
+        );
+
+        await initializeDatabase();
     }
 );
