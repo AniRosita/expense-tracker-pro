@@ -36,6 +36,10 @@ let allIncome = [];
 
 window.allIncome = allIncome;
 
+// Prevent duplicate initialization
+let dashboardInitialized = false;
+let dashboardLoading = false;
+
 // ======================================================
 // ================= DOM HELPER ==========================
 // ======================================================
@@ -71,6 +75,8 @@ const customCategory = $("customCategory");
 const importExpenseBtn = $("importExpenseBtn");
 const expenseFileInput = $("expenseFileInput");
 
+const exportExpenseBtn = $("exportExpenseBtn");
+
 // ======================================================
 // ================= API REQUEST =========================
 // ======================================================
@@ -99,23 +105,20 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
 
-        const response =
-            await fetch(
-                url,
-                fetchOptions
-            );
+        const response = await fetch(
+            url,
+            fetchOptions
+        );
 
-        const text =
-            await response.text();
+        const text = await response.text();
 
         let data = {};
 
         try {
 
-            data =
-                text
-                    ? JSON.parse(text)
-                    : {};
+            data = text
+                ? JSON.parse(text)
+                : {};
 
         } catch {
 
@@ -125,6 +128,7 @@ async function apiRequest(endpoint, options = {}) {
                     text ||
                     "Invalid server response"
             };
+
         }
 
         console.log(
@@ -139,6 +143,7 @@ async function apiRequest(endpoint, options = {}) {
                 data.message ||
                 `Server error ${response.status}`
             );
+
         }
 
         return data;
@@ -194,7 +199,7 @@ function normalizeDate(value) {
     const str =
         String(value).trim();
 
-    // Already YYYY-MM-DD
+    // YYYY-MM-DD
     if (
         /^\d{4}-\d{2}-\d{2}$/.test(str)
     ) {
@@ -357,7 +362,6 @@ if (menuBtn && sideMenu) {
     );
 }
 
-// Close sidebar when clicking outside
 document.addEventListener(
     "click",
     function (event) {
@@ -456,6 +460,7 @@ async function loadExpenses() {
     if (!email) {
 
         expenses = [];
+
         return;
     }
 
@@ -488,7 +493,7 @@ async function loadExpenses() {
         }
 
         console.log(
-            "✅ Expenses:",
+            "Expenses Loaded:",
             expenses
         );
 
@@ -502,6 +507,9 @@ async function loadExpenses() {
         expenses = [];
     }
 }
+
+window.loadExpenses =
+    loadExpenses;
 
 // ======================================================
 // ================= LOAD INCOME ==========================
@@ -517,7 +525,10 @@ async function loadIncome() {
     if (!email) {
 
         allIncome = [];
-        window.allIncome = allIncome;
+
+        window.allIncome =
+            allIncome;
+
         return;
     }
 
@@ -553,7 +564,7 @@ async function loadIncome() {
             allIncome;
 
         console.log(
-            "✅ Income:",
+            "Income Loaded:",
             allIncome
         );
 
@@ -565,9 +576,14 @@ async function loadIncome() {
         );
 
         allIncome = [];
-        window.allIncome = allIncome;
+
+        window.allIncome =
+            allIncome;
     }
 }
+
+window.loadIncome =
+    loadIncome;
 
 // ======================================================
 // ================= ADD INCOME ==========================
@@ -575,7 +591,9 @@ async function loadIncome() {
 
 async function addIncome() {
 
-    console.log("🟢 ADD INCOME CLICKED");
+    console.log(
+        "🟢 ADD INCOME CLICKED"
+    );
 
     const nameInput =
         $("incomeName");
@@ -594,10 +612,6 @@ async function addIncome() {
 
         alert(
             "Income form elements not found."
-        );
-
-        console.error(
-            "Income elements missing"
         );
 
         return;
@@ -667,10 +681,13 @@ async function addIncome() {
         return;
     }
 
-    // Disable button while saving
-    addIncomeBtn.disabled = true;
-    addIncomeBtn.textContent =
-        "Adding...";
+    if (addIncomeBtn) {
+
+        addIncomeBtn.disabled = true;
+
+        addIncomeBtn.textContent =
+            "Adding...";
+    }
 
     try {
 
@@ -733,9 +750,14 @@ async function addIncome() {
 
     } finally {
 
-        addIncomeBtn.disabled = false;
-        addIncomeBtn.textContent =
-            "Add Income";
+        if (addIncomeBtn) {
+
+            addIncomeBtn.disabled =
+                false;
+
+            addIncomeBtn.textContent =
+                "Add Income";
+        }
     }
 }
 
@@ -747,7 +769,8 @@ if (addIncomeBtn) {
     );
 }
 
-window.addIncome = addIncome;
+window.addIncome =
+    addIncome;
 
 // ======================================================
 // ================= ADD EXPENSE =========================
@@ -755,7 +778,9 @@ window.addIncome = addIncome;
 
 async function addExpense() {
 
-    console.log("🟢 ADD EXPENSE CLICKED");
+    console.log(
+        "🟢 ADD EXPENSE CLICKED"
+    );
 
     const nameInput =
         $("expenseName");
@@ -872,9 +897,14 @@ async function addExpense() {
         return;
     }
 
-    addExpenseBtn.disabled = true;
-    addExpenseBtn.textContent =
-        "Adding...";
+    if (addExpenseBtn) {
+
+        addExpenseBtn.disabled =
+            true;
+
+        addExpenseBtn.textContent =
+            "Adding...";
+    }
 
     try {
 
@@ -918,7 +948,8 @@ async function addExpense() {
 
             if (customInput) {
 
-                customInput.value = "";
+                customInput.value =
+                    "";
 
                 customInput.style.display =
                     "none";
@@ -948,9 +979,14 @@ async function addExpense() {
 
     } finally {
 
-        addExpenseBtn.disabled = false;
-        addExpenseBtn.textContent =
-            "Add Expense";
+        if (addExpenseBtn) {
+
+            addExpenseBtn.disabled =
+                false;
+
+            addExpenseBtn.textContent =
+                "Add Expense";
+        }
     }
 }
 
@@ -962,7 +998,8 @@ if (addExpenseBtn) {
     );
 }
 
-window.addExpense = addExpense;
+window.addExpense =
+    addExpense;
 
 // ======================================================
 // ================= DISPLAY TRANSACTIONS ================
@@ -988,47 +1025,64 @@ function displayTransactions() {
 
     const transactions = [];
 
-    // Expenses
+    // ---------------- EXPENSES ----------------
+
     expenses.forEach(
         item => {
 
             transactions.push({
+
                 type: "expense",
+
                 id: item.id,
+
                 name:
                     item.name ||
                     item.description ||
                     "Expense",
+
                 amount:
                     Number(item.amount) || 0,
+
                 category:
                     item.category ||
                     "Others",
+
                 date:
                     normalizeDate(item.date)
             });
         }
     );
 
-    // Income
+    // ---------------- INCOME ----------------
+
     allIncome.forEach(
         item => {
 
             transactions.push({
+
                 type: "income",
+
                 id: item.id,
+
                 name:
                     item.name ||
                     item.source ||
                     "Income",
+
                 amount:
                     Number(item.amount) || 0,
-                category: "Income",
+
+                category:
+                    "Income",
+
                 date:
                     normalizeDate(item.date)
             });
         }
     );
+
+    // ---------------- SORT ----------------
 
     transactions.sort(
         (a, b) =>
@@ -1043,10 +1097,14 @@ function displayTransactions() {
 
             const matchesSearch =
                 !search ||
-                transaction.name
+                String(
+                    transaction.name
+                )
                     .toLowerCase()
                     .includes(search) ||
-                transaction.category
+                String(
+                    transaction.category
+                )
                     .toLowerCase()
                     .includes(search);
 
@@ -1070,10 +1128,12 @@ function displayTransactions() {
 
             const amount =
                 transaction.type === "income"
+
                     ? "+" +
                         formatCurrency(
                             transaction.amount
                         )
+
                     : "-" +
                         formatCurrency(
                             transaction.amount
@@ -1122,9 +1182,11 @@ function displayTransactions() {
             }
 
             row.innerHTML = `
+
                 <td>
                     ${
-                        transaction.type === "income"
+                        transaction.type ===
+                        "income"
                             ? "Income"
                             : "Expense"
                     }
@@ -1153,6 +1215,7 @@ function displayTransactions() {
                 <td>
                     ${actions}
                 </td>
+
             `;
 
             expenseList.appendChild(row);
@@ -1162,7 +1225,9 @@ function displayTransactions() {
     if (count === 0) {
 
         expenseList.innerHTML = `
+
             <tr>
+
                 <td
                     colspan="6"
                     style="
@@ -1172,7 +1237,9 @@ function displayTransactions() {
                 >
                     No transactions found.
                 </td>
+
             </tr>
+
         `;
     }
 }
@@ -1226,25 +1293,45 @@ function editExpenseById(id) {
         return;
     }
 
+    const editIndex =
+        $("editIndex");
+
+    const editName =
+        $("editName");
+
+    const editAmount =
+        $("editAmount");
+
+    const editCategory =
+        $("editCategory");
+
+    const editDate =
+        $("editDate");
+
+    if (editIndex)
+        editIndex.value = item.id;
+
+    if (editName)
+        editName.value =
+            item.name || "";
+
+    if (editAmount)
+        editAmount.value =
+            item.amount || "";
+
+    if (editCategory)
+        editCategory.value =
+            item.category || "Others";
+
+    if (editDate)
+        editDate.value =
+            normalizeDate(item.date);
+
     const popup =
         $("editPopup");
 
-    $("editIndex").value =
-        item.id;
-
-    $("editName").value =
-        item.name || "";
-
-    $("editAmount").value =
-        item.amount || "";
-
-    $("editCategory").value =
-        item.category || "Others";
-
-    $("editDate").value =
-        normalizeDate(item.date);
-
     if (popup) {
+
         popup.style.display =
             "block";
     }
@@ -1270,6 +1357,7 @@ if (closeEditBtn) {
                 $("editPopup");
 
             if (popup) {
+
                 popup.style.display =
                     "none";
             }
@@ -1291,25 +1379,40 @@ if (updateExpenseBtn) {
         async function () {
 
             const id =
-                $("editIndex").value;
+                $("editIndex")
+                    ? $("editIndex").value
+                    : "";
 
             const name =
-                $("editName").value.trim();
+                $("editName")
+                    ? $("editName")
+                        .value
+                        .trim()
+                    : "";
 
             const amount =
-                Number(
-                    $("editAmount").value
-                );
+                $("editAmount")
+                    ? Number(
+                        $("editAmount").value
+                    )
+                    : 0;
 
             const category =
-                $("editCategory").value.trim();
+                $("editCategory")
+                    ? $("editCategory")
+                        .value
+                        .trim()
+                    : "";
 
             const date =
-                $("editDate").value;
+                $("editDate")
+                    ? $("editDate").value
+                    : "";
 
             if (
                 !id ||
                 !name ||
+                !Number.isFinite(amount) ||
                 amount <= 0 ||
                 !category ||
                 !date
@@ -1341,6 +1444,7 @@ if (updateExpenseBtn) {
                     );
 
                 if (
+                    result &&
                     result.success
                 ) {
 
@@ -1348,8 +1452,12 @@ if (updateExpenseBtn) {
                         "Expense Updated Successfully ✅"
                     );
 
-                    $("editPopup").style.display =
-                        "none";
+                    const popup =
+                        $("editPopup");
+
+                    if (popup)
+                        popup.style.display =
+                            "none";
 
                     await refreshDashboard();
 
@@ -1362,6 +1470,11 @@ if (updateExpenseBtn) {
                 }
 
             } catch (error) {
+
+                console.error(
+                    "Expense update error:",
+                    error
+                );
 
                 alert(
                     "Expense update failed.\n\n" +
@@ -1397,11 +1510,17 @@ async function deleteExpenseById(id) {
     if (
         !confirm(
             "Delete this expense?\n\n" +
-            item.name +
+            (
+                item.name ||
+                "Expense"
+            ) +
             "\n" +
-            formatCurrency(item.amount)
+            formatCurrency(
+                item.amount
+            )
         )
     ) {
+
         return;
     }
 
@@ -1416,6 +1535,7 @@ async function deleteExpenseById(id) {
             );
 
         if (
+            result &&
             result.success
         ) {
 
@@ -1434,6 +1554,11 @@ async function deleteExpenseById(id) {
         }
 
     } catch (error) {
+
+        console.error(
+            "Expense delete error:",
+            error
+        );
 
         alert(
             "Expense delete failed.\n\n" +
@@ -1467,24 +1592,29 @@ function editIncomeById(id) {
         return;
     }
 
-    $("editIncomeId").value =
-        item.id;
+    if ($("editIncomeId"))
+        $("editIncomeId").value =
+            item.id;
 
-    $("editIncomeSource").value =
-        item.name ||
-        item.source ||
-        "";
+    if ($("editIncomeSource"))
+        $("editIncomeSource").value =
+            item.name ||
+            item.source ||
+            "";
 
-    $("editIncomeAmount").value =
-        item.amount || "";
+    if ($("editIncomeAmount"))
+        $("editIncomeAmount").value =
+            item.amount || "";
 
-    $("editIncomeDate").value =
-        normalizeDate(item.date);
+    if ($("editIncomeDate"))
+        $("editIncomeDate").value =
+            normalizeDate(item.date);
 
     const popup =
         $("editIncomePopup");
 
     if (popup) {
+
         popup.style.display =
             "block";
     }
@@ -1532,26 +1662,33 @@ if (updateIncomeBtn) {
         async function () {
 
             const id =
-                $("editIncomeId").value;
+                $("editIncomeId")
+                    ? $("editIncomeId").value
+                    : "";
 
             const source =
                 $("editIncomeSource")
-                    .value
-                    .trim();
+                    ? $("editIncomeSource")
+                        .value
+                        .trim()
+                    : "";
 
             const amount =
-                Number(
-                    $("editIncomeAmount")
-                        .value
-                );
+                $("editIncomeAmount")
+                    ? Number(
+                        $("editIncomeAmount").value
+                    )
+                    : 0;
 
             const date =
                 $("editIncomeDate")
-                    .value;
+                    ? $("editIncomeDate").value
+                    : "";
 
             if (
                 !id ||
                 !source ||
+                !Number.isFinite(amount) ||
                 amount <= 0 ||
                 !date
             ) {
@@ -1582,6 +1719,7 @@ if (updateIncomeBtn) {
                     );
 
                 if (
+                    result &&
                     result.success
                 ) {
 
@@ -1589,9 +1727,12 @@ if (updateIncomeBtn) {
                         "Income Updated Successfully ✅"
                     );
 
-                    $("editIncomePopup")
-                        .style
-                        .display = "none";
+                    const popup =
+                        $("editIncomePopup");
+
+                    if (popup)
+                        popup.style.display =
+                            "none";
 
                     await refreshDashboard();
 
@@ -1604,6 +1745,11 @@ if (updateIncomeBtn) {
                 }
 
             } catch (error) {
+
+                console.error(
+                    "Income update error:",
+                    error
+                );
 
                 alert(
                     "Income update failed.\n\n" +
@@ -1639,9 +1785,12 @@ async function deleteIncomeById(id) {
     if (
         !confirm(
             "Delete this income?\n\n" +
-            formatCurrency(item.amount)
+            formatCurrency(
+                item.amount
+            )
         )
     ) {
+
         return;
     }
 
@@ -1656,6 +1805,7 @@ async function deleteIncomeById(id) {
             );
 
         if (
+            result &&
             result.success
         ) {
 
@@ -1674,6 +1824,11 @@ async function deleteIncomeById(id) {
         }
 
     } catch (error) {
+
+        console.error(
+            "Income delete error:",
+            error
+        );
 
         alert(
             "Income delete failed.\n\n" +
@@ -1703,12 +1858,15 @@ function calculateTotals() {
     let incomeTotal = 0;
     let expenseTotal = 0;
 
-    // Income
+    // ---------------- INCOME ----------------
+
     allIncome.forEach(
         item => {
 
             const date =
-                normalizeDate(item.date);
+                normalizeDate(
+                    item.date
+                );
 
             if (!date) return;
 
@@ -1732,12 +1890,15 @@ function calculateTotals() {
         }
     );
 
-    // Expenses
+    // ---------------- EXPENSE ----------------
+
     expenses.forEach(
         item => {
 
             const date =
-                normalizeDate(item.date);
+                normalizeDate(
+                    item.date
+                );
 
             if (!date) return;
 
@@ -1765,6 +1926,8 @@ function calculateTotals() {
         incomeTotal -
         expenseTotal;
 
+    // ---------------- UI ----------------
+
     if (totalIncome) {
 
         totalIncome.textContent =
@@ -1789,7 +1952,8 @@ function calculateTotals() {
             );
     }
 
-    // Warning
+    // ---------------- WARNING ----------------
+
     const warning =
         $("balanceWarning");
 
@@ -1805,7 +1969,8 @@ function calculateTotals() {
 
         } else if (
             incomeTotal > 0 &&
-            balance <= incomeTotal * 0.1
+            balance <=
+                incomeTotal * 0.1
         ) {
 
             warning.textContent =
@@ -1816,7 +1981,8 @@ function calculateTotals() {
 
         } else {
 
-            warning.textContent = "";
+            warning.textContent =
+                "";
 
             warning.style.display =
                 "none";
@@ -1824,7 +1990,7 @@ function calculateTotals() {
     }
 
     console.log(
-        "Totals:",
+        "Current Month Totals:",
         {
             income: incomeTotal,
             expense: expenseTotal,
@@ -1842,28 +2008,48 @@ window.calculateTotals =
 
 async function refreshDashboard() {
 
+    // Prevent simultaneous duplicate refresh
+    if (dashboardLoading) {
+
+        console.log(
+            "⏳ Dashboard refresh already running..."
+        );
+
+        return;
+    }
+
+    dashboardLoading = true;
+
     console.log(
-        "🔄 Refreshing dashboard..."
+        "🔄 Loading dashboard data..."
     );
 
     try {
 
-        await loadExpenses();
-        await loadIncome();
+        // Load both at the same time
+        await Promise.all([
+            loadExpenses(),
+            loadIncome()
+        ]);
 
         displayTransactions();
+
         calculateTotals();
 
         console.log(
-            "✅ Dashboard refreshed"
+            "Dashboard data loaded successfully ✅"
         );
 
     } catch (error) {
 
         console.error(
-            "Refresh error:",
+            "Refresh dashboard error:",
             error
         );
+
+    } finally {
+
+        dashboardLoading = false;
     }
 }
 
@@ -1914,6 +2100,7 @@ if (expenseFileInput) {
                 );
 
                 this.value = "";
+
                 return;
             }
 
@@ -2009,6 +2196,7 @@ if (expenseFileInput) {
                         row["Expense Date"] ||
                         "";
 
+                    // Excel serial date
                     if (
                         typeof date ===
                         "number"
@@ -2032,6 +2220,7 @@ if (expenseFileInput) {
                                     0,
                                     10
                                 );
+
                     } else {
 
                         date =
@@ -2050,6 +2239,7 @@ if (expenseFileInput) {
                     ) {
 
                         skipped++;
+
                         continue;
                     }
 
@@ -2073,6 +2263,7 @@ if (expenseFileInput) {
                             );
 
                         if (
+                            result &&
                             result.success
                         ) {
 
@@ -2137,17 +2328,18 @@ window.openProfile =
 // ================= INITIALIZE ==========================
 // ======================================================
 
-let dashboardInitialized =
-    false;
-
 async function initializeDashboard() {
 
     if (dashboardInitialized) {
+
+        console.log(
+            "⚠️ Dashboard already initialized. Skipping."
+        );
+
         return;
     }
 
-    dashboardInitialized =
-        true;
+    dashboardInitialized = true;
 
     console.log(
         "🚀 Initializing Dashboard..."
@@ -2160,6 +2352,7 @@ async function initializeDashboard() {
     );
 }
 
+// Only ONE initialization path
 if (
     document.readyState ===
     "loading"
@@ -2167,12 +2360,153 @@ if (
 
     document.addEventListener(
         "DOMContentLoaded",
-        initializeDashboard
+        initializeDashboard,
+        {
+            once: true
+        }
     );
 
 } else {
 
     initializeDashboard();
+}
+
+// ======================================================
+// ================= EXPORT EXCEL ========================
+// ======================================================
+
+if (exportExpenseBtn) {
+
+    exportExpenseBtn.addEventListener(
+        "click",
+        function () {
+
+            try {
+
+                const transactions = [];
+
+                // ---------------- EXPENSES ----------------
+
+                expenses.forEach(
+                    item => {
+
+                        transactions.push({
+
+                            Type: "Expense",
+
+                            Name:
+                                item.name ||
+                                item.description ||
+                                "Expense",
+
+                            Amount:
+                                Number(
+                                    item.amount
+                                ) || 0,
+
+                            Category:
+                                item.category ||
+                                "Others",
+
+                            Date:
+                                normalizeDate(
+                                    item.date
+                                )
+                        });
+                    }
+                );
+
+                // ---------------- INCOME ----------------
+
+                allIncome.forEach(
+                    item => {
+
+                        transactions.push({
+
+                            Type: "Income",
+
+                            Name:
+                                item.name ||
+                                item.source ||
+                                "Income",
+
+                            Amount:
+                                Number(
+                                    item.amount
+                                ) || 0,
+
+                            Category:
+                                "Income",
+
+                            Date:
+                                normalizeDate(
+                                    item.date
+                                )
+                        });
+                    }
+                );
+
+                if (
+                    transactions.length ===
+                    0
+                ) {
+
+                    alert(
+                        "No transactions available to export."
+                    );
+
+                    return;
+                }
+
+                if (
+                    typeof XLSX ===
+                    "undefined"
+                ) {
+
+                    alert(
+                        "Excel library not loaded."
+                    );
+
+                    return;
+                }
+
+                const worksheet =
+                    XLSX.utils.json_to_sheet(
+                        transactions
+                    );
+
+                const workbook =
+                    XLSX.utils.book_new();
+
+                XLSX.utils.book_append_sheet(
+                    workbook,
+                    worksheet,
+                    "Transactions"
+                );
+
+                XLSX.writeFile(
+                    workbook,
+                    "Expense_Tracker_Report.xlsx"
+                );
+
+                alert(
+                    "Excel exported successfully ✅"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Excel Export Error:",
+                    error
+                );
+
+                alert(
+                    "Excel export failed: " +
+                    error.message
+                );
+            }
+        }
+    );
 }
 
 // ======================================================
