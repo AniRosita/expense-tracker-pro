@@ -3116,3 +3116,683 @@ function parseExcelDate(value) {
 }
 
 window.parseExcelDate = parseExcelDate;
+// ======================================================
+// ================= EXCEL IMPORT ========================
+// ======================================================
+
+async function importExpensesFromExcel(file) {
+
+    if (!file) {
+        alert("Please select an Excel file.");
+        return;
+    }
+
+    if (typeof XLSX === "undefined") {
+        alert(
+            "Excel library is not loaded.\n\n" +
+            "Please check XLSX script in dashboard.html."
+        );
+        return;
+    }
+
+    const email =
+        localStorage.getItem("userEmail");
+
+    if (!email) {
+        alert(
+            "Login session expired. Please login again."
+        );
+
+        window.location.href = "index.html";
+        return;
+    }
+
+    try {
+
+        console.log("📊 Reading Excel file:", file.name);
+
+        const buffer =
+            await file.arrayBuffer();
+
+        const workbook =
+            XLSX.read(buffer, {
+                type: "array",
+                cellDates: true
+            });
+
+        if (
+            !workbook.SheetNames ||
+            workbook.SheetNames.length === 0
+        ) {
+            alert("Excel file has no sheets.");
+            return;
+        }
+
+        const sheetName =
+            workbook.SheetNames[0];
+
+        const worksheet =
+            workbook.Sheets[sheetName];
+
+        const matrix =
+            XLSX.utils.sheet_to_json(
+                worksheet,
+                {
+                    header: 1,
+                    defval: "",
+                    raw: true
+                }
+            );
+
+        if (
+            !matrix ||
+            matrix.length < 2
+        ) {
+            alert(
+                "Excel file does not contain enough data."
+            );
+            return;
+        }
+
+        console.log(
+            "Excel rows:",
+            matrix
+        );
+
+        // ----------------------------------------------
+        // FIND HEADER ROW
+        // ----------------------------------------------
+
+        let headerRowIndex = 0;
+        let headerScore = -1;
+
+        matrix
+            .slice(
+                0,
+                Math.min(matrix.length, 10)
+            )
+            .forEach(
+                (row, index) => {
+
+                    if (
+                        !Array.isArray(row)
+                    ) return;
+
+                    let score = 0;
+
+                    row.forEach(
+                        cell => {
+
+                            score +=
+                                Math.max(
+                                    scoreExcelHeader(
+                                        cell,
+                                        "name"
+                                    ),
+                                    scoreExcelHeader(
+                                        cell,
+                                        "amount"
+                                    ),
+                                    scoreExcelHeader(
+                                        cell,
+                                        "category"
+                                    ),
+                                    scoreExcelHeader(
+                                        cell,
+                                        "date"
+                                    )
+                                );
+                        }
+                    );
+
+                    if (
+                        score >
+                        headerScore
+                    ) {
+
+                        headerScore =
+                            score;
+
+                        headerRowIndex =
+                            index;
+                    }
+                }
+            );
+
+        const headers =
+            matrix[headerRowIndex]
+                .map(
+                    cell =>
+                        normalizeExcelHeader(
+                            excelCellToText(
+                                cell
+                            )
+                        )
+                );
+
+        console.log(
+            "Detected headers:",
+            headers
+        );
+
+        // ----------------------------------------------
+        // FIND COLUMNS USING HEADER
+        // ----------------------------------------------
+
+        const usedColumns =
+            new Set();
+
+        function findHeaderColumn(type) {
+
+            let bestColumn = null;
+            let bestScore = 0;
+
+            headers.forEach(
+                (header, index) => {
+
+                    if (
+                        usedColumns.has(index)
+                    ) {
+                        return;
+                    }
+
+                    const score =
+                        scoreExcelHeader(
+                            header,
+                            type
+                        );
+
+                    if (
+                        score >
+                        bestScore
+                    ) {
+
+                        bestScore =
+                            score;
+
+                        bestColumn =
+                            index;
+                    }
+                }
+            );
+
+            if (
+                bestColumn !== null &&
+                bestScore >= 50
+            ) {
+
+                usedColumns.add(
+                    bestColumn
+                );
+
+                return bestColumn;
+            }
+
+            return null;
+        }
+
+        let nameColumn =
+            findHeaderColumn("name");
+
+        let amountColumn =
+            findHeaderColumn("amount");
+
+        let categoryColumn =
+            findHeaderColumn("category");
+
+        let dateColumn =
+            findHeaderColumn("date");
+
+        // ----------------------------------------------
+        // VALUE BASED FALLBACK
+        // ----------------------------------------------
+
+        if (
+            nameColumn === null
+        ) {
+
+            nameColumn =
+                inferExcelColumn(
+                    matrix.slice(
+                        headerRowIndex + 1
+                    ),
+                    "name",
+                    usedColumns
+                );
+
+            if (
+                nameColumn !== null
+            ) {
+                usedColumns.add(
+                    nameColumn
+                );
+            }
+        }
+
+        if (
+            amountColumn === null
+        ) {
+
+            amountColumn =
+                inferExcelColumn(
+                    matrix.slice(
+                        headerRowIndex + 1
+                    ),
+                    "amount",
+                    usedColumns
+                );
+
+            if (
+                amountColumn !== null
+            ) {
+                usedColumns.add(
+                    amountColumn
+                );
+            }
+        }
+
+        if (
+            categoryColumn === null
+        ) {
+
+            categoryColumn =
+                inferExcelColumn(
+                    matrix.slice(
+                        headerRowIndex + 1
+                    ),
+                    "category",
+                    usedColumns
+                );
+
+            if (
+                categoryColumn !== null
+            ) {
+                usedColumns.add(
+                    categoryColumn
+                );
+            }
+        }
+
+        if (
+            dateColumn === null
+        ) {
+
+            dateColumn =
+                inferExcelColumn(
+                    matrix.slice(
+                        headerRowIndex + 1
+                    ),
+                    "date",
+                    usedColumns
+                );
+        }
+
+        console.log(
+            "Excel column mapping:",
+            {
+                nameColumn,
+                amountColumn,
+                categoryColumn,
+                dateColumn
+            }
+        );
+
+        // ----------------------------------------------
+        // VALIDATION
+        // ----------------------------------------------
+
+        if (
+            nameColumn === null ||
+            amountColumn === null
+        ) {
+
+            alert(
+                "Could not identify Expense Name and Amount columns.\n\n" +
+                "Your Excel should contain columns like:\n" +
+                "Name | Amount | Category | Date"
+            );
+
+            return;
+        }
+
+        // ----------------------------------------------
+        // CONVERT ROWS
+        // ----------------------------------------------
+
+        const importedExpenses = [];
+
+        for (
+            let i =
+                headerRowIndex + 1;
+            i < matrix.length;
+            i++
+        ) {
+
+            const row =
+                matrix[i];
+
+            if (
+                isExcelRowEmpty(row)
+            ) {
+                continue;
+            }
+
+            const rawName =
+                row[nameColumn];
+
+            const rawAmount =
+                row[amountColumn];
+
+            const rawCategory =
+                categoryColumn !== null
+                    ? row[categoryColumn]
+                    : "";
+
+            const rawDate =
+                dateColumn !== null
+                    ? row[dateColumn]
+                    : "";
+
+            const name =
+                excelCellToText(
+                    rawName
+                ).trim();
+
+            // ------------------------------------------
+            // AMOUNT
+            // ------------------------------------------
+
+            let amountText =
+                excelCellToText(
+                    rawAmount
+                );
+
+            amountText =
+                amountText
+                    .replace(
+                        /₹|\$|€|£/g,
+                        ""
+                    )
+                    .replace(
+                        /\b(?:rs|inr|usd|eur|gbp|rupees?)\b/gi,
+                        ""
+                    )
+                    .replace(
+                        /,/g,
+                        ""
+                    )
+                    .replace(
+                        /\s/g,
+                        ""
+                    )
+                    .replace(
+                        /[()]/g,
+                        ""
+                    );
+
+            const amount =
+                Number(
+                    amountText
+                );
+
+            // ------------------------------------------
+            // CATEGORY
+            // ------------------------------------------
+
+            let category =
+                excelCellToText(
+                    rawCategory
+                ).trim();
+
+            if (!category) {
+                category = "Others";
+            }
+
+            // ------------------------------------------
+            // DATE
+            // ------------------------------------------
+
+            let date =
+                parseExcelDate(
+                    rawDate
+                );
+
+            // If Excel has no date, use today
+            if (!date) {
+
+                const today =
+                    new Date();
+
+                date =
+                    today.getFullYear() +
+                    "-" +
+                    String(
+                        today.getMonth() + 1
+                    ).padStart(2, "0") +
+                    "-" +
+                    String(
+                        today.getDate()
+                    ).padStart(2, "0");
+            }
+
+            // ------------------------------------------
+            // SKIP INVALID ROW
+            // ------------------------------------------
+
+            if (
+                !name ||
+                !Number.isFinite(amount) ||
+                amount <= 0
+            ) {
+
+                console.warn(
+                    "Skipped invalid Excel row:",
+                    i + 1,
+                    row
+                );
+
+                continue;
+            }
+
+            importedExpenses.push({
+                email,
+                name,
+                amount,
+                category,
+                date
+            });
+        }
+
+        console.log(
+            "Valid expenses found:",
+            importedExpenses
+        );
+
+        if (
+            importedExpenses.length === 0
+        ) {
+
+            alert(
+                "No valid expenses found in the Excel file."
+            );
+
+            return;
+        }
+
+        // ----------------------------------------------
+        // CONFIRM IMPORT
+        // ----------------------------------------------
+
+        const confirmed =
+            confirm(
+                importedExpenses.length +
+                " expense(s) found.\n\n" +
+                "Do you want to import them?"
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        // ----------------------------------------------
+        // IMPORT TO DATABASE
+        // ----------------------------------------------
+
+        let successCount = 0;
+        let failedCount = 0;
+
+        for (
+            const expense of
+            importedExpenses
+        ) {
+
+            try {
+
+                const result =
+                    await apiRequest(
+                        "/expenses",
+                        {
+                            method:
+                                "POST",
+
+                            body:
+                                JSON.stringify(
+                                    expense
+                                )
+                        }
+                    );
+
+                if (
+                    result &&
+                    result.success === true
+                ) {
+
+                    successCount++;
+
+                } else {
+
+                    failedCount++;
+
+                    console.error(
+                        "Import failed:",
+                        result
+                    );
+                }
+
+            } catch (error) {
+
+                failedCount++;
+
+                console.error(
+                    "Import row failed:",
+                    expense,
+                    error
+                );
+            }
+        }
+
+        // ----------------------------------------------
+        // REFRESH DASHBOARD
+        // ----------------------------------------------
+
+        await refreshDashboard();
+
+        if (
+            expenseFileInput
+        ) {
+
+            expenseFileInput.value =
+                "";
+        }
+
+        alert(
+            "Excel Import Completed ✅\n\n" +
+            "Successfully imported: " +
+            successCount +
+            "\nFailed: " +
+            failedCount
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Excel Import Error:",
+            error
+        );
+
+        alert(
+            "Excel import failed.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+// ======================================================
+// ================= IMPORT BUTTON =======================
+// ======================================================
+
+if (
+    importExpenseBtn &&
+    expenseFileInput
+) {
+
+    importExpenseBtn.addEventListener(
+        "click",
+        function () {
+
+            expenseFileInput.click();
+        }
+    );
+
+    expenseFileInput.addEventListener(
+        "change",
+        async function () {
+
+            const file =
+                this.files &&
+                this.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            await importExpensesFromExcel(
+                file
+            );
+        }
+    );
+}
+
+window.importExpensesFromExcel =
+    importExpensesFromExcel;
+
+
+// ======================================================
+// ================= INITIAL LOAD ========================
+// ======================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function () {
+
+        if (
+            dashboardInitialized
+        ) {
+            return;
+        }
+
+        dashboardInitialized =
+            true;
+
+        console.log(
+            "🚀 Dashboard initializing..."
+        );
+
+        await refreshDashboard();
+
+        console.log(
+            "✅ Dashboard initialized"
+        );
+    }
+);
