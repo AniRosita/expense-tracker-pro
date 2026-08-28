@@ -263,6 +263,8 @@ async function createRequiredTables() {
 
 let databaseReady = false;
 
+let databaseRetryTimer = null;
+
 async function initializeDatabase() {
 
     try {
@@ -297,10 +299,12 @@ async function initializeDatabase() {
             error.message
         );
 
-        setTimeout(
-            initializeDatabase,
-            5000
-        );
+        if (!databaseRetryTimer) {
+            databaseRetryTimer = setTimeout(() => {
+                databaseRetryTimer = null;
+                initializeDatabase();
+            }, 5000);
+        }
     }
 }
 
@@ -589,6 +593,7 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
+
             user: {
                 id: user.id,
                 name: user.name,
@@ -2333,6 +2338,7 @@ app.get(
                 users,
                 expenses,
                 income,
+
                 counts: {
                     users: users.length,
                     expenses: expenses.length,
