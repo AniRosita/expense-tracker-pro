@@ -36,7 +36,6 @@ let allIncome = [];
 
 window.allIncome = allIncome;
 
-// Prevent duplicate initialization
 let dashboardInitialized = false;
 let dashboardLoading = false;
 
@@ -183,7 +182,7 @@ function formatCurrency(amount) {
 window.formatCurrency = formatCurrency;
 
 // ======================================================
-// ================= DATE NORMALIZER ====================
+// ================= DATE NORMALIZER =====================
 // ======================================================
 
 function normalizeDate(value) {
@@ -410,7 +409,7 @@ if (logoutBtn) {
 }
 
 // ======================================================
-// ================= CATEGORY =============================
+// ================= CATEGORY ============================
 // ======================================================
 
 if (expenseCategory) {
@@ -438,8 +437,7 @@ if (expenseCategory) {
                     customCategory.style.display =
                         "none";
 
-                    customCategory.value =
-                        "";
+                    customCategory.value = "";
                 }
             }
         }
@@ -447,7 +445,7 @@ if (expenseCategory) {
 }
 
 // ======================================================
-// ================= LOAD EXPENSES ========================
+// ================= LOAD EXPENSES =======================
 // ======================================================
 
 async function loadExpenses() {
@@ -472,6 +470,11 @@ async function loadExpenses() {
                 encodeURIComponent(email)
             );
 
+        console.log(
+            "Expenses API Response:",
+            data
+        );
+
         if (
             data &&
             Array.isArray(data.expenses)
@@ -479,6 +482,14 @@ async function loadExpenses() {
 
             expenses =
                 data.expenses;
+
+        } else if (
+            data &&
+            Array.isArray(data.data)
+        ) {
+
+            expenses =
+                data.data;
 
         } else if (
             Array.isArray(data)
@@ -512,7 +523,7 @@ window.loadExpenses =
     loadExpenses;
 
 // ======================================================
-// ================= LOAD INCOME ==========================
+// ================= LOAD INCOME =========================
 // ======================================================
 
 async function loadIncome() {
@@ -540,6 +551,11 @@ async function loadIncome() {
                 encodeURIComponent(email)
             );
 
+        console.log(
+            "Income API Response:",
+            data
+        );
+
         if (
             data &&
             Array.isArray(data.income)
@@ -547,6 +563,14 @@ async function loadIncome() {
 
             allIncome =
                 data.income;
+
+        } else if (
+            data &&
+            Array.isArray(data.data)
+        ) {
+
+            allIncome =
+                data.data;
 
         } else if (
             Array.isArray(data)
@@ -581,9 +605,6 @@ async function loadIncome() {
             allIncome;
     }
 }
-
-window.loadIncome =
-    loadIncome;
 
 // ======================================================
 // ================= ADD INCOME ==========================
@@ -948,8 +969,7 @@ async function addExpense() {
 
             if (customInput) {
 
-                customInput.value =
-                    "";
+                customInput.value = "";
 
                 customInput.style.display =
                     "none";
@@ -1002,7 +1022,7 @@ window.addExpense =
     addExpense;
 
 // ======================================================
-// ================= DISPLAY TRANSACTIONS ================
+// ============== DISPLAY TRANSACTIONS ==================
 // ======================================================
 
 function displayTransactions() {
@@ -1085,9 +1105,24 @@ function displayTransactions() {
     // ---------------- SORT ----------------
 
     transactions.sort(
-        (a, b) =>
-            new Date(b.date || 0) -
-            new Date(a.date || 0)
+        (a, b) => {
+
+            const dateA =
+                a.date
+                    ? new Date(
+                        a.date + "T00:00:00"
+                    ).getTime()
+                    : 0;
+
+            const dateB =
+                b.date
+                    ? new Date(
+                        b.date + "T00:00:00"
+                    ).getTime()
+                    : 0;
+
+            return dateB - dateA;
+        }
     );
 
     let count = 0;
@@ -1182,11 +1217,9 @@ function displayTransactions() {
             }
 
             row.innerHTML = `
-
                 <td>
                     ${
-                        transaction.type ===
-                        "income"
+                        transaction.type === "income"
                             ? "Income"
                             : "Expense"
                     }
@@ -1215,7 +1248,6 @@ function displayTransactions() {
                 <td>
                     ${actions}
                 </td>
-
             `;
 
             expenseList.appendChild(row);
@@ -1225,9 +1257,7 @@ function displayTransactions() {
     if (count === 0) {
 
         expenseList.innerHTML = `
-
             <tr>
-
                 <td
                     colspan="6"
                     style="
@@ -1237,9 +1267,7 @@ function displayTransactions() {
                 >
                     No transactions found.
                 </td>
-
             </tr>
-
         `;
     }
 }
@@ -1248,7 +1276,7 @@ window.displayTransactions =
     displayTransactions;
 
 // ======================================================
-// ================= SEARCH ===============================
+// ================= SEARCH ==============================
 // ======================================================
 
 if (searchExpense) {
@@ -1260,7 +1288,7 @@ if (searchExpense) {
 }
 
 // ======================================================
-// ================= FILTER ===============================
+// ================= FILTER ==============================
 // ======================================================
 
 if (transactionFilter) {
@@ -1272,7 +1300,7 @@ if (transactionFilter) {
 }
 
 // ======================================================
-// ================= EDIT EXPENSE =========================
+// ================= EDIT EXPENSE ========================
 // ======================================================
 
 function editExpenseById(id) {
@@ -1293,39 +1321,30 @@ function editExpenseById(id) {
         return;
     }
 
-    const editIndex =
-        $("editIndex");
+    if ($("editIndex"))
+        $("editIndex").value =
+            item.id;
 
-    const editName =
-        $("editName");
+    if ($("editName"))
+        $("editName").value =
+            item.name ||
+            item.description ||
+            "";
 
-    const editAmount =
-        $("editAmount");
-
-    const editCategory =
-        $("editCategory");
-
-    const editDate =
-        $("editDate");
-
-    if (editIndex)
-        editIndex.value = item.id;
-
-    if (editName)
-        editName.value =
-            item.name || "";
-
-    if (editAmount)
-        editAmount.value =
+    if ($("editAmount"))
+        $("editAmount").value =
             item.amount || "";
 
-    if (editCategory)
-        editCategory.value =
-            item.category || "Others";
+    if ($("editCategory"))
+        $("editCategory").value =
+            item.category ||
+            "Others";
 
-    if (editDate)
-        editDate.value =
-            normalizeDate(item.date);
+    if ($("editDate"))
+        $("editDate").value =
+            normalizeDate(
+                item.date
+            );
 
     const popup =
         $("editPopup");
@@ -1455,9 +1474,11 @@ if (updateExpenseBtn) {
                     const popup =
                         $("editPopup");
 
-                    if (popup)
+                    if (popup) {
+
                         popup.style.display =
                             "none";
+                    }
 
                     await refreshDashboard();
 
@@ -1512,6 +1533,7 @@ async function deleteExpenseById(id) {
             "Delete this expense?\n\n" +
             (
                 item.name ||
+                item.description ||
                 "Expense"
             ) +
             "\n" +
@@ -1520,7 +1542,6 @@ async function deleteExpenseById(id) {
             )
         )
     ) {
-
         return;
     }
 
@@ -1608,7 +1629,9 @@ function editIncomeById(id) {
 
     if ($("editIncomeDate"))
         $("editIncomeDate").value =
-            normalizeDate(item.date);
+            normalizeDate(
+                item.date
+            );
 
     const popup =
         $("editIncomePopup");
@@ -1624,7 +1647,7 @@ window.editIncomeById =
     editIncomeById;
 
 // ======================================================
-// ================= CLOSE INCOME EDIT ==================
+// ================= CLOSE INCOME EDIT ===================
 // ======================================================
 
 const closeIncomeEditBtn =
@@ -1730,9 +1753,11 @@ if (updateIncomeBtn) {
                     const popup =
                         $("editIncomePopup");
 
-                    if (popup)
+                    if (popup) {
+
                         popup.style.display =
                             "none";
+                    }
 
                     await refreshDashboard();
 
@@ -1785,12 +1810,17 @@ async function deleteIncomeById(id) {
     if (
         !confirm(
             "Delete this income?\n\n" +
+            (
+                item.name ||
+                item.source ||
+                "Income"
+            ) +
+            "\n" +
             formatCurrency(
                 item.amount
             )
         )
     ) {
-
         return;
     }
 
@@ -1841,7 +1871,7 @@ window.deleteIncomeById =
     deleteIncomeById;
 
 // ======================================================
-// ================= CALCULATE TOTALS ===================
+// ================= CALCULATE TOTALS ====================
 // ======================================================
 
 function calculateTotals() {
@@ -1872,7 +1902,8 @@ function calculateTotals() {
 
             const d =
                 new Date(
-                    date + "T00:00:00"
+                    date +
+                    "T00:00:00"
                 );
 
             if (
@@ -1904,7 +1935,8 @@ function calculateTotals() {
 
             const d =
                 new Date(
-                    date + "T00:00:00"
+                    date +
+                    "T00:00:00"
                 );
 
             if (
@@ -1981,8 +2013,7 @@ function calculateTotals() {
 
         } else {
 
-            warning.textContent =
-                "";
+            warning.textContent = "";
 
             warning.style.display =
                 "none";
@@ -2008,7 +2039,6 @@ window.calculateTotals =
 
 async function refreshDashboard() {
 
-    // Prevent simultaneous duplicate refresh
     if (dashboardLoading) {
 
         console.log(
@@ -2026,7 +2056,6 @@ async function refreshDashboard() {
 
     try {
 
-        // Load both at the same time
         await Promise.all([
             loadExpenses(),
             loadIncome()
@@ -2049,7 +2078,8 @@ async function refreshDashboard() {
 
     } finally {
 
-        dashboardLoading = false;
+        dashboardLoading =
+            false;
     }
 }
 
@@ -2169,14 +2199,17 @@ if (expenseFileInput) {
                             ""
                         ).trim();
 
+                    const rawAmount =
+                        String(
+                            row.Amount ||
+                            row["Expense Amount"] ||
+                            row.Cost ||
+                            ""
+                        );
+
                     const amount =
                         Number(
-                            String(
-                                row.Amount ||
-                                row["Expense Amount"] ||
-                                row.Cost ||
-                                ""
-                            )
+                            rawAmount
                                 .replace(
                                     /₹|Rs\.?|INR|,/gi,
                                     ""
@@ -2197,6 +2230,7 @@ if (expenseFileInput) {
                         "";
 
                     // Excel serial date
+
                     if (
                         typeof date ===
                         "number"
@@ -2231,9 +2265,7 @@ if (expenseFileInput) {
 
                     if (
                         !name ||
-                        !Number.isFinite(
-                            amount
-                        ) ||
+                        !Number.isFinite(amount) ||
                         amount <= 0 ||
                         !date
                     ) {
@@ -2339,7 +2371,8 @@ async function initializeDashboard() {
         return;
     }
 
-    dashboardInitialized = true;
+    dashboardInitialized =
+        true;
 
     console.log(
         "🚀 Initializing Dashboard..."
@@ -2352,7 +2385,6 @@ async function initializeDashboard() {
     );
 }
 
-// Only ONE initialization path
 if (
     document.readyState ===
     "loading"
@@ -2510,7 +2542,7 @@ if (exportExpenseBtn) {
 }
 
 // ======================================================
-// ================= GLOBAL EXPORTS =====================
+// ================= GLOBAL EXPORTS ======================
 // ======================================================
 
 window.loadExpenses =
