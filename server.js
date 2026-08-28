@@ -31,9 +31,7 @@ app.use((req, res, next) => {
 
     if (origin && allowedOrigins.includes(origin)) {
         res.setHeader("Access-Control-Allow-Origin", origin);
-    }
-
-    if (!origin) {
+    } else if (!origin) {
         res.setHeader("Access-Control-Allow-Origin", "*");
     }
 
@@ -583,6 +581,7 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
+
             user: {
                 id: user.id,
                 name: user.name,
@@ -1851,6 +1850,7 @@ async function forgotPassword(req, res) {
             );
 
         // Remove previous OTP
+
         await db.promise().query(
             `
             DELETE FROM password_resets
@@ -1860,6 +1860,7 @@ async function forgotPassword(req, res) {
         );
 
         // Save new OTP
+
         const [result] =
             await db.promise().query(
                 `
@@ -2343,6 +2344,7 @@ app.get(
                 users,
                 expenses,
                 income,
+
                 counts: {
                     users: users.length,
                     expenses: expenses.length,

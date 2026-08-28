@@ -3,6 +3,7 @@
 // ================= AUTHENTICATION ======================
 // ======================================================
 
+"use strict";
 
 // ======================================================
 // ================= API BASE ============================
@@ -11,14 +12,16 @@
 const API_BASE =
     "https://expense-tracker-pro-production-b745.up.railway.app";
 
+console.log("================================");
+console.log("Auth.js Loaded");
+console.log("API BASE:", API_BASE);
+console.log("================================");
 
 // ======================================================
 // ================= LOGIN FORM ==========================
 // ======================================================
 
-const loginForm =
-    document.getElementById("loginForm");
-
+const loginForm = document.getElementById("loginForm");
 
 // ======================================================
 // ================= GMAIL VALIDATION ====================
@@ -27,14 +30,12 @@ const loginForm =
 const gmailPattern =
     /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
-
 // ======================================================
-// ================= PASSWORD VALIDATION ================
+// ================= PASSWORD VALIDATION =================
 // ======================================================
 
 const passwordPattern =
     /^\d{6}$/;
-
 
 // ======================================================
 // ================= LOGIN ===============================
@@ -42,439 +43,371 @@ const passwordPattern =
 
 if (loginForm) {
 
-    loginForm.addEventListener(
-        "submit",
-        async function (e) {
+    loginForm.addEventListener("submit", async function (e) {
 
-            e.preventDefault();
+        e.preventDefault();
 
+        // ==================================================
+        // GET INPUTS
+        // ==================================================
 
-            // ==================================================
-            // GET INPUTS
-            // ==================================================
+        const emailInput =
+            document.getElementById("email");
 
-            const emailInput =
-                document.getElementById("email");
+        const passwordInput =
+            document.getElementById("password");
 
-            const passwordInput =
-                document.getElementById("password");
+        if (!emailInput || !passwordInput) {
 
+            console.error(
+                "❌ Login fields not found"
+            );
 
-            if (!emailInput || !passwordInput) {
+            return;
+        }
 
-                console.error(
-                    "❌ Login fields not found"
+        // ==================================================
+        // GET VALUES
+        // ==================================================
+
+        const email =
+            emailInput.value
+                .trim()
+                .toLowerCase();
+
+        const password =
+            passwordInput.value.trim();
+
+        // ==================================================
+        // EMPTY CHECK
+        // ==================================================
+
+        if (!email || !password) {
+
+            Swal.fire({
+                title: "Missing Fields!",
+                text: "Please fill all fields",
+                icon: "warning",
+                confirmButtonColor: "#4f46e5"
+            });
+
+            return;
+        }
+
+        // ==================================================
+        // GMAIL CHECK
+        // ==================================================
+
+        if (!gmailPattern.test(email)) {
+
+            Swal.fire({
+                title: "Invalid Email!",
+                text: "Only Gmail address allowed",
+                icon: "error",
+                confirmButtonColor: "#4f46e5"
+            });
+
+            return;
+        }
+
+        // ==================================================
+        // PASSWORD CHECK
+        // ==================================================
+
+        if (!passwordPattern.test(password)) {
+
+            Swal.fire({
+                title: "Invalid Password!",
+                text: "Password must be exactly 6 digits",
+                icon: "error",
+                confirmButtonColor: "#4f46e5"
+            });
+
+            return;
+        }
+
+        // ==================================================
+        // LOGIN BUTTON
+        // ==================================================
+
+        const loginButton =
+            document.getElementById("loginBtn");
+
+        if (loginButton) {
+
+            loginButton.disabled = true;
+
+            loginButton.dataset.originalText =
+                loginButton.innerHTML;
+
+            loginButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+        }
+
+        // ==================================================
+        // LOGIN API
+        // ==================================================
+
+        try {
+
+            const loginURL =
+                `${API_BASE}/api/login`;
+
+            console.log("================================");
+            console.log("Login API URL:", loginURL);
+            console.log("Login Email:", email);
+            console.log("================================");
+
+            const response =
+                await fetch(
+                    loginURL,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            "Accept":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                email: email,
+                                password: password
+                            })
+                    }
                 );
 
-                return;
-            }
-
-
-            // ==================================================
-            // GET VALUES
-            // ==================================================
-
-            const email =
-                emailInput.value
-                    .trim()
-                    .toLowerCase();
-
-            const password =
-                passwordInput.value.trim();
-
+            console.log(
+                "Login Status:",
+                response.status
+            );
 
             // ==================================================
-            // EMPTY CHECK
+            // READ RESPONSE
             // ==================================================
 
-            if (!email || !password) {
+            const responseText =
+                await response.text();
 
-                Swal.fire({
+            console.log(
+                "Login Raw Response:",
+                responseText
+            );
 
-                    title:
-                        "Missing Fields!",
-
-                    text:
-                        "Please fill all fields",
-
-                    icon:
-                        "warning",
-
-                    confirmButtonColor:
-                        "#4f46e5"
-
-                });
-
-                return;
-            }
-
-
-            // ==================================================
-            // GMAIL CHECK
-            // ==================================================
-
-            if (!gmailPattern.test(email)) {
-
-                Swal.fire({
-
-                    title:
-                        "Invalid Email!",
-
-                    text:
-                        "Only Gmail address allowed",
-
-                    icon:
-                        "error",
-
-                    confirmButtonColor:
-                        "#4f46e5"
-
-                });
-
-                return;
-            }
-
-
-            // ==================================================
-            // PASSWORD CHECK
-            // ==================================================
-
-            if (!passwordPattern.test(password)) {
-
-                Swal.fire({
-
-                    title:
-                        "Invalid Password!",
-
-                    text:
-                        "Password must be exactly 6 digits",
-
-                    icon:
-                        "error",
-
-                    confirmButtonColor:
-                        "#4f46e5"
-
-                });
-
-                return;
-            }
-
-
-            // ==================================================
-            // LOGIN BUTTON
-            // ==================================================
-
-            const loginButton =
-                document.getElementById("loginBtn");
-
-
-            if (loginButton) {
-
-                loginButton.disabled = true;
-
-                loginButton.dataset.originalText =
-                    loginButton.innerHTML;
-
-                loginButton.innerHTML =
-                    '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            }
-
-
-            // ==================================================
-            // LOGIN API
-            // ==================================================
+            let data = {};
 
             try {
 
-                const loginURL =
-                    `${API_BASE}/api/login`;
+                data =
+                    JSON.parse(responseText);
 
-
-                console.log(
-                    "================================"
-                );
-
-                console.log(
-                    "Login API URL:",
-                    loginURL
-                );
-
-                console.log(
-                    "Login Email:",
-                    email
-                );
-
-                console.log(
-                    "================================"
-                );
-
-
-                const response =
-                    await fetch(
-                        loginURL,
-                        {
-                            method:
-                                "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json",
-
-                                "Accept":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-                                    email:
-                                        email,
-
-                                    password:
-                                        password
-                                })
-                        }
-                    );
-
-
-                console.log(
-                    "Login Status:",
-                    response.status
-                );
-
-
-                // ==================================================
-                // READ RESPONSE
-                // ==================================================
-
-                const responseText =
-                    await response.text();
-
-
-                console.log(
-                    "Login Raw Response:",
-                    responseText
-                );
-
-
-                let data = {};
-
-
-                try {
-
-                    data =
-                        JSON.parse(
-                            responseText
-                        );
-
-                } catch (jsonError) {
-
-                    console.error(
-                        "❌ Invalid JSON:",
-                        jsonError
-                    );
-
-                    throw new Error(
-                        `Server returned invalid response (${response.status})`
-                    );
-                }
-
-
-                console.log(
-                    "Login Response:",
-                    data
-                );
-
-
-                // ==================================================
-                // SERVER ERROR
-                // ==================================================
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.message ||
-                        `Server Error (${response.status})`
-                    );
-                }
-
-
-                // ==================================================
-                // LOGIN SUCCESS
-                // ==================================================
-
-                if (
-                    data.success === true &&
-                    data.user
-                ) {
-
-
-                    // USER EMAIL
-                    localStorage.setItem(
-                        "userEmail",
-                        data.user.email
-                    );
-
-
-                    // USER NAME
-                    if (data.user.name) {
-
-                        localStorage.setItem(
-                            "userName",
-                            data.user.name
-                        );
-                    }
-
-
-                    // USER ID
-                    if (data.user.id) {
-
-                        localStorage.setItem(
-                            "userId",
-                            String(data.user.id)
-                        );
-                    }
-
-
-                    // PROFILE
-                    localStorage.setItem(
-                        "gmailProfile",
-                        "assets/profile.png"
-                    );
-
-
-                    // MESSAGE
-                    const message =
-                        document.getElementById(
-                            "message"
-                        );
-
-
-                    if (message) {
-
-                        message.innerHTML =
-                            "Login Successful ✅";
-                    }
-
-
-                    // SUCCESS POPUP
-                    await Swal.fire({
-
-                        title:
-                            "Login Successful!",
-
-                        text:
-                            "Welcome Back 👋",
-
-                        icon:
-                            "success",
-
-                        confirmButtonColor:
-                            "#4f46e5",
-
-                        timer:
-                            1200,
-
-                        showConfirmButton:
-                            false
-
-                    });
-
-
-                    // DASHBOARD
-                    window.location.href =
-                        "dashboard.html";
-
-                    return;
-                }
-
-
-                // ==================================================
-                // LOGIN FAILED
-                // ==================================================
-
-                Swal.fire({
-
-                    title:
-                        "Login Failed!",
-
-                    text:
-                        data.message ||
-                        "Invalid email or password",
-
-                    icon:
-                        "error",
-
-                    confirmButtonColor:
-                        "#4f46e5"
-
-                });
-
-            }
-
-
-            // ==================================================
-            // LOGIN ERROR
-            // ==================================================
-
-            catch (error) {
+            } catch (jsonError) {
 
                 console.error(
-                    "❌ Login Error:",
-                    error
+                    "❌ Invalid JSON:",
+                    jsonError
                 );
 
-
-                Swal.fire({
-
-                    title:
-                        "Server Error!",
-
-                    text:
-                        error.message ||
-                        "Unable to connect to server.",
-
-                    icon:
-                        "error",
-
-                    confirmButtonColor:
-                        "#4f46e5"
-
-                });
-
+                throw new Error(
+                    `Server returned invalid response (${response.status})`
+                );
             }
 
+            console.log(
+                "Login Response:",
+                data
+            );
 
             // ==================================================
-            // ENABLE BUTTON
+            // SERVER ERROR
             // ==================================================
 
-            finally {
+            if (!response.ok) {
 
-                if (loginButton) {
+                throw new Error(
+                    data.message ||
+                    `Server Error (${response.status})`
+                );
+            }
 
-                    loginButton.disabled =
-                        false;
+            // ==================================================
+            // LOGIN SUCCESS
+            // ==================================================
 
-                    loginButton.innerHTML =
-                        loginButton.dataset.originalText ||
-                        '<i class="fas fa-right-to-bracket"></i> Login';
+            if (
+                data.success === true &&
+                data.user
+            ) {
+
+                // ==================================================
+                // SAVE USER EMAIL
+                // ==================================================
+
+                localStorage.setItem(
+                    "userEmail",
+                    data.user.email
+                );
+
+                // ==================================================
+                // SAVE USER NAME
+                // ==================================================
+
+                if (data.user.name) {
+
+                    localStorage.setItem(
+                        "userName",
+                        data.user.name
+                    );
                 }
 
+                // ==================================================
+                // SAVE USER ID
+                // ==================================================
+
+                if (data.user.id) {
+
+                    localStorage.setItem(
+                        "userId",
+                        String(data.user.id)
+                    );
+                }
+
+                // ==================================================
+                // DEFAULT PROFILE
+                // ==================================================
+
+                localStorage.setItem(
+                    "gmailProfile",
+                    "assets/profile.png"
+                );
+
+                // ==================================================
+                // MESSAGE
+                // ==================================================
+
+                const message =
+                    document.getElementById(
+                        "message"
+                    );
+
+                if (message) {
+
+                    message.innerHTML =
+                        "Login Successful ✅";
+                }
+
+                // ==================================================
+                // SUCCESS POPUP
+                // ==================================================
+
+                await Swal.fire({
+
+                    title:
+                        "Login Successful!",
+
+                    text:
+                        "Welcome Back 👋",
+
+                    icon:
+                        "success",
+
+                    confirmButtonColor:
+                        "#4f46e5",
+
+                    timer:
+                        1200,
+
+                    showConfirmButton:
+                        false
+                });
+
+                // ==================================================
+                // GO TO DASHBOARD
+                // ==================================================
+
+                window.location.href =
+                    "dashboard.html";
+
+                return;
             }
 
+            // ==================================================
+            // LOGIN FAILED
+            // ==================================================
+
+            Swal.fire({
+
+                title:
+                    "Login Failed!",
+
+                text:
+                    data.message ||
+                    "Invalid email or password",
+
+                icon:
+                    "error",
+
+                confirmButtonColor:
+                    "#4f46e5"
+            });
         }
-    );
 
+        // ==================================================
+        // LOGIN ERROR
+        // ==================================================
+
+        catch (error) {
+
+            console.error(
+                "❌ Login Error:",
+                error
+            );
+
+            Swal.fire({
+
+                title:
+                    "Server Error!",
+
+                text:
+                    error.message ||
+                    "Unable to connect to server.",
+
+                icon:
+                    "error",
+
+                confirmButtonColor:
+                    "#4f46e5"
+            });
+        }
+
+        // ==================================================
+        // ENABLE LOGIN BUTTON
+        // ==================================================
+
+        finally {
+
+            if (loginButton) {
+
+                loginButton.disabled =
+                    false;
+
+                loginButton.innerHTML =
+                    loginButton.dataset.originalText ||
+                    '<i class="fas fa-right-to-bracket"></i> Login';
+            }
+        }
+
+    });
 }
-
 
 // ======================================================
 // ================= FORGOT PASSWORD ====================
 // ======================================================
 
 async function forgotPassword() {
-
 
     // ==================================================
     // ASK EMAIL
@@ -508,8 +441,7 @@ async function forgotPassword() {
                 "#4f46e5",
 
             inputAttributes: {
-                autocomplete:
-                    "email"
+                autocomplete: "email"
             },
 
             inputValidator:
@@ -517,16 +449,13 @@ async function forgotPassword() {
 
                     if (!value) {
 
-                        return
-                            "Please enter your email";
+                        return "Please enter your email";
                     }
-
 
                     const enteredEmail =
                         value
                             .trim()
                             .toLowerCase();
-
 
                     if (
                         !gmailPattern.test(
@@ -534,16 +463,12 @@ async function forgotPassword() {
                         )
                     ) {
 
-                        return
-                            "Please enter a valid Gmail address";
+                        return "Please enter a valid Gmail address";
                     }
-
 
                     return undefined;
                 }
-
         });
-
 
     // ==================================================
     // CANCEL CHECK
@@ -554,7 +479,6 @@ async function forgotPassword() {
         return;
     }
 
-
     // ==================================================
     // GET EMAIL
     // ==================================================
@@ -564,19 +488,16 @@ async function forgotPassword() {
             .trim()
             .toLowerCase();
 
-
     if (!email) {
 
         return;
     }
-
 
     // ==================================================
     // SEND OTP
     // ==================================================
 
     try {
-
 
         Swal.fire({
 
@@ -596,11 +517,8 @@ async function forgotPassword() {
                 () => {
 
                     Swal.showLoading();
-
                 }
-
         });
-
 
         // ==================================================
         // FORGOT PASSWORD URL
@@ -609,11 +527,7 @@ async function forgotPassword() {
         const forgotURL =
             `${API_BASE}/api/forgot-password`;
 
-
-        console.log(
-            "================================"
-        );
-
+        console.log("================================");
         console.log(
             "Forgot Password API URL:",
             forgotURL
@@ -624,10 +538,7 @@ async function forgotPassword() {
             email
         );
 
-        console.log(
-            "================================"
-        );
-
+        console.log("================================");
 
         // ==================================================
         // API REQUEST
@@ -641,26 +552,20 @@ async function forgotPassword() {
                         "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json",
 
                         "Accept":
                             "application/json"
-
                     },
 
                     body:
                         JSON.stringify({
-
                             email:
                                 email
-
                         })
-
                 }
             );
-
 
         // ==================================================
         // RESPONSE
@@ -668,7 +573,6 @@ async function forgotPassword() {
 
         const responseText =
             await response.text();
-
 
         console.log(
             "Forgot Password Status:",
@@ -680,9 +584,7 @@ async function forgotPassword() {
             responseText
         );
 
-
         let data = {};
-
 
         try {
 
@@ -703,16 +605,16 @@ async function forgotPassword() {
             );
         }
 
-
         console.log(
             "Forgot Password Response:",
             data
         );
 
-
+        // ==================================================
         // CLOSE LOADING
-        Swal.close();
+        // ==================================================
 
+        Swal.close();
 
         // ==================================================
         // SERVER ERROR
@@ -728,7 +630,6 @@ async function forgotPassword() {
                 `Server Error (${response.status})`
             );
         }
-
 
         // ==================================================
         // OTP SENT
@@ -750,9 +651,7 @@ async function forgotPassword() {
 
             confirmButtonColor:
                 "#4f46e5"
-
         });
-
 
         // ==================================================
         // SAVE RESET EMAIL
@@ -763,16 +662,13 @@ async function forgotPassword() {
             email
         );
 
-
         // ==================================================
         // RESET PAGE
         // ==================================================
 
         window.location.href =
             "reset-password.html";
-
     }
-
 
     // ==================================================
     // FORGOT PASSWORD ERROR
@@ -785,9 +681,7 @@ async function forgotPassword() {
             error
         );
 
-
         Swal.close();
-
 
         Swal.fire({
 
@@ -803,26 +697,18 @@ async function forgotPassword() {
 
             confirmButtonColor:
                 "#4f46e5"
-
         });
-
     }
-
 }
-
 
 // ======================================================
 // ============== FORGOT PASSWORD LINK ==================
 // ======================================================
 
-// IMPORTANT:
-// Keep ONLY ONE declaration of this variable.
-
 const forgotPasswordLink =
     document.getElementById(
         "forgotPasswordLink"
     );
-
 
 if (forgotPasswordLink) {
 
@@ -833,22 +719,16 @@ if (forgotPasswordLink) {
             e.preventDefault();
 
             forgotPassword();
-
         }
     );
-
 }
-
 
 // ======================================================
 // ============== GLOBAL FUNCTION ========================
 // ======================================================
 
-// This makes onclick="forgotPassword()" work too.
-
 window.forgotPassword =
     forgotPassword;
-
 
 // ======================================================
 // ================= DEBUG ===============================
