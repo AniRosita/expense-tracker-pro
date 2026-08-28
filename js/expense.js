@@ -5,25 +5,33 @@
 "use strict";
 
 // ======================================================
-// ================= LOGIN CHECK =========================
-// ======================================================
-
-if (!localStorage.getItem("userEmail")) {
-    window.location.href = "index.html";
-}
-
-
-// ======================================================
 // ================= API BASE URL ========================
 // ======================================================
 
-// Same Railway website + backend
-// Example:
-// https://expense-tracker-pro-production-b745.up.railway.app
-//
-// Relative API URL will automatically use the current domain.
+const API_BASE =
+    "https://expense-tracker-pro-production-b745.up.railway.app";
 
-const API_BASE = "";
+
+// ======================================================
+// ================= LOGIN CHECK =========================
+// ======================================================
+
+function getUserEmail() {
+
+    const email =
+        localStorage.getItem("userEmail");
+
+    if (!email) {
+
+        window.location.href = "index.html";
+
+        return null;
+    }
+
+    return email
+        .trim()
+        .toLowerCase();
+}
 
 
 // ======================================================
@@ -32,28 +40,19 @@ const API_BASE = "";
 
 let expenses = [];
 
+let filteredExpenses = [];
+
 
 // ======================================================
 // ================= ELEMENTS ============================
 // ======================================================
 
-const monthFilter =
-    document.getElementById("monthFilter");
-
-const yearFilter =
-    document.getElementById("yearFilter");
-
-const history =
-    document.getElementById("expenseHistory");
-
-const totalExpense =
-    document.getElementById("totalExpense");
-
-const amountType =
-    document.getElementById("amountFilter");
-
-const amountValue =
-    document.getElementById("amountValue");
+let monthFilter;
+let yearFilter;
+let history;
+let totalExpense;
+let amountType;
+let amountValue;
 
 
 // ======================================================
@@ -64,29 +63,31 @@ const recordsPerPage = 50;
 
 let currentPage = 1;
 
-let filteredExpenses = [];
-
 
 // ======================================================
-// ================= SAFE EMAIL ===========================
+// ================= INITIALIZE ELEMENTS =================
 // ======================================================
 
-function getUserEmail() {
+function initializeElements() {
 
-    const email =
-        localStorage.getItem("userEmail");
+    monthFilter =
+        document.getElementById("monthFilter");
 
-    if (!email) {
+    yearFilter =
+        document.getElementById("yearFilter");
 
-        window.location.href =
-            "index.html";
+    history =
+        document.getElementById("expenseHistory");
 
-        return null;
-    }
+    totalExpense =
+        document.getElementById("totalExpense");
 
-    return email
-        .trim()
-        .toLowerCase();
+    amountType =
+        document.getElementById("amountFilter");
+
+    amountValue =
+        document.getElementById("amountValue");
+
 }
 
 
@@ -110,7 +111,7 @@ async function loadExpensesFromDatabase() {
         );
 
         console.log(
-            "Loading expenses from Railway MySQL..."
+            "Loading expenses from Railway..."
         );
 
         const url =
@@ -122,15 +123,18 @@ async function loadExpensesFromDatabase() {
         );
 
         const response =
-            await fetch(url, {
+            await fetch(
+                url,
+                {
+                    method: "GET",
 
-                method: "GET",
-
-                headers: {
-                    "Accept": "application/json"
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
                 }
+            );
 
-            });
 
         console.log(
             "Expense API Status:",
@@ -138,49 +142,26 @@ async function loadExpensesFromDatabase() {
         );
 
 
-        // ==================================================
-        // RESPONSE CHECK
-        // ==================================================
-
         if (!response.ok) {
 
-            let errorMessage =
-                `Expense API Error: ${response.status}`;
-
-            try {
-
-                const errorData =
-                    await response.json();
-
-                if (errorData.message) {
-
-                    errorMessage =
-                        errorData.message;
-
-                }
-
-            } catch {
-
-                // Ignore JSON parse error
-
-            }
+            const errorText =
+                await response.text();
 
             console.error(
-                errorMessage
+                "Expense API Error:",
+                errorText
             );
 
             throw new Error(
-                errorMessage
+                `Expense API Error: ${response.status}`
             );
+
         }
 
 
-        // ==================================================
-        // JSON DATA
-        // ==================================================
-
         const data =
             await response.json();
+
 
         console.log(
             "Expense API Data:",
@@ -188,11 +169,8 @@ async function loadExpensesFromDatabase() {
         );
 
 
-        // ==================================================
-        // SAVE DATA
-        // ==================================================
-
         if (
+            data &&
             data.success &&
             Array.isArray(data.expenses)
         ) {
@@ -200,32 +178,29 @@ async function loadExpensesFromDatabase() {
             expenses =
                 data.expenses;
 
-            console.log(
-                "Expenses Loaded Successfully ✅",
-                expenses
-            );
-
         } else {
 
             expenses = [];
-
-            console.log(
-                data.message ||
-                "No expenses found"
-            );
 
         }
 
 
         console.log(
-            "======================================"
+            "Expenses Loaded:",
+            expenses
+        );
+
+        console.log(
+            "Expense Count:",
+            expenses.length
         );
 
 
         return true;
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "Expense Page Load Error:",
@@ -268,13 +243,14 @@ async function loadExpensesFromDatabase() {
 
 
         return false;
+
     }
 
 }
 
 
 // ======================================================
-// ================= RETRY LOAD ==========================
+// ================= RETRY ==============================
 // ======================================================
 
 async function loadExpensesAndRefresh() {
@@ -327,83 +303,79 @@ function loadYearList() {
     }
 
 
-    // Remove previously generated years
-
     yearFilter
         .querySelectorAll(".dynamic-year")
-        .forEach(option => {
-
-            option.remove();
-
-        });
+        .forEach(
+            option => option.remove()
+        );
 
 
-    let years = [];
+    const years =
+        new Set();
 
 
-    expenses.forEach(item => {
+    expenses.forEach(
+        item => {
 
-        if (!item.date) {
-            return;
-        }
-
-
-        const date =
-            new Date(item.date);
+            if (!item.date) {
+                return;
+            }
 
 
-        if (!isNaN(date.getTime())) {
-
-            const year =
-                date.getFullYear();
+            const date =
+                new Date(item.date);
 
 
-            if (!years.includes(year)) {
+            if (!isNaN(date.getTime())) {
 
-                years.push(year);
+                years.add(
+                    date.getFullYear()
+                );
 
             }
 
         }
-
-    });
-
-
-    years.sort(
-        (a, b) => a - b
     );
 
 
-    years.forEach(year => {
+    Array.from(years)
+        .sort(
+            (a, b) => a - b
+        )
+        .forEach(
+            year => {
 
-        const option =
-            document.createElement("option");
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
 
-        option.value =
-            year;
+                option.value =
+                    year;
 
 
-        option.innerText =
-            year;
+                option.innerText =
+                    year;
 
 
-        option.classList.add(
-            "dynamic-year"
+                option.classList.add(
+                    "dynamic-year"
+                );
+
+
+                yearFilter.appendChild(
+                    option
+                );
+
+            }
         );
-
-
-        yearFilter.appendChild(
-            option
-        );
-
-    });
 
 }
 
 
 // ======================================================
-// ================= FILTER FUNCTION =====================
+// ================= FILTER ==============================
 // ======================================================
 
 function filterExpenses() {
@@ -427,104 +399,92 @@ function filterExpenses() {
 
 
     filteredExpenses =
-        expenses.filter(item => {
+        expenses.filter(
+            item => {
 
-            if (!item.date) {
-                return false;
-            }
-
-
-            const date =
-                new Date(item.date);
+                if (!item.date) {
+                    return false;
+                }
 
 
-            if (isNaN(date.getTime())) {
-                return false;
-            }
+                const date =
+                    new Date(item.date);
 
 
-            const itemMonth =
-                date.getMonth();
+                if (isNaN(date.getTime())) {
+                    return false;
+                }
 
 
-            const itemYear =
-                date.getFullYear();
+                const itemMonth =
+                    date.getMonth();
 
 
-            const matchMonth =
-
-                month === "all"
-
-                ||
-
-                Number(month) === itemMonth;
+                const itemYear =
+                    date.getFullYear();
 
 
-            const matchYear =
-
-                year === "all"
-
-                ||
-
-                Number(year) === itemYear;
+                const matchMonth =
+                    month === "all" ||
+                    Number(month) === itemMonth;
 
 
-            let matchAmount =
-                true;
+                const matchYear =
+                    year === "all" ||
+                    Number(year) === itemYear;
 
 
-            // BELOW
-
-            if (
-                amountType &&
-                amountType.value === "below" &&
-                amount > 0
-            ) {
-
-                matchAmount =
-                    Number(item.amount) < amount;
-
-            }
+                let matchAmount =
+                    true;
 
 
-            // ABOVE
+                if (
+                    amountType &&
+                    amountType.value === "below" &&
+                    amount > 0
+                ) {
 
-            if (
-                amountType &&
-                amountType.value === "above" &&
-                amount > 0
-            ) {
+                    matchAmount =
+                        Number(item.amount) < amount;
 
-                matchAmount =
-                    Number(item.amount) > amount;
-
-            }
+                }
 
 
-            // EXACT
+                if (
+                    amountType &&
+                    amountType.value === "above" &&
+                    amount > 0
+                ) {
 
-            if (
-                amountType &&
-                (
-                    amountType.value === "equal" ||
-                    amountType.value === "equals"
-                ) &&
-                amount > 0
-            ) {
+                    matchAmount =
+                        Number(item.amount) > amount;
 
-                matchAmount =
-                    Number(item.amount) === amount;
+                }
+
+
+                if (
+                    amountType &&
+                    (
+                        amountType.value === "equal" ||
+                        amountType.value === "equals"
+                    ) &&
+                    amount > 0
+                ) {
+
+                    matchAmount =
+                        Number(item.amount) === amount;
+
+                }
+
+
+                return (
+                    matchMonth &&
+                    matchYear &&
+                    matchAmount
+                );
 
             }
-
-
-            return (
-                matchMonth &&
-                matchYear &&
-                matchAmount
-            );
-
-        });
+        );
 
 }
 
@@ -551,7 +511,13 @@ function formatExpenseAmount(amount) {
 
     return (
         "₹" +
-        value.toFixed(2)
+        value.toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        )
     );
 
 }
@@ -579,6 +545,11 @@ function escapeHTML(value) {
 
 function formatExpenseDate(dateValue) {
 
+    if (!dateValue) {
+        return "Invalid date";
+    }
+
+
     const date =
         new Date(dateValue);
 
@@ -591,18 +562,14 @@ function formatExpenseDate(dateValue) {
 
 
     return `
-
         ${date.getDate()}
-
         ${date.toLocaleString(
             "default",
             {
                 month: "long"
             }
         )}
-
         ${date.getFullYear()}
-
     `;
 
 }
@@ -627,19 +594,21 @@ function showExpense() {
 
 
     // ==================================================
-    // TOTAL EXPENSE
+    // TOTAL
     // ==================================================
 
     let total =
         0;
 
 
-    filteredExpenses.forEach(item => {
+    filteredExpenses.forEach(
+        item => {
 
-        total +=
-            Number(item.amount) || 0;
+            total +=
+                Number(item.amount) || 0;
 
-    });
+        }
+    );
 
 
     if (totalExpense) {
@@ -734,73 +703,71 @@ function showExpense() {
         "";
 
 
-    pageExpenses.forEach(item => {
+    pageExpenses.forEach(
+        item => {
 
-        const displayName =
-            escapeHTML(
-                item.name ||
-                "Expense"
-            );
-
-
-        const displayCategory =
-            escapeHTML(
-                item.category ||
-                "Others"
-            );
+            const displayName =
+                escapeHTML(
+                    item.name ||
+                    "Expense"
+                );
 
 
-        const displayAmount =
-            formatExpenseAmount(
-                item.amount
-            );
+            const displayCategory =
+                escapeHTML(
+                    item.category ||
+                    "Others"
+                );
 
 
-        const displayDate =
-            formatExpenseDate(
-                item.date
-            );
+            const displayAmount =
+                formatExpenseAmount(
+                    item.amount
+                );
 
 
-        html += `
+            const displayDate =
+                formatExpenseDate(
+                    item.date
+                );
 
-            <div class="expense-card">
 
-                <div class="line">
+            html += `
 
-                    <h3>
-                        ${displayName}
-                    </h3>
+                <div class="expense-card">
+
+                    <div class="line">
+
+                        <h3>
+                            ${displayName}
+                        </h3>
+
+                        <p>
+                            ${displayAmount}
+                        </p>
+
+                    </div>
 
                     <p>
-                        ${displayAmount}
+                        Category :
+                        ${displayCategory}
                     </p>
+
+                    <span>
+                        ${displayDate}
+                    </span>
 
                 </div>
 
-                <p>
-                    Category :
-                    ${displayCategory}
-                </p>
+            `;
 
-                <span>
-                    ${displayDate}
-                </span>
-
-            </div>
-
-        `;
-
-    });
+        }
+    );
 
 
     history.innerHTML =
         html;
 
-
-    // ==================================================
-    // PAGINATION
-    // ==================================================
 
     createPagination();
 
@@ -834,14 +801,14 @@ function createPagination() {
 
 
     if (totalPages <= 1) {
-
         return;
-
     }
 
 
     const pagination =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
 
     pagination.id =
@@ -903,10 +870,6 @@ function createPagination() {
         );
 
 
-    // ==================================================
-    // PREVIOUS
-    // ==================================================
-
     if (prevBtn) {
 
         prevBtn.onclick =
@@ -929,10 +892,6 @@ function createPagination() {
 
     }
 
-
-    // ==================================================
-    // NEXT
-    // ==================================================
 
     if (nextBtn) {
 
@@ -966,70 +925,70 @@ function createPagination() {
 // ================= FILTER EVENTS =======================
 // ======================================================
 
-if (monthFilter) {
+function setupFilterEvents() {
 
-    monthFilter.addEventListener(
-        "change",
-        () => {
+    if (monthFilter) {
 
-            currentPage =
-                1;
+        monthFilter.addEventListener(
+            "change",
+            () => {
 
-            showExpense();
+                currentPage = 1;
 
-        }
-    );
+                showExpense();
 
-}
+            }
+        );
 
-
-if (yearFilter) {
-
-    yearFilter.addEventListener(
-        "change",
-        () => {
-
-            currentPage =
-                1;
-
-            showExpense();
-
-        }
-    );
-
-}
+    }
 
 
-if (amountType) {
+    if (yearFilter) {
 
-    amountType.addEventListener(
-        "change",
-        () => {
+        yearFilter.addEventListener(
+            "change",
+            () => {
 
-            currentPage =
-                1;
+                currentPage = 1;
 
-            showExpense();
+                showExpense();
 
-        }
-    );
+            }
+        );
 
-}
+    }
 
 
-if (amountValue) {
+    if (amountType) {
 
-    amountValue.addEventListener(
-        "input",
-        () => {
+        amountType.addEventListener(
+            "change",
+            () => {
 
-            currentPage =
-                1;
+                currentPage = 1;
 
-            showExpense();
+                showExpense();
 
-        }
-    );
+            }
+        );
+
+    }
+
+
+    if (amountValue) {
+
+        amountValue.addEventListener(
+            "input",
+            () => {
+
+                currentPage = 1;
+
+                showExpense();
+
+            }
+        );
+
+    }
 
 }
 
@@ -1038,13 +997,18 @@ if (amountValue) {
 // ================= PDF DOWNLOAD ========================
 // ======================================================
 
-const pdfBtn =
-    document.getElementById(
-        "downloadPdf"
-    );
+function setupPDF() {
+
+    const pdfBtn =
+        document.getElementById(
+            "downloadPdf"
+        );
 
 
-if (pdfBtn) {
+    if (!pdfBtn) {
+        return;
+    }
+
 
     pdfBtn.onclick =
         function () {
@@ -1059,10 +1023,13 @@ if (pdfBtn) {
                 );
 
                 return;
+
             }
 
 
-            const { jsPDF } =
+            const {
+                jsPDF
+            } =
                 window.jspdf;
 
 
@@ -1098,15 +1065,18 @@ if (pdfBtn) {
                     12
                 );
 
+
                 pdf.text(
                     "No expenses found.",
                     20,
                     y
                 );
 
+
                 pdf.save(
                     "Expense_Report.pdf"
                 );
+
 
                 return;
 
@@ -1125,16 +1095,16 @@ if (pdfBtn) {
                     }
 
 
-                    const amount =
-                        formatExpenseAmount(
-                            item.amount
-                        );
-
-
                     const name =
                         String(
                             item.name ||
                             "Expense"
+                        );
+
+
+                    const amount =
+                        formatExpenseAmount(
+                            item.amount
                         );
 
 
@@ -1152,18 +1122,13 @@ if (pdfBtn) {
                         );
 
 
-                    const text =
-
-                        `${name} | ${amount} | ${category} | ${date}`;
-
-
                     pdf.setFontSize(
                         10
                     );
 
 
                     pdf.text(
-                        text,
+                        `${name} | ${amount} | ${category} | ${date}`,
                         20,
                         y
                     );
@@ -1189,13 +1154,18 @@ if (pdfBtn) {
 // ================= EXCEL DOWNLOAD ======================
 // ======================================================
 
-const excelBtn =
-    document.getElementById(
-        "downloadExcel"
-    );
+function setupExcel() {
+
+    const excelBtn =
+        document.getElementById(
+            "downloadExcel"
+        );
 
 
-if (excelBtn) {
+    if (!excelBtn) {
+        return;
+    }
+
 
     excelBtn.onclick =
         function () {
@@ -1287,19 +1257,23 @@ if (excelBtn) {
 // ================= VIEW REPORT =========================
 // ======================================================
 
-const reportBtn =
-    document.getElementById(
-        "viewReport"
-    );
+function setupViewReport() {
+
+    const reportBtn =
+        document.getElementById(
+            "viewReport"
+        );
 
 
-if (reportBtn) {
+    if (!reportBtn) {
+        return;
+    }
+
 
     reportBtn.onclick =
         function () {
 
-            currentPage =
-                1;
+            currentPage = 1;
 
             showExpense();
 
@@ -1309,7 +1283,7 @@ if (reportBtn) {
 
 
 // ======================================================
-// ================= DASHBOARD ============================
+// ================= DASHBOARD ===========================
 // ======================================================
 
 function goDashboard() {
@@ -1321,7 +1295,7 @@ function goDashboard() {
 
 
 // ======================================================
-// ================= LOAD SAVED THEME ====================
+// ================= THEME ===============================
 // ======================================================
 
 function loadSavedTheme() {
@@ -1339,8 +1313,7 @@ function loadSavedTheme() {
 
 
     if (
-        savedTheme ===
-        "light"
+        savedTheme === "light"
     ) {
 
         document.body.classList.add(
@@ -1359,12 +1332,12 @@ function loadSavedTheme() {
 
 
 // ======================================================
-// ================= INITIAL PAGE LOAD ===================
+// ================= INITIAL LOAD ========================
 // ======================================================
 
 document.addEventListener(
     "DOMContentLoaded",
-    async () => {
+    async function () {
 
         console.log(
             "======================================"
@@ -1383,7 +1356,7 @@ document.addEventListener(
 
         console.log(
             "API Base:",
-            API_BASE || "(same domain)"
+            API_BASE
         );
 
         console.log(
@@ -1391,7 +1364,22 @@ document.addEventListener(
         );
 
 
+        initializeElements();
+
+
         loadSavedTheme();
+
+
+        setupFilterEvents();
+
+
+        setupPDF();
+
+
+        setupExcel();
+
+
+        setupViewReport();
 
 
         const loaded =
@@ -1403,8 +1391,7 @@ document.addEventListener(
             loadYearList();
 
 
-            currentPage =
-                1;
+            currentPage = 1;
 
 
             showExpense();

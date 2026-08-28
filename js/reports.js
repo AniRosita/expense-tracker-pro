@@ -1,8 +1,12 @@
 // ======================================================
-// ================= REPORT INITIALIZATION ===============
+// ================= EXPENSE REPORT ======================
 // ======================================================
 
 "use strict";
+
+// ======================================================
+// ================= DATA ================================
+// ======================================================
 
 let allExpenses = [];
 let allIncome = [];
@@ -17,9 +21,9 @@ let incomeExpenseChart = null;
 // ================= API BASE URL ========================
 // ======================================================
 
-// Same Railway server as current website
-// Keep empty when frontend and backend are on same Railway domain.
-const API_BASE = "";
+// Railway Backend URL
+const API_BASE =
+    "https://expense-tracker-pro-production-b745.up.railway.app";
 
 
 // ======================================================
@@ -57,7 +61,7 @@ function checkReportLogin() {
 
 
 // ======================================================
-// ================= CHART THEME =========================
+// ================= CHART COLORS ========================
 // ======================================================
 
 function getChartTextColor() {
@@ -87,16 +91,11 @@ function reportCurrency(value) {
     const amount =
         Number(value) || 0;
 
-
-    if (
-        typeof formatCurrency ===
-        "function"
-    ) {
+    if (typeof formatCurrency === "function") {
 
         return formatCurrency(amount);
 
     }
-
 
     return (
         "₹" +
@@ -119,14 +118,28 @@ function reportCurrency(value) {
 function getDateString(value) {
 
     if (!value) {
-
         return "";
+    }
+
+    // MySQL date / datetime
+    if (value instanceof Date) {
+
+        if (isNaN(value.getTime())) {
+            return "";
+        }
+
+        return value.toISOString().substring(0, 10);
 
     }
 
+    const stringValue =
+        String(value).trim();
 
-    return String(value)
-        .substring(0, 10);
+    if (!stringValue) {
+        return "";
+    }
+
+    return stringValue.substring(0, 10);
 
 }
 
@@ -140,13 +153,30 @@ window.addEventListener(
     function () {
 
         console.log(
+            "======================================"
+        );
+
+        console.log(
             "Reports Page Loading..."
         );
 
+        console.log(
+            "Report API:",
+            API_BASE
+        );
+
+        console.log(
+            "User:",
+            localStorage.getItem("userEmail")
+        );
+
+        console.log(
+            "======================================"
+        );
+
+
         if (!checkReportLogin()) {
-
             return;
-
         }
 
         loadReportData();
@@ -164,7 +194,6 @@ async function loadReportData() {
     const email =
         localStorage.getItem("userEmail");
 
-
     if (!email) {
 
         checkReportLogin();
@@ -177,16 +206,7 @@ async function loadReportData() {
     try {
 
         console.log(
-            "======================================"
-        );
-
-        console.log(
             "Loading report data..."
-        );
-
-        console.log(
-            "User Email:",
-            email
         );
 
 
@@ -197,7 +217,9 @@ async function loadReportData() {
         const expenseUrl =
             API_BASE +
             "/expenses/" +
-            encodeURIComponent(email);
+            encodeURIComponent(
+                email.trim().toLowerCase()
+            );
 
 
         console.log(
@@ -231,7 +253,7 @@ async function loadReportData() {
                 await expenseRes.text();
 
             console.error(
-                "Expense API Response:",
+                "Expense API Error Response:",
                 errorText
             );
 
@@ -248,14 +270,28 @@ async function loadReportData() {
 
 
         console.log(
-            "Expense API Data:",
+            "FULL EXPENSE API DATA:",
             expenseData
         );
 
 
+        // ==================================================
+        // HANDLE EXPENSE RESPONSE
+        // ==================================================
+
         if (
+            Array.isArray(
+                expenseData
+            )
+        ) {
+
+            allExpenses =
+                expenseData;
+
+        }
+
+        else if (
             expenseData &&
-            expenseData.success &&
             Array.isArray(
                 expenseData.expenses
             )
@@ -264,7 +300,21 @@ async function loadReportData() {
             allExpenses =
                 expenseData.expenses;
 
-        } else {
+        }
+
+        else if (
+            expenseData &&
+            Array.isArray(
+                expenseData.data
+            )
+        ) {
+
+            allExpenses =
+                expenseData.data;
+
+        }
+
+        else {
 
             allExpenses = [];
 
@@ -272,7 +322,12 @@ async function loadReportData() {
 
 
         console.log(
-            "Expenses Loaded:",
+            "Expenses loaded:",
+            allExpenses
+        );
+
+        console.log(
+            "Expense Count:",
             allExpenses.length
         );
 
@@ -284,7 +339,9 @@ async function loadReportData() {
         const incomeUrl =
             API_BASE +
             "/income/" +
-            encodeURIComponent(email);
+            encodeURIComponent(
+                email.trim().toLowerCase()
+            );
 
 
         console.log(
@@ -318,7 +375,7 @@ async function loadReportData() {
                 await incomeRes.text();
 
             console.error(
-                "Income API Response:",
+                "Income API Error Response:",
                 errorText
             );
 
@@ -335,14 +392,28 @@ async function loadReportData() {
 
 
         console.log(
-            "Income API Data:",
+            "FULL INCOME API DATA:",
             incomeData
         );
 
 
+        // ==================================================
+        // HANDLE INCOME RESPONSE
+        // ==================================================
+
         if (
+            Array.isArray(
+                incomeData
+            )
+        ) {
+
+            allIncome =
+                incomeData;
+
+        }
+
+        else if (
             incomeData &&
-            incomeData.success &&
             Array.isArray(
                 incomeData.income
             )
@@ -351,7 +422,21 @@ async function loadReportData() {
             allIncome =
                 incomeData.income;
 
-        } else {
+        }
+
+        else if (
+            incomeData &&
+            Array.isArray(
+                incomeData.data
+            )
+        ) {
+
+            allIncome =
+                incomeData.data;
+
+        }
+
+        else {
 
             allIncome = [];
 
@@ -359,13 +444,18 @@ async function loadReportData() {
 
 
         console.log(
-            "Income Loaded:",
+            "Income loaded:",
+            allIncome
+        );
+
+        console.log(
+            "Income Count:",
             allIncome.length
         );
 
 
         // ==================================================
-        // ================= LOAD FILTERS ===================
+        // ================= FILTERS ========================
         // ==================================================
 
         loadAvailableYears();
@@ -384,11 +474,13 @@ async function loadReportData() {
             "Reports loaded successfully ✅"
         );
 
+
         console.log(
             "======================================"
         );
 
     }
+
 
     catch (error) {
 
@@ -407,12 +499,12 @@ async function loadReportData() {
 
 
         allExpenses = [];
+
         allIncome = [];
 
 
         if (
-            typeof Swal !==
-            "undefined"
+            typeof Swal !== "undefined"
         ) {
 
             Swal.fire({
@@ -422,15 +514,9 @@ async function loadReportData() {
                 title: "Report Error",
 
                 text:
-                    "Unable to load report. Please check the server connection."
+                    "Unable to load report data. Please check the server connection."
 
             });
-
-        } else {
-
-            alert(
-                "Unable to load report. Please check the server connection."
-            );
 
         }
 
@@ -452,33 +538,35 @@ function loadAvailableYears() {
 
 
     if (!reportYear) {
-
         return;
-
     }
+
+
+    reportYear
+        .querySelectorAll(".dynamic-year")
+        .forEach(
+            option => option.remove()
+        );
 
 
     const years =
         new Set();
 
 
-    // ==================================================
-    // ================= EXPENSE YEARS ==================
-    // ==================================================
+    // EXPENSE YEARS
 
     allExpenses.forEach(
-        function (expense) {
+        expense => {
 
             const date =
                 getDateString(
-                    expense.date
+                    expense.date ||
+                    expense.created_at
                 );
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -501,12 +589,10 @@ function loadAvailableYears() {
     );
 
 
-    // ==================================================
-    // ================= INCOME YEARS ===================
-    // ==================================================
+    // INCOME YEARS
 
     allIncome.forEach(
-        function (income) {
+        income => {
 
             const date =
                 getDateString(
@@ -516,9 +602,7 @@ function loadAvailableYears() {
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -541,28 +625,18 @@ function loadAvailableYears() {
     );
 
 
-    // ==================================================
-    // ================= UPDATE SELECT ==================
-    // ==================================================
-
     reportYear.innerHTML = "";
 
 
     const sortedYears =
         Array.from(years)
             .sort(
-                function (a, b) {
-
-                    return (
-                        Number(a) -
-                        Number(b)
-                    );
-
-                }
+                (a, b) =>
+                    Number(a) -
+                    Number(b)
             );
 
 
-    // If no data, show current year
     if (
         sortedYears.length === 0
     ) {
@@ -583,19 +657,15 @@ function loadAvailableYears() {
         option.value =
             currentYear;
 
-
         option.textContent =
             currentYear;
-
 
         reportYear.appendChild(
             option
         );
 
-
         reportYear.value =
             currentYear;
-
 
         return;
 
@@ -603,21 +673,22 @@ function loadAvailableYears() {
 
 
     sortedYears.forEach(
-        function (year) {
+        year => {
 
             const option =
                 document.createElement(
                     "option"
                 );
 
-
             option.value =
                 year;
-
 
             option.textContent =
                 year;
 
+            option.classList.add(
+                "dynamic-year"
+            );
 
             reportYear.appendChild(
                 option
@@ -646,7 +717,6 @@ function loadAvailableMonths() {
             "reportYear"
         );
 
-
     const reportMonth =
         document.getElementById(
             "reportMonth"
@@ -657,9 +727,7 @@ function loadAvailableMonths() {
         !reportYear ||
         !reportMonth
     ) {
-
         return;
-
     }
 
 
@@ -668,9 +736,7 @@ function loadAvailableMonths() {
 
 
     if (!selectedYear) {
-
         return;
-
     }
 
 
@@ -678,23 +744,20 @@ function loadAvailableMonths() {
         new Set();
 
 
-    // ==================================================
-    // ================= EXPENSE MONTHS ================
-    // ==================================================
+    // EXPENSE MONTHS
 
     allExpenses.forEach(
-        function (expense) {
+        expense => {
 
             const date =
                 getDateString(
-                    expense.date
+                    expense.date ||
+                    expense.created_at
                 );
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -724,12 +787,10 @@ function loadAvailableMonths() {
     );
 
 
-    // ==================================================
-    // ================= INCOME MONTHS =================
-    // ==================================================
+    // INCOME MONTHS
 
     allIncome.forEach(
-        function (income) {
+        income => {
 
             const date =
                 getDateString(
@@ -739,9 +800,7 @@ function loadAvailableMonths() {
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -779,7 +838,6 @@ function loadAvailableMonths() {
             .sort();
 
 
-    // If no data, use current month
     if (
         sortedMonths.length === 0
     ) {
@@ -832,20 +890,7 @@ function loadAvailableMonths() {
 
 
     sortedMonths.forEach(
-        function (month) {
-
-            const monthName =
-                new Date(
-                    Number(selectedYear),
-                    Number(month) - 1,
-                    1
-                ).toLocaleString(
-                    "en-US",
-                    {
-                        month: "long"
-                    }
-                );
-
+        month => {
 
             const option =
                 document.createElement(
@@ -858,7 +903,16 @@ function loadAvailableMonths() {
 
 
             option.textContent =
-                monthName;
+                new Date(
+                    Number(selectedYear),
+                    Number(month) - 1,
+                    1
+                ).toLocaleString(
+                    "en-US",
+                    {
+                        month: "long"
+                    }
+                );
 
 
             reportMonth.appendChild(
@@ -923,7 +977,6 @@ function generateReport() {
             "reportYear"
         );
 
-
     const monthElement =
         document.getElementById(
             "reportMonth"
@@ -934,15 +987,12 @@ function generateReport() {
         !yearElement ||
         !monthElement
     ) {
-
         return;
-
     }
 
 
     const year =
         yearElement.value;
-
 
     const month =
         monthElement.value;
@@ -952,9 +1002,7 @@ function generateReport() {
         !year ||
         !month
     ) {
-
         return;
-
     }
 
 
@@ -962,28 +1010,29 @@ function generateReport() {
         `${year}-${month}`;
 
 
+    console.log(
+        "Generating report for:",
+        selectedMonth
+    );
+
+
     // ==================================================
-    // ================= EXPENSE FILTER =================
+    // EXPENSE FILTER
     // ==================================================
 
     const monthExpenses =
         allExpenses.filter(
-            function (expense) {
+            expense => {
 
                 const date =
                     getDateString(
-                        expense.date
+                        expense.date ||
+                        expense.created_at
                     );
 
 
-                if (!date) {
-
-                    return false;
-
-                }
-
-
                 return (
+                    date &&
                     date.substring(0, 7) ===
                     selectedMonth
                 );
@@ -993,12 +1042,12 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= INCOME FILTER ==================
+    // INCOME FILTER
     // ==================================================
 
     const monthIncome =
         allIncome.filter(
-            function (income) {
+            income => {
 
                 const date =
                     getDateString(
@@ -1007,14 +1056,8 @@ function generateReport() {
                     );
 
 
-                if (!date) {
-
-                    return false;
-
-                }
-
-
                 return (
+                    date &&
                     date.substring(0, 7) ===
                     selectedMonth
                 );
@@ -1023,13 +1066,24 @@ function generateReport() {
         );
 
 
+    console.log(
+        "Month Expenses:",
+        monthExpenses
+    );
+
+    console.log(
+        "Month Income:",
+        monthIncome
+    );
+
+
     // ==================================================
-    // ================= TOTAL EXPENSE ==================
+    // TOTAL EXPENSE
     // ==================================================
 
     const totalExpense =
         monthExpenses.reduce(
-            function (sum, item) {
+            (sum, item) => {
 
                 return (
                     sum +
@@ -1046,12 +1100,12 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= TOTAL INCOME ===================
+    // TOTAL INCOME
     // ==================================================
 
     const totalIncome =
         monthIncome.reduce(
-            function (sum, item) {
+            (sum, item) => {
 
                 return (
                     sum +
@@ -1068,7 +1122,7 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= BALANCE ========================
+    // BALANCE
     // ==================================================
 
     const balance =
@@ -1077,7 +1131,7 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= UPDATE CARDS ===================
+    // UPDATE CARDS
     // ==================================================
 
     const reportIncome =
@@ -1085,18 +1139,15 @@ function generateReport() {
             "reportIncome"
         );
 
-
     const reportExpense =
         document.getElementById(
             "reportExpense"
         );
 
-
     const reportBalance =
         document.getElementById(
             "reportBalance"
         );
-
 
     const totalSavings =
         document.getElementById(
@@ -1145,14 +1196,14 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= HIGHEST EXPENSE ================
+    // HIGHEST EXPENSE
     // ==================================================
 
     let highestExpense = 0;
 
 
     monthExpenses.forEach(
-        function (item) {
+        item => {
 
             const amount =
                 Number(
@@ -1180,7 +1231,9 @@ function generateReport() {
         );
 
 
-    if (highestExpenseElement) {
+    if (
+        highestExpenseElement
+    ) {
 
         highestExpenseElement.innerText =
             reportCurrency(
@@ -1191,14 +1244,14 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= TOP CATEGORY ===================
+    // TOP CATEGORY
     // ==================================================
 
     const categoryCount = {};
 
 
     monthExpenses.forEach(
-        function (expense) {
+        expense => {
 
             const category =
                 expense.category ||
@@ -1218,7 +1271,6 @@ function generateReport() {
     let topCategory =
         "-";
 
-
     let maxCount =
         0;
 
@@ -1226,7 +1278,7 @@ function generateReport() {
     Object.keys(
         categoryCount
     ).forEach(
-        function (category) {
+        category => {
 
             if (
                 categoryCount[category] >
@@ -1251,7 +1303,9 @@ function generateReport() {
         );
 
 
-    if (topCategoryElement) {
+    if (
+        topCategoryElement
+    ) {
 
         topCategoryElement.innerText =
             topCategory;
@@ -1260,7 +1314,7 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= TRANSACTIONS ===================
+    // TRANSACTIONS
     // ==================================================
 
     const transactions =
@@ -1278,7 +1332,7 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= FINANCIAL SCORE ================
+    // FINANCIAL SCORE
     // ==================================================
 
     let score = 100;
@@ -1330,7 +1384,7 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= SMART SUGGESTION ===============
+    // SMART SUGGESTION
     // ==================================================
 
     const suggestion =
@@ -1383,21 +1437,18 @@ function generateReport() {
 
 
     // ==================================================
-    // ================= LOAD CHARTS =====================
+    // CHARTS
     // ==================================================
 
     loadExpensePieChart(
         monthExpenses
     );
 
-
     loadMonthlyExpenseChart(
         totalExpense
     );
 
-
     loadSavingTrendChart();
-
 
     loadIncomeExpenseChart(
         totalIncome,
@@ -1421,24 +1472,11 @@ function loadExpensePieChart(
         );
 
 
-    if (!canvas) {
-
-        return;
-
-    }
-
-
     if (
-        typeof Chart ===
-        "undefined"
+        !canvas ||
+        typeof Chart === "undefined"
     ) {
-
-        console.error(
-            "Chart.js is not loaded."
-        );
-
         return;
-
     }
 
 
@@ -1455,7 +1493,7 @@ function loadExpensePieChart(
 
 
     monthExpenses.forEach(
-        function (expense) {
+        expense => {
 
             const category =
                 expense.category ||
@@ -1552,7 +1590,6 @@ function loadExpensePieChart(
                 }
             );
 
-
         return;
 
     }
@@ -1606,16 +1643,6 @@ function loadExpensePieChart(
 
                     cutout: "68%",
 
-                    animation: {
-
-                        animateRotate:
-                            true,
-
-                        duration:
-                            1200
-
-                    },
-
                     plugins: {
 
                         legend: {
@@ -1653,23 +1680,11 @@ function loadExpensePieChart(
                                     ) {
 
                                         const total =
-                                            context
-                                                .dataset
-                                                .data
-                                                .reduce(
-                                                    function (
-                                                        a,
-                                                        b
-                                                    ) {
-
-                                                        return (
-                                                            a +
-                                                            b
-                                                        );
-
-                                                    },
-                                                    0
-                                                );
+                                            context.dataset.data.reduce(
+                                                (a, b) =>
+                                                    a + b,
+                                                0
+                                            );
 
 
                                         const value =
@@ -1729,20 +1744,11 @@ function loadMonthlyExpenseChart(
         );
 
 
-    if (!canvas) {
-
-        return;
-
-    }
-
-
     if (
-        typeof Chart ===
-        "undefined"
+        !canvas ||
+        typeof Chart === "undefined"
     ) {
-
         return;
-
     }
 
 
@@ -1770,16 +1776,16 @@ function loadMonthlyExpenseChart(
         monthSelect.selectedIndex >= 0
     ) {
 
-        const selectedOption =
+        const option =
             monthSelect.options[
                 monthSelect.selectedIndex
             ];
 
 
-        if (selectedOption) {
+        if (option) {
 
             monthName =
-                selectedOption.text;
+                option.text;
 
         }
 
@@ -1787,15 +1793,11 @@ function loadMonthlyExpenseChart(
 
 
     const ctx =
-        canvas.getContext(
-            "2d"
-        );
+        canvas.getContext("2d");
 
 
     if (!ctx) {
-
         return;
-
     }
 
 
@@ -1867,16 +1869,6 @@ function loadMonthlyExpenseChart(
                     maintainAspectRatio:
                         false,
 
-                    animation: {
-
-                        duration:
-                            1500,
-
-                        easing:
-                            "easeOutQuart"
-
-                    },
-
                     plugins: {
 
                         legend: {
@@ -1915,10 +1907,7 @@ function loadMonthlyExpenseChart(
                         x: {
 
                             grid: {
-
-                                display:
-                                    false
-
+                                display: false
                             },
 
                             ticks: {
@@ -1941,13 +1930,11 @@ function loadMonthlyExpenseChart(
 
                         y: {
 
-                            beginAtZero:
-                                true,
+                            beginAtZero: true,
 
                             suggestedMax:
                                 totalExpense > 0
-                                    ? totalExpense *
-                                      1.25
+                                    ? totalExpense * 1.25
                                     : 1000,
 
                             grid: {
@@ -1963,15 +1950,10 @@ function loadMonthlyExpenseChart(
                                     getChartTextColor(),
 
                                 callback:
-                                    function (
-                                        value
-                                    ) {
-
-                                        return formatAxisValue(
+                                    value =>
+                                        formatAxisValue(
                                             value
-                                        );
-
-                                    }
+                                        )
 
                             }
 
@@ -1999,20 +1981,11 @@ function loadSavingTrendChart() {
         );
 
 
-    if (!canvas) {
-
-        return;
-
-    }
-
-
     if (
-        typeof Chart ===
-        "undefined"
+        !canvas ||
+        typeof Chart === "undefined"
     ) {
-
         return;
-
     }
 
 
@@ -2028,12 +2001,8 @@ function loadSavingTrendChart() {
     const monthData = {};
 
 
-    // ==================================================
-    // ================= INCOME =========================
-    // ==================================================
-
     allIncome.forEach(
-        function (income) {
+        income => {
 
             const date =
                 getDateString(
@@ -2043,9 +2012,7 @@ function loadSavingTrendChart() {
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -2056,16 +2023,11 @@ function loadSavingTrendChart() {
                 );
 
 
-            if (
-                !monthData[month]
-            ) {
+            if (!monthData[month]) {
 
                 monthData[month] = {
-
                     income: 0,
-
                     expense: 0
-
                 };
 
             }
@@ -2080,23 +2042,18 @@ function loadSavingTrendChart() {
     );
 
 
-    // ==================================================
-    // ================= EXPENSE ========================
-    // ==================================================
-
     allExpenses.forEach(
-        function (expense) {
+        expense => {
 
             const date =
                 getDateString(
-                    expense.date
+                    expense.date ||
+                    expense.created_at
                 );
 
 
             if (!date) {
-
                 return;
-
             }
 
 
@@ -2107,16 +2064,11 @@ function loadSavingTrendChart() {
                 );
 
 
-            if (
-                !monthData[month]
-            ) {
+            if (!monthData[month]) {
 
                 monthData[month] = {
-
                     income: 0,
-
                     expense: 0
-
                 };
 
             }
@@ -2131,10 +2083,6 @@ function loadSavingTrendChart() {
     );
 
 
-    // ==================================================
-    // ================= LAST 3 MONTHS ==================
-    // ==================================================
-
     const months =
         Object.keys(
             monthData
@@ -2144,12 +2092,11 @@ function loadSavingTrendChart() {
 
 
     const labels = [];
-
     const values = [];
 
 
     months.forEach(
-        function (month) {
+        month => {
 
             const saving =
                 monthData[month].income -
@@ -2160,19 +2107,10 @@ function loadSavingTrendChart() {
                 month.split("-");
 
 
-            const year =
-                Number(parts[0]);
-
-
-            const monthNumber =
-                Number(parts[1]);
-
-
             labels.push(
-
                 new Date(
-                    year,
-                    monthNumber - 1,
+                    Number(parts[0]),
+                    Number(parts[1]) - 1,
                     1
                 ).toLocaleString(
                     "en-US",
@@ -2180,7 +2118,6 @@ function loadSavingTrendChart() {
                         month: "short"
                     }
                 )
-
             );
 
 
@@ -2212,9 +2149,7 @@ function loadSavingTrendChart() {
 
 
     if (!ctx) {
-
         return;
-
     }
 
 
@@ -2237,12 +2172,6 @@ function loadSavingTrendChart() {
         1,
         "rgba(34,197,94,0)"
     );
-
-
-    const maxValue =
-        Math.max(
-            ...values
-        );
 
 
     savingChart =
@@ -2271,14 +2200,11 @@ function loadSavingTrendChart() {
 
                         fill: true,
 
-                        tension:
-                            0.4,
+                        tension: 0.4,
 
-                        pointRadius:
-                            7,
+                        pointRadius: 7,
 
-                        pointHoverRadius:
-                            10,
+                        pointHoverRadius: 10,
 
                         pointBackgroundColor:
                             "#22C55E",
@@ -2286,8 +2212,7 @@ function loadSavingTrendChart() {
                         pointBorderColor:
                             "#ffffff",
 
-                        pointBorderWidth:
-                            3
+                        pointBorderWidth: 3
 
                     }]
 
@@ -2300,20 +2225,10 @@ function loadSavingTrendChart() {
                     maintainAspectRatio:
                         false,
 
-                    animation: {
-
-                        duration:
-                            1500
-
-                    },
-
                     plugins: {
 
                         legend: {
-
-                            display:
-                                false
-
+                            display: false
                         },
 
                         tooltip: {
@@ -2321,18 +2236,11 @@ function loadSavingTrendChart() {
                             callbacks: {
 
                                 label:
-                                    function (
-                                        context
-                                    ) {
-
-                                        return (
-                                            " Saving : " +
-                                            reportCurrency(
-                                                context.raw
-                                            )
-                                        );
-
-                                    }
+                                    context =>
+                                        " Saving : " +
+                                        reportCurrency(
+                                            context.raw
+                                        )
 
                             }
 
@@ -2345,10 +2253,7 @@ function loadSavingTrendChart() {
                         x: {
 
                             grid: {
-
-                                display:
-                                    false
-
+                                display: false
                             },
 
                             ticks: {
@@ -2357,10 +2262,7 @@ function loadSavingTrendChart() {
                                     getChartTextColor(),
 
                                 font: {
-
-                                    weight:
-                                        "bold"
-
+                                    weight: "bold"
                                 }
 
                             }
@@ -2369,18 +2271,7 @@ function loadSavingTrendChart() {
 
                         y: {
 
-                            beginAtZero:
-                                true,
-
-                            suggestedMax:
-                                maxValue > 0
-                                    ? Math.ceil(
-                                        maxValue /
-                                        1000
-                                    ) *
-                                      1000 +
-                                      2000
-                                    : 5000,
+                            beginAtZero: true,
 
                             grid: {
 
@@ -2395,15 +2286,10 @@ function loadSavingTrendChart() {
                                     getChartTextColor(),
 
                                 callback:
-                                    function (
-                                        value
-                                    ) {
-
-                                        return formatAxisValue(
+                                    value =>
+                                        formatAxisValue(
                                             value
-                                        );
-
-                                    }
+                                        )
 
                             }
 
@@ -2434,20 +2320,11 @@ function loadIncomeExpenseChart(
         );
 
 
-    if (!canvas) {
-
-        return;
-
-    }
-
-
     if (
-        typeof Chart ===
-        "undefined"
+        !canvas ||
+        typeof Chart === "undefined"
     ) {
-
         return;
-
     }
 
 
@@ -2469,9 +2346,7 @@ function loadIncomeExpenseChart(
 
 
     if (!ctx) {
-
         return;
-
     }
 
 
@@ -2500,11 +2375,8 @@ function loadIncomeExpenseChart(
                 data: {
 
                     labels: [
-
                         "Income",
-
                         "Expense"
-
                     ],
 
                     datasets: [{
@@ -2522,14 +2394,11 @@ function loadIncomeExpenseChart(
 
                         ],
 
-                        borderRadius:
-                            18,
+                        borderRadius: 18,
 
-                        borderSkipped:
-                            false,
+                        borderSkipped: false,
 
-                        barThickness:
-                            38
+                        barThickness: 38
 
                     }]
 
@@ -2537,32 +2406,16 @@ function loadIncomeExpenseChart(
 
                 options: {
 
-                    indexAxis:
-                        "y",
+                    indexAxis: "y",
 
-                    responsive:
-                        true,
+                    responsive: true,
 
-                    maintainAspectRatio:
-                        false,
-
-                    animation: {
-
-                        duration:
-                            1400,
-
-                        easing:
-                            "easeOutQuart"
-
-                    },
+                    maintainAspectRatio: false,
 
                     plugins: {
 
                         legend: {
-
-                            display:
-                                false
-
+                            display: false
                         },
 
                         tooltip: {
@@ -2570,18 +2423,11 @@ function loadIncomeExpenseChart(
                             callbacks: {
 
                                 label:
-                                    function (
-                                        context
-                                    ) {
-
-                                        return (
-                                            " " +
-                                            reportCurrency(
-                                                context.raw
-                                            )
-                                        );
-
-                                    }
+                                    context =>
+                                        " " +
+                                        reportCurrency(
+                                            context.raw
+                                        )
 
                             }
 
@@ -2593,13 +2439,11 @@ function loadIncomeExpenseChart(
 
                         x: {
 
-                            beginAtZero:
-                                true,
+                            beginAtZero: true,
 
                             suggestedMax:
                                 maxValue > 0
-                                    ? maxValue *
-                                      1.25
+                                    ? maxValue * 1.25
                                     : 1000,
 
                             grid: {
@@ -2615,15 +2459,10 @@ function loadIncomeExpenseChart(
                                     getChartTextColor(),
 
                                 callback:
-                                    function (
-                                        value
-                                    ) {
-
-                                        return formatAxisValue(
+                                    value =>
+                                        formatAxisValue(
                                             value
-                                        );
-
-                                    }
+                                        )
 
                             }
 
@@ -2632,10 +2471,7 @@ function loadIncomeExpenseChart(
                         y: {
 
                             grid: {
-
-                                display:
-                                    false
-
+                                display: false
                             },
 
                             ticks: {
@@ -2677,15 +2513,13 @@ function formatAxisValue(value) {
 
 
     if (
-        number >=
-        10000000
+        number >= 10000000
     ) {
 
         return (
             "₹" +
             (
-                number /
-                10000000
+                number / 10000000
             ).toFixed(1) +
             "Cr"
         );
@@ -2694,15 +2528,13 @@ function formatAxisValue(value) {
 
 
     if (
-        number >=
-        100000
+        number >= 100000
     ) {
 
         return (
             "₹" +
             (
-                number /
-                100000
+                number / 100000
             ).toFixed(1) +
             "L"
         );
@@ -2711,15 +2543,13 @@ function formatAxisValue(value) {
 
 
     if (
-        number >=
-        1000
+        number >= 1000
     ) {
 
         return (
             "₹" +
             (
-                number /
-                1000
+                number / 1000
             ).toFixed(1) +
             "K"
         );
