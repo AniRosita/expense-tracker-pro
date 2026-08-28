@@ -184,7 +184,6 @@ const passwordRegex =
 // ======================================================
 
 async function createRequiredTables() {
-
     const usersSQL = `
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -263,12 +262,8 @@ async function createRequiredTables() {
 
 let databaseReady = false;
 
-let databaseRetryTimer = null;
-
 async function initializeDatabase() {
-
     try {
-
         const [result] =
             await db.promise().query(
                 "SELECT DATABASE() AS database_name"
@@ -291,7 +286,6 @@ async function initializeDatabase() {
         console.log("======================================");
 
     } catch (error) {
-
         databaseReady = false;
 
         console.error(
@@ -299,12 +293,10 @@ async function initializeDatabase() {
             error.message
         );
 
-        if (!databaseRetryTimer) {
-            databaseRetryTimer = setTimeout(() => {
-                databaseRetryTimer = null;
-                initializeDatabase();
-            }, 5000);
-        }
+        setTimeout(
+            initializeDatabase,
+            5000
+        );
     }
 }
 
@@ -313,9 +305,7 @@ async function initializeDatabase() {
 // ======================================================
 
 function checkDatabase(req, res, next) {
-
     if (!databaseReady) {
-
         return res.status(503).json({
             success: false,
             message:
@@ -331,7 +321,6 @@ function checkDatabase(req, res, next) {
 // ======================================================
 
 app.get("/", (req, res) => {
-
     res.sendFile(
         path.join(__dirname, "index.html")
     );
@@ -342,9 +331,7 @@ app.get("/", (req, res) => {
 // ======================================================
 
 app.get("/api/status", async (req, res) => {
-
     try {
-
         const [result] =
             await db.promise().query(
                 "SELECT DATABASE() AS database_name"
@@ -362,7 +349,6 @@ app.get("/api/status", async (req, res) => {
         });
 
     } catch (error) {
-
         res.status(500).json({
             success: false,
             server: "running",
@@ -378,7 +364,6 @@ app.get("/api/status", async (req, res) => {
 // ======================================================
 
 app.get("/api/cors-test", (req, res) => {
-
     res.json({
         success: true,
         message: "CORS is working",
@@ -392,9 +377,7 @@ app.get("/api/cors-test", (req, res) => {
 // ======================================================
 
 app.get("/api/test-db", async (req, res) => {
-
     try {
-
         const [result] =
             await db.promise().query(
                 "SELECT DATABASE() AS database_name"
@@ -407,7 +390,6 @@ app.get("/api/test-db", async (req, res) => {
         });
 
     } catch (error) {
-
         res.status(500).json({
             success: false,
             error: error.message
@@ -420,9 +402,7 @@ app.get("/api/test-db", async (req, res) => {
 // ======================================================
 
 async function registerUser(req, res) {
-
     try {
-
         const name =
             String(req.body.name || "").trim();
 
@@ -433,7 +413,6 @@ async function registerUser(req, res) {
             String(req.body.password || "").trim();
 
         if (!name || !email || !password) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -442,7 +421,6 @@ async function registerUser(req, res) {
         }
 
         if (!gmailRegex.test(email)) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -451,7 +429,6 @@ async function registerUser(req, res) {
         }
 
         if (!passwordRegex.test(password)) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -487,14 +464,12 @@ async function registerUser(req, res) {
         });
 
     } catch (error) {
-
         console.error(
             "REGISTER DATABASE ERROR:",
             error.message
         );
 
         if (error.code === "ER_DUP_ENTRY") {
-
             return res.status(409).json({
                 success: false,
                 message:
@@ -527,9 +502,7 @@ app.post(
 // ======================================================
 
 async function loginUser(req, res) {
-
     try {
-
         const email =
             normalizeEmail(req.body.email);
 
@@ -542,7 +515,6 @@ async function loginUser(req, res) {
         console.log("======================================");
 
         if (!email || !password) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -562,7 +534,6 @@ async function loginUser(req, res) {
             );
 
         if (!results.length) {
-
             return res.status(401).json({
                 success: false,
                 message:
@@ -576,7 +547,6 @@ async function loginUser(req, res) {
             String(user.password) !==
             String(password)
         ) {
-
             return res.status(401).json({
                 success: false,
                 message:
@@ -602,7 +572,6 @@ async function loginUser(req, res) {
         });
 
     } catch (error) {
-
         console.error(
             "LOGIN DATABASE ERROR:",
             error.message
@@ -636,9 +605,7 @@ app.get(
     "/api/user/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -658,7 +625,6 @@ app.get(
                 );
 
             if (!results.length) {
-
                 return res.status(404).json({
                     success: false,
                     message:
@@ -672,7 +638,6 @@ app.get(
             });
 
         } catch (error) {
-
             res.status(500).json({
                 success: false,
                 message: "Database error",
@@ -690,9 +655,7 @@ app.get(
     "/expenses/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -728,7 +691,6 @@ app.get(
             });
 
         } catch (error) {
-
             console.error(
                 "GET EXPENSE ERROR:",
                 error.message
@@ -753,9 +715,7 @@ app.post(
     "/expenses",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     req.body.email
@@ -786,7 +746,6 @@ app.post(
                 !category ||
                 !date
             ) {
-
                 return res.status(400).json({
                     success: false,
                     message:
@@ -825,7 +784,6 @@ app.post(
             });
 
         } catch (error) {
-
             console.error(
                 "ADD EXPENSE ERROR:",
                 error.message
@@ -850,9 +808,7 @@ app.put(
     "/expenses/:id",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const id =
                 Number(req.params.id);
 
@@ -881,7 +837,6 @@ app.put(
                 !category ||
                 !date
             ) {
-
                 return res.status(400).json({
                     success: false,
                     message:
@@ -918,7 +873,6 @@ app.put(
             });
 
         } catch (error) {
-
             console.error(
                 "UPDATE EXPENSE ERROR:",
                 error.message
@@ -943,9 +897,7 @@ app.delete(
     "/expenses/:id",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const id =
                 Number(req.params.id);
 
@@ -961,7 +913,6 @@ app.delete(
                 );
 
             if (!rows.length) {
-
                 return res.status(404).json({
                     success: false,
                     message:
@@ -1011,7 +962,6 @@ app.delete(
             });
 
         } catch (error) {
-
             console.error(
                 "DELETE EXPENSE ERROR:",
                 error.message
@@ -1036,9 +986,7 @@ app.get(
     "/income/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -1067,7 +1015,6 @@ app.get(
             });
 
         } catch (error) {
-
             console.error(
                 "GET INCOME ERROR:",
                 error.message
@@ -1092,9 +1039,7 @@ app.post(
     "/income",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     req.body.email
@@ -1113,7 +1058,6 @@ app.post(
                 !Number.isFinite(amount) ||
                 !date
             ) {
-
                 return res.status(400).json({
                     success: false,
                     message:
@@ -1150,7 +1094,6 @@ app.post(
             });
 
         } catch (error) {
-
             console.error(
                 "ADD INCOME ERROR:",
                 error.message
@@ -1175,9 +1118,7 @@ app.put(
     "/income/:id",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const id =
                 Number(req.params.id);
 
@@ -1194,7 +1135,6 @@ app.put(
                 !Number.isFinite(amount) ||
                 !date
             ) {
-
                 return res.status(400).json({
                     success: false,
                     message:
@@ -1227,7 +1167,6 @@ app.put(
             });
 
         } catch (error) {
-
             console.error(
                 "UPDATE INCOME ERROR:",
                 error.message
@@ -1252,9 +1191,7 @@ app.delete(
     "/income/:id",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const id =
                 Number(req.params.id);
 
@@ -1270,7 +1207,6 @@ app.delete(
                 );
 
             if (!rows.length) {
-
                 return res.status(404).json({
                     success: false,
                     message:
@@ -1320,7 +1256,6 @@ app.delete(
             });
 
         } catch (error) {
-
             console.error(
                 "DELETE INCOME ERROR:",
                 error.message
@@ -1345,9 +1280,7 @@ app.get(
     "/trash/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -1381,7 +1314,6 @@ app.get(
             });
 
         } catch (error) {
-
             res.status(500).json({
                 success: false,
                 message:
@@ -1401,9 +1333,7 @@ app.post(
     "/trash/restore/:id",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const id =
                 Number(req.params.id);
 
@@ -1419,7 +1349,6 @@ app.post(
                 );
 
             if (!rows.length) {
-
                 return res.status(404).json({
                     success: false,
                     message:
@@ -1430,7 +1359,6 @@ app.post(
             const item = rows[0];
 
             if (item.type === "expense") {
-
                 const [result] =
                     await db.promise().query(
                         `
@@ -1462,7 +1390,6 @@ app.post(
             }
 
             if (item.type === "income") {
-
                 const [result] =
                     await db.promise().query(
                         `
@@ -1498,7 +1425,6 @@ app.post(
             });
 
         } catch (error) {
-
             console.error(
                 "RESTORE ERROR:",
                 error.message
@@ -1523,9 +1449,7 @@ app.delete(
     "/trash/cleanup",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const [result] =
                 await db.promise().query(
                     `
@@ -1544,7 +1468,6 @@ app.delete(
             });
 
         } catch (error) {
-
             res.status(500).json({
                 success: false,
                 message:
@@ -1564,9 +1487,7 @@ app.get(
     "/api/data/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -1613,7 +1534,6 @@ app.get(
             });
 
         } catch (error) {
-
             res.status(500).json({
                 success: false,
                 message:
@@ -1634,16 +1554,13 @@ async function sendOTPEmail(
     userName,
     otp
 ) {
-
     if (!BREVO_API_KEY) {
-
         throw new Error(
             "BREVO_API_KEY is missing in Railway Variables"
         );
     }
 
     if (!BREVO_FROM_EMAIL) {
-
         throw new Error(
             "BREVO_FROM_EMAIL is missing in Railway Variables"
         );
@@ -1765,7 +1682,6 @@ Expense Tracker Pro
         await response.json();
 
     if (!response.ok) {
-
         console.error(
             "Brevo API Error:",
             data
@@ -1791,9 +1707,7 @@ Expense Tracker Pro
 // ======================================================
 
 async function forgotPassword(req, res) {
-
     try {
-
         const email =
             normalizeEmail(
                 req.body.email
@@ -1805,7 +1719,6 @@ async function forgotPassword(req, res) {
         );
 
         if (!email) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -1814,7 +1727,6 @@ async function forgotPassword(req, res) {
         }
 
         if (!gmailRegex.test(email)) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -1834,7 +1746,6 @@ async function forgotPassword(req, res) {
             );
 
         if (!users.length) {
-
             return res.status(404).json({
                 success: false,
                 message:
@@ -1885,7 +1796,6 @@ async function forgotPassword(req, res) {
         );
 
         try {
-
             console.log(
                 "Sending OTP through Brevo..."
             );
@@ -1908,7 +1818,6 @@ async function forgotPassword(req, res) {
             });
 
         } catch (emailError) {
-
             console.error(
                 "EMAIL ERROR:",
                 emailError.message
@@ -1932,7 +1841,6 @@ async function forgotPassword(req, res) {
         }
 
     } catch (error) {
-
         console.error(
             "FORGOT PASSWORD ERROR:",
             error.message
@@ -1965,9 +1873,7 @@ app.post(
 // ======================================================
 
 async function verifyResetOTP(req, res) {
-
     try {
-
         const email =
             normalizeEmail(
                 req.body.email
@@ -1979,7 +1885,6 @@ async function verifyResetOTP(req, res) {
             ).trim();
 
         if (!email || !otp) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2004,7 +1909,6 @@ async function verifyResetOTP(req, res) {
             );
 
         if (!results.length) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2021,7 +1925,6 @@ async function verifyResetOTP(req, res) {
             ).getTime();
 
         if (Date.now() > expiresAt) {
-
             await db.promise().query(
                 `
                 DELETE FROM password_resets
@@ -2041,7 +1944,6 @@ async function verifyResetOTP(req, res) {
             String(resetData.otp) !==
             String(otp)
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2061,7 +1963,6 @@ async function verifyResetOTP(req, res) {
         });
 
     } catch (error) {
-
         console.error(
             "VERIFY OTP ERROR:",
             error.message
@@ -2094,9 +1995,7 @@ app.post(
 // ======================================================
 
 async function resetPassword(req, res) {
-
     try {
-
         const email =
             normalizeEmail(
                 req.body.email
@@ -2117,7 +2016,6 @@ async function resetPassword(req, res) {
             !otp ||
             !newPassword
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2126,7 +2024,6 @@ async function resetPassword(req, res) {
         }
 
         if (!gmailRegex.test(email)) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2139,7 +2036,6 @@ async function resetPassword(req, res) {
                 newPassword
             )
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2164,7 +2060,6 @@ async function resetPassword(req, res) {
             );
 
         if (!results.length) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2181,7 +2076,6 @@ async function resetPassword(req, res) {
                 resetData.expires_at
             ).getTime()
         ) {
-
             await db.promise().query(
                 `
                 DELETE FROM password_resets
@@ -2201,7 +2095,6 @@ async function resetPassword(req, res) {
             String(resetData.otp) !==
             String(otp)
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -2226,7 +2119,6 @@ async function resetPassword(req, res) {
         if (
             result.affectedRows === 0
         ) {
-
             return res.status(404).json({
                 success: false,
                 message:
@@ -2254,7 +2146,6 @@ async function resetPassword(req, res) {
         });
 
     } catch (error) {
-
         console.error(
             "RESET PASSWORD ERROR:",
             error.message
@@ -2290,9 +2181,7 @@ app.get(
     "/api/debug/user/:email",
     checkDatabase,
     async (req, res) => {
-
         try {
-
             const email =
                 normalizeEmail(
                     decodeURIComponent(
@@ -2347,7 +2236,6 @@ app.get(
             });
 
         } catch (error) {
-
             res.status(500).json({
                 success: false,
                 error:
@@ -2362,7 +2250,6 @@ app.get(
 // ======================================================
 
 app.use((req, res) => {
-
     console.log(
         "404:",
         req.method,
@@ -2384,7 +2271,6 @@ app.use((req, res) => {
 
 app.use(
     (err, req, res, next) => {
-
         console.error(
             "SERVER ERROR:",
             err.message
@@ -2408,7 +2294,6 @@ app.listen(
     PORT,
     "0.0.0.0",
     async () => {
-
         console.log(
             "======================================"
         );
