@@ -23,7 +23,8 @@ const PORT = Number(process.env.PORT) || 5000;
 
 const allowedOrigins = [
     "https://expense-tracker-pro-production-98cf.up.railway.app",
-    "https://expense-tracker-pro-production-b745.up.railway.app"
+    "https://expense-tracker-pro-production-b745.up.railway.app",
+    "https://expense-tracker-pro-production-99eb.up.railway.app"
 ];
 
 app.use((req, res, next) => {
@@ -31,8 +32,6 @@ app.use((req, res, next) => {
 
     if (origin && allowedOrigins.includes(origin)) {
         res.setHeader("Access-Control-Allow-Origin", origin);
-    } else if (!origin) {
-        res.setHeader("Access-Control-Allow-Origin", "*");
     }
 
     res.setHeader("Vary", "Origin");
@@ -142,12 +141,12 @@ console.log("BREVO EMAIL CONFIG");
 
 console.log(
     "Brevo API Key:",
-    BREVO_API_KEY ? "configured ✅" : "MISSING ❌"
+    BREVO_API_KEY ? "configured OK" : "MISSING"
 );
 
 console.log(
     "Brevo From Email:",
-    BREVO_FROM_EMAIL || "MISSING ❌"
+    BREVO_FROM_EMAIL || "MISSING"
 );
 
 console.log(
@@ -176,6 +175,7 @@ function generateOTP() {
 // ======================================================
 // VALIDATION
 // ======================================================
+
 const gmailRegex =
     /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
@@ -245,19 +245,19 @@ async function createRequiredTables() {
     `;
 
     await db.promise().query(usersSQL);
-    console.log("✅ users table ready");
+    console.log("users table ready");
 
     await db.promise().query(expensesSQL);
-    console.log("✅ expenses table ready");
+    console.log("expenses table ready");
 
     await db.promise().query(incomeSQL);
-    console.log("✅ income table ready");
+    console.log("income table ready");
 
     await db.promise().query(historySQL);
-    console.log("✅ deleted_history table ready");
+    console.log("deleted_history table ready");
 
     await db.promise().query(passwordResetSQL);
-    console.log("✅ password_resets table ready");
+    console.log("password_resets table ready");
 }
 
 // ======================================================
@@ -276,7 +276,7 @@ async function initializeDatabase() {
             );
 
         console.log("======================================");
-        console.log("MySQL Connected ✅");
+        console.log("MySQL Connected");
         console.log(
             "Database:",
             result[0]?.database_name
@@ -288,17 +288,17 @@ async function initializeDatabase() {
         databaseReady = true;
 
         console.log("======================================");
-        console.log("DATABASE READY ✅");
+        console.log("DATABASE READY");
         console.log("======================================");
 
     } catch (error) {
 
+        databaseReady = false;
+
         console.error(
-            "❌ MySQL Connection Failed:",
+            "MySQL Connection Failed:",
             error.message
         );
-
-        databaseReady = false;
     }
 }
 
@@ -352,7 +352,7 @@ app.get("/api/status", async (req, res) => {
                 result[0]?.database_name,
             databaseReady,
             message:
-                "Expense Tracker API is working ✅"
+                "Expense Tracker API is working"
         });
 
     } catch (error) {
@@ -361,6 +361,7 @@ app.get("/api/status", async (req, res) => {
             success: false,
             server: "running",
             mysql: "disconnected",
+            databaseReady: false,
             error: error.message
         });
     }
@@ -374,7 +375,7 @@ app.get("/api/cors-test", (req, res) => {
 
     res.json({
         success: true,
-        message: "CORS is working ✅",
+        message: "CORS is working",
         origin:
             req.headers.origin || null
     });
@@ -466,7 +467,7 @@ async function registerUser(req, res) {
             );
 
         console.log(
-            "✅ USER REGISTERED:",
+            "USER REGISTERED:",
             email
         );
 
@@ -481,7 +482,7 @@ async function registerUser(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ REGISTER DATABASE ERROR:",
+            "REGISTER DATABASE ERROR:",
             error.message
         );
 
@@ -572,7 +573,7 @@ async function loginUser(req, res) {
         }
 
         console.log(
-            "✅ LOGIN:",
+            "LOGIN:",
             email
         );
 
@@ -580,7 +581,6 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
-
             user: {
                 id: user.id,
                 name: user.name,
@@ -591,7 +591,7 @@ async function loginUser(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ LOGIN DATABASE ERROR:",
+            "LOGIN DATABASE ERROR:",
             error.message
         );
 
@@ -688,7 +688,7 @@ app.get(
                 );
 
             console.log(
-                "📥 GET EXPENSES:",
+                "GET EXPENSES:",
                 email
             );
 
@@ -709,11 +709,6 @@ app.get(
                     [email]
                 );
 
-            console.log(
-                "📊 EXPENSE ROWS:",
-                results.length
-            );
-
             res.json({
                 success: true,
                 expenses: results
@@ -722,7 +717,7 @@ app.get(
         } catch (error) {
 
             console.error(
-                "❌ GET EXPENSE ERROR:",
+                "GET EXPENSE ERROR:",
                 error.message
             );
 
@@ -770,17 +765,6 @@ app.post(
                     req.body.date || ""
                 ).trim();
 
-            console.log(
-                "📤 ADD EXPENSE:",
-                {
-                    email,
-                    name,
-                    amount,
-                    category,
-                    date
-                }
-            );
-
             if (
                 !email ||
                 !name ||
@@ -813,9 +797,8 @@ app.post(
                 );
 
             console.log(
-                "✅ EXPENSE SAVED:",
-                result.insertId,
-                email
+                "EXPENSE SAVED:",
+                result.insertId
             );
 
             res.json({
@@ -829,7 +812,7 @@ app.post(
         } catch (error) {
 
             console.error(
-                "❌ ADD EXPENSE ERROR:",
+                "ADD EXPENSE ERROR:",
                 error.message
             );
 
@@ -1004,7 +987,7 @@ app.delete(
         } catch (error) {
 
             console.error(
-                "❌ DELETE EXPENSE ERROR:",
+                "DELETE EXPENSE ERROR:",
                 error.message
             );
 
@@ -1036,11 +1019,6 @@ app.get(
                     )
                 );
 
-            console.log(
-                "📥 GET INCOME:",
-                email
-            );
-
             const [results] =
                 await db.promise().query(
                     `
@@ -1056,11 +1034,6 @@ app.get(
                     [email]
                 );
 
-            console.log(
-                "💰 INCOME ROWS:",
-                results.length
-            );
-
             res.json({
                 success: true,
                 income: results
@@ -1069,7 +1042,7 @@ app.get(
         } catch (error) {
 
             console.error(
-                "❌ GET INCOME ERROR:",
+                "GET INCOME ERROR:",
                 error.message
             );
 
@@ -1107,15 +1080,6 @@ app.post(
                     req.body.date || ""
                 ).trim();
 
-            console.log(
-                "📤 ADD INCOME:",
-                {
-                    email,
-                    amount,
-                    date
-                }
-            );
-
             if (
                 !email ||
                 !Number.isFinite(amount) ||
@@ -1143,12 +1107,6 @@ app.post(
                     ]
                 );
 
-            console.log(
-                "✅ INCOME SAVED:",
-                result.insertId,
-                email
-            );
-
             res.json({
                 success: true,
                 message:
@@ -1160,7 +1118,7 @@ app.post(
         } catch (error) {
 
             console.error(
-                "❌ ADD INCOME ERROR:",
+                "ADD INCOME ERROR:",
                 error.message
             );
 
@@ -1321,7 +1279,7 @@ app.delete(
         } catch (error) {
 
             console.error(
-                "❌ DELETE INCOME ERROR:",
+                "DELETE INCOME ERROR:",
                 error.message
             );
 
@@ -1497,7 +1455,7 @@ app.post(
         } catch (error) {
 
             console.error(
-                "❌ RESTORE ERROR:",
+                "RESTORE ERROR:",
                 error.message
             );
 
@@ -1688,9 +1646,7 @@ padding:20px;
 border-radius:12px;
 margin:25px 0;
 ">
-
 ${otp}
-
 </div>
 
 <p>
@@ -1709,9 +1665,7 @@ please ignore this email.
 color:#777;
 font-size:13px;
 ">
-
 Expense Tracker Pro
-
 </p>
 
 </div>
@@ -1732,7 +1686,6 @@ Expense Tracker Pro
             },
 
             body: JSON.stringify({
-
                 sender: {
                     name: BREVO_FROM_NAME,
                     email: BREVO_FROM_EMAIL
@@ -1762,7 +1715,7 @@ Expense Tracker Pro
     if (!response.ok) {
 
         console.error(
-            "❌ Brevo API Error:",
+            "Brevo API Error:",
             data
         );
 
@@ -1774,7 +1727,7 @@ Expense Tracker Pro
     }
 
     console.log(
-        "✅ Brevo Email Sent:",
+        "Brevo Email Sent:",
         data.messageId
     );
 
@@ -1795,7 +1748,7 @@ async function forgotPassword(req, res) {
             );
 
         console.log(
-            "📧 FORGOT PASSWORD REQUEST:",
+            "FORGOT PASSWORD REQUEST:",
             email
         );
 
@@ -1848,8 +1801,7 @@ async function forgotPassword(req, res) {
                 10 * 60 * 1000
             );
 
-        // Remove previous OTP
-
+        // Remove old OTP
         await db.promise().query(
             `
             DELETE FROM password_resets
@@ -1859,7 +1811,6 @@ async function forgotPassword(req, res) {
         );
 
         // Save new OTP
-
         const [result] =
             await db.promise().query(
                 `
@@ -1875,7 +1826,7 @@ async function forgotPassword(req, res) {
             );
 
         console.log(
-            "✅ OTP SAVED:",
+            "OTP SAVED:",
             result.insertId,
             "FOR:",
             email
@@ -1884,7 +1835,7 @@ async function forgotPassword(req, res) {
         try {
 
             console.log(
-                "📤 Sending OTP through Brevo..."
+                "Sending OTP through Brevo..."
             );
 
             await sendOTPEmail(
@@ -1894,7 +1845,7 @@ async function forgotPassword(req, res) {
             );
 
             console.log(
-                "✅ OTP SENT SUCCESSFULLY:",
+                "OTP SENT SUCCESSFULLY:",
                 email
             );
 
@@ -1907,7 +1858,7 @@ async function forgotPassword(req, res) {
         } catch (emailError) {
 
             console.error(
-                "❌ EMAIL ERROR:",
+                "EMAIL ERROR:",
                 emailError.message
             );
 
@@ -1931,7 +1882,7 @@ async function forgotPassword(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ FORGOT PASSWORD ERROR:",
+            "FORGOT PASSWORD ERROR:",
             error.message
         );
 
@@ -1975,11 +1926,6 @@ async function verifyResetOTP(req, res) {
                 req.body.otp || ""
             ).trim();
 
-        console.log(
-            "🔐 VERIFY OTP:",
-            email
-        );
-
         if (!email || !otp) {
 
             return res.status(400).json({
@@ -2014,7 +1960,8 @@ async function verifyResetOTP(req, res) {
             });
         }
 
-        const resetData = results[0];
+        const resetData =
+            results[0];
 
         const expiresAt =
             new Date(
@@ -2051,7 +1998,7 @@ async function verifyResetOTP(req, res) {
         }
 
         console.log(
-            "✅ OTP VERIFIED:",
+            "OTP VERIFIED:",
             email
         );
 
@@ -2064,7 +2011,7 @@ async function verifyResetOTP(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ VERIFY OTP ERROR:",
+            "VERIFY OTP ERROR:",
             error.message
         );
 
@@ -2112,11 +2059,6 @@ async function resetPassword(req, res) {
             String(
                 req.body.newPassword || ""
             ).trim();
-
-        console.log(
-            "🔑 RESET PASSWORD:",
-            email
-        );
 
         if (
             !email ||
@@ -2178,7 +2120,8 @@ async function resetPassword(req, res) {
             });
         }
 
-        const resetData = results[0];
+        const resetData =
+            results[0];
 
         if (
             Date.now() >
@@ -2248,7 +2191,7 @@ async function resetPassword(req, res) {
         );
 
         console.log(
-            "✅ PASSWORD RESET SUCCESS:",
+            "PASSWORD RESET SUCCESS:",
             email
         );
 
@@ -2261,7 +2204,7 @@ async function resetPassword(req, res) {
     } catch (error) {
 
         console.error(
-            "❌ RESET PASSWORD ERROR:",
+            "RESET PASSWORD ERROR:",
             error.message
         );
 
@@ -2343,7 +2286,6 @@ app.get(
                 users,
                 expenses,
                 income,
-
                 counts: {
                     users: users.length,
                     expenses: expenses.length,
@@ -2391,7 +2333,7 @@ app.use(
     (err, req, res, next) => {
 
         console.error(
-            "❌ SERVER ERROR:",
+            "SERVER ERROR:",
             err.message
         );
 
@@ -2419,11 +2361,11 @@ app.listen(
         );
 
         console.log(
-            "Expense Tracker Server Started 🚀"
+            "Expense Tracker Server Started"
         );
 
         console.log(
-            "Express Backend Ready ✅"
+            "Express Backend Ready"
         );
 
         console.log(

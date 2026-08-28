@@ -1,338 +1,820 @@
-// Load Profile Data
+// ======================================================
+// ================= EXPENSE TRACKER PRO =================
+// ===================== PROFILE JS =======================
+// ============== NO EXPENSE/INCOME LOCALSTORAGE =========
+// ======================================================
 
-let userEmail = localStorage.getItem("userEmail");
-if(!userEmail){
+"use strict";
 
-    window.location.href="index.html";
+// ======================================================
+// ================= USER EMAIL ==========================
+// ======================================================
+
+const userEmail =
+    localStorage.getItem("userEmail");
+
+if (!userEmail) {
+    window.location.href = "index.html";
 }
-// Profile Image Load
+
+// ======================================================
+// ================= DOM HELPER ==========================
+// ======================================================
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+// ======================================================
+// ================= PROFILE ELEMENTS ====================
+// ======================================================
 
 const profileImg =
-document.getElementById("profileImg");
+    $("profileImg");
 
 const profileUpload =
-document.getElementById("profileUpload");
+    $("profileUpload");
 
+const profileLetter =
+    $("profileLetter");
 
-let savedImage =
-localStorage.getItem("profileImage");
+const profileEmail =
+    $("profileEmail");
 
+const profileName =
+    $("profileName");
 
-const profileLetter = document.getElementById("profileLetter");
+const profileCountry =
+    $("profileCountry");
 
+const profileCurrency =
+    $("profileCurrency");
 
-if(savedImage){
+const minimumBalance =
+    $("minimumBalance");
 
-    profileImg.src = savedImage;
-    profileImg.style.display="block";
+const saveProfileBtn =
+    $("saveProfile");
 
-    if(profileLetter)
-    profileLetter.style.display="none";
+// ======================================================
+// ================= LOAD PROFILE EMAIL ==================
+// ======================================================
 
+if (profileEmail) {
+    profileEmail.value =
+        userEmail;
 }
-else{
 
-    profileImg.style.display="none";
+// ======================================================
+// ================= LOAD PROFILE DATA ===================
+// ======================================================
 
-    if(profileLetter){
+let savedProfile = null;
 
-        let name = 
-        document.getElementById("profileName")?.value || "User";
+try {
+    savedProfile =
+        JSON.parse(
+            localStorage.getItem(
+                "profileData"
+            )
+        );
+} catch (error) {
 
-        profileLetter.innerText =
-        name.charAt(0).toUpperCase();
+    console.warn(
+        "Invalid profileData found. Resetting profile data."
+    );
 
-        profileLetter.style.display="flex";
+    localStorage.removeItem(
+        "profileData"
+    );
 
+    savedProfile = null;
+}
+
+// ======================================================
+// ================= DEFAULT PROFILE =====================
+// ======================================================
+
+if (profileCurrency &&
+    !profileCurrency.value) {
+
+    profileCurrency.value =
+        "INR";
+}
+
+// ======================================================
+// ================= APPLY PROFILE DATA ==================
+// ======================================================
+
+if (savedProfile) {
+
+    if (profileName) {
+
+        profileName.value =
+            savedProfile.name || "";
     }
 
+    if (profileCountry) {
+
+        profileCountry.value =
+            savedProfile.country || "";
+    }
+
+    if (profileCurrency) {
+
+        profileCurrency.value =
+            savedProfile.currency ||
+            "INR";
+    }
+
+    if (minimumBalance) {
+
+        minimumBalance.value =
+            savedProfile.minimumBalance ||
+            "";
+    }
 }
 
+// ======================================================
+// ================= PROFILE IMAGE LOAD ==================
+// ======================================================
 
+function loadProfileImage() {
 
-if(profileUpload){
-
-profileUpload.addEventListener("change",function(){
-
-    const reader = new FileReader();
-
-
-    reader.onload = function(e){
-
-        profileImg.src = e.target.result;
-
-
-        localStorage.setItem(
-            "profileImage",
-            e.target.result
+    const savedImage =
+        localStorage.getItem(
+            "profileImage"
         );
 
+    if (
+        savedImage &&
+        profileImg
+    ) {
+
+        profileImg.src =
+            savedImage;
+
+        profileImg.style.display =
+            "block";
+
+        if (profileLetter) {
+
+            profileLetter.style.display =
+                "none";
+        }
+
+        return;
     }
 
+    if (profileImg) {
 
-    reader.readAsDataURL(this.files[0]);
+        profileImg.style.display =
+            "none";
+    }
 
-
-});
-
+    showProfileLetter();
 }
 
-document.getElementById("profileEmail").value = userEmail;
+// ======================================================
+// ================= PROFILE LETTER =====================
+// ======================================================
 
+function showProfileLetter() {
 
+    if (!profileLetter) {
+        return;
+    }
 
-let savedProfile = JSON.parse(localStorage.getItem("profileData"));
+    const name =
+        profileName?.value?.trim() ||
+        savedProfile?.name?.trim() ||
+        "User";
 
+    profileLetter.innerText =
+        name.charAt(0)
+            .toUpperCase();
 
-
-if(savedProfile){
-
-
-document.getElementById("profileName").value =
-savedProfile.name || "";
-
-
-document.getElementById("profileCountry").value =
-savedProfile.country || "";
-
-
-document.getElementById("profileCurrency").value =
-savedProfile.currency || "INR";
-
-
-document.getElementById("minimumBalance").value =
-savedProfile.minimumBalance || "";
-
-
-// Profile First Letter
-
-let letter = document.getElementById("profileLetter");
-
-if(letter && savedProfile.name){
-
-    letter.innerText =
-    savedProfile.name.charAt(0).toUpperCase();
-
+    profileLetter.style.display =
+        "flex";
 }
 
+// ======================================================
+// ================= UPDATE PROFILE LETTER ==============
+// ======================================================
 
+function updateProfileLetter() {
+
+    const savedImage =
+        localStorage.getItem(
+            "profileImage"
+        );
+
+    if (savedImage) {
+        return;
+    }
+
+    showProfileLetter();
 }
 
-// Expense Calculation
+// ======================================================
+// ================= PROFILE IMAGE UPLOAD ===============
+// ======================================================
 
+if (profileUpload) {
 
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    profileUpload.addEventListener(
+        "change",
+        function () {
 
-let income = Number(localStorage.getItem("income")) || 0;
+            const file =
+                this.files &&
+                this.files[0];
 
+            if (!file) {
+                return;
+            }
 
+            // ------------------------------------------
+            // IMAGE VALIDATION
+            // ------------------------------------------
 
-let totalExpense = expenses.reduce((sum,item)=>{
+            if (
+                !file.type.startsWith(
+                    "image/"
+                )
+            ) {
 
-    return sum + Number(item.amount);
+                alert(
+                    "Please select a valid image file."
+                );
 
-},0);
+                this.value =
+                    "";
 
+                return;
+            }
 
+            // ------------------------------------------
+            // SIZE VALIDATION
+            // ------------------------------------------
 
-let balance = income - totalExpense;
+            const maxSize =
+                5 * 1024 * 1024;
 
+            if (
+                file.size >
+                maxSize
+            ) {
 
+                alert(
+                    "Image size must be less than 5 MB."
+                );
 
-document.getElementById("totalIncome").innerText =
-formatCurrency(income);
+                this.value =
+                    "";
 
+                return;
+            }
 
-document.getElementById("totalExpense").innerText =
-formatCurrency(totalExpense);
+            // ------------------------------------------
+            // READ IMAGE
+            // ------------------------------------------
 
+            const reader =
+                new FileReader();
 
-document.getElementById("totalBalance").innerText =
-formatCurrency(balance);
+            reader.onload =
+                function (event) {
 
+                    const imageData =
+                        event.target.result;
 
+                    if (profileImg) {
 
-// Save Profile
+                        profileImg.src =
+                            imageData;
 
+                        profileImg.style.display =
+                            "block";
+                    }
 
-document.getElementById("saveProfile")
-.addEventListener("click",()=>{
+                    if (profileLetter) {
 
+                        profileLetter.style.display =
+                            "none";
+                    }
 
-let profile = {
+                    localStorage.setItem(
+                        "profileImage",
+                        imageData
+                    );
+                };
 
+            reader.onerror =
+                function () {
 
-name:
-document.getElementById("profileName").value,
+                    alert(
+                        "Unable to load profile image."
+                    );
+                };
 
-
-country:
-document.getElementById("profileCountry").value,
-
-
-currency:
-document.getElementById("profileCurrency").value,
-
-
-minimumBalance:
-document.getElementById("minimumBalance").value
-
-
-};
-
-
-
-localStorage.setItem(
-"profileData",
-JSON.stringify(profile)
-);
-
-
-
-Swal.fire({
-    title:"Success!",
-    text:"Profile Saved Successfully ✅",
-    icon:"success",
-    confirmButtonColor:"#4f46e5"
-});
-window.location.href="dashboard.html";
-
-
-
-});
-
-
-
-
-// Back Dashboard
-
-function goDashboard(){
-
-window.location.href="dashboard.html";
-
+            reader.readAsDataURL(
+                file
+            );
+        }
+    );
 }
-// LOAD SAVED THEME
 
-if(localStorage.getItem("theme") === "light"){
+// ======================================================
+// ================= SAVE PROFILE ========================
+// ======================================================
 
-    document.body.classList.add("light-mode");
+if (saveProfileBtn) {
 
+    saveProfileBtn.addEventListener(
+        "click",
+        function () {
+
+            const name =
+                profileName
+                    ? profileName.value.trim()
+                    : "";
+
+            const country =
+                profileCountry
+                    ? profileCountry.value.trim()
+                    : "";
+
+            const currency =
+                profileCurrency
+                    ? profileCurrency.value
+                    : "INR";
+
+            const minimum =
+                minimumBalance
+                    ? minimumBalance.value.trim()
+                    : "";
+
+            // ------------------------------------------
+            // VALIDATION
+            // ------------------------------------------
+
+            if (!name) {
+
+                if (typeof Swal !== "undefined") {
+
+                    Swal.fire({
+                        title: "Name Required",
+                        text: "Please enter your name.",
+                        icon: "warning",
+                        confirmButtonColor:
+                            "#4f46e5"
+                    });
+
+                } else {
+
+                    alert(
+                        "Please enter your name."
+                    );
+                }
+
+                if (profileName) {
+                    profileName.focus();
+                }
+
+                return;
+            }
+
+            // ------------------------------------------
+            // PROFILE OBJECT
+            // ------------------------------------------
+
+            const profile = {
+
+                name:
+                    name,
+
+                country:
+                    country,
+
+                currency:
+                    currency || "INR",
+
+                minimumBalance:
+                    minimum
+            };
+
+            // ------------------------------------------
+            // SAVE PROFILE ONLY
+            // ------------------------------------------
+
+            localStorage.setItem(
+                "profileData",
+                JSON.stringify(
+                    profile
+                )
+            );
+
+            // Update letter immediately
+            updateProfileLetter();
+
+            // ------------------------------------------
+            // SUCCESS MESSAGE
+            // ------------------------------------------
+
+            if (
+                typeof Swal !==
+                "undefined"
+            ) {
+
+                Swal.fire({
+
+                    title:
+                        "Success!",
+
+                    text:
+                        "Profile Saved Successfully ✅",
+
+                    icon:
+                        "success",
+
+                    confirmButtonColor:
+                        "#4f46e5"
+                }).then(
+                    function () {
+
+                        window.location.href =
+                            "dashboard.html";
+                    }
+                );
+
+            } else {
+
+                alert(
+                    "Profile Saved Successfully ✅"
+                );
+
+                window.location.href =
+                    "dashboard.html";
+            }
+        }
+    );
 }
-// ================= PROFILE IMAGE OPTIONS =================
 
+// ======================================================
+// ================= BACK DASHBOARD =====================
+// ======================================================
 
-function openImagePopup(){
+function goDashboard() {
 
-    document.getElementById("imageOptions").style.display="flex";
-
+    window.location.href =
+        "dashboard.html";
 }
 
+window.goDashboard =
+    goDashboard;
 
+// ======================================================
+// ================= LOAD SAVED THEME ====================
+// ======================================================
 
-function closeImagePopup(){
+function loadSavedTheme() {
 
-    document.getElementById("imageOptions").style.display="none";
+    const theme =
+        localStorage.getItem(
+            "theme"
+        );
 
+    if (
+        theme === "light"
+    ) {
+
+        document.body.classList.add(
+            "light-mode"
+        );
+
+    } else {
+
+        document.body.classList.remove(
+            "light-mode"
+        );
+    }
 }
-function changeProfileImage(){
 
-    let upload = document.getElementById("profileUpload");
+loadSavedTheme();
 
-    if(upload){
+// ======================================================
+// ================= IMAGE POPUP =========================
+// ======================================================
+
+function openImagePopup() {
+
+    const popup =
+        $("imageOptions");
+
+    if (!popup) {
+        return;
+    }
+
+    popup.style.display =
+        "flex";
+}
+
+window.openImagePopup =
+    openImagePopup;
+
+// ======================================================
+// ================= CLOSE IMAGE POPUP ===================
+// ======================================================
+
+function closeImagePopup() {
+
+    const popup =
+        $("imageOptions");
+
+    if (!popup) {
+        return;
+    }
+
+    popup.style.display =
+        "none";
+}
+
+window.closeImagePopup =
+    closeImagePopup;
+
+// ======================================================
+// ================= CHANGE PROFILE IMAGE ===============
+// ======================================================
+
+function changeProfileImage() {
+
+    const upload =
+        $("profileUpload");
+
+    if (upload) {
 
         upload.click();
-
     }
 
     closeImagePopup();
-
 }
 
+window.changeProfileImage =
+    changeProfileImage;
 
-function viewProfileImage(){
+// ======================================================
+// ================= VIEW PROFILE IMAGE ==================
+// ======================================================
 
-    let img = document.getElementById("profileImg");
+function viewProfileImage() {
 
-    if(img){
+    const img =
+        $("profileImg");
 
-        let popup = window.open("");
+    if (!img) {
+        return;
+    }
 
-        popup.document.write(`
-        
+    if (
+        !img.src ||
+        img.style.display === "none"
+    ) {
+
+        alert(
+            "No profile image available."
+        );
+
+        return;
+    }
+
+    const popup =
+        window.open(
+            "",
+            "_blank",
+            "width=500,height=600"
+        );
+
+    if (!popup) {
+
+        alert(
+            "Please allow pop-ups to view the profile image."
+        );
+
+        return;
+    }
+
+    const safeImage =
+        String(img.src)
+            .replace(
+                /"/g,
+                "&quot;"
+            );
+
+    popup.document.write(`
+
+        <!DOCTYPE html>
+
         <html>
-        <body style="
-        margin:0;
-        background:#111827;
-        height:100vh;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        ">
 
-        <img src="${img.src}"
-        style="
-        width:400px;
-        height:400px;
-        object-fit:cover;
-        border-radius:20px;
-        ">
+        <head>
 
+            <title>
+                Profile Image
+            </title>
 
-        <button onclick="window.close()"
-        style="
-        margin-top:25px;
-        padding:12px 30px;
-        border:none;
-        border-radius:10px;
-        background:#4f46e5;
-        color:white;
-        cursor:pointer;
-        font-size:16px;
-        ">
-        ← Back
-        </button>
+            <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+            >
 
+        </head>
+
+        <body
+            style="
+                margin:0;
+                background:#111827;
+                min-height:100vh;
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+                align-items:center;
+                font-family:Arial,sans-serif;
+            "
+        >
+
+            <img
+                src="${safeImage}"
+                alt="Profile Image"
+                style="
+                    width:400px;
+                    height:400px;
+                    max-width:90vw;
+                    max-height:70vh;
+                    object-fit:cover;
+                    border-radius:20px;
+                    box-shadow:0 20px 50px rgba(0,0,0,.4);
+                "
+            >
+
+            <button
+                onclick="window.close()"
+                style="
+                    margin-top:25px;
+                    padding:12px 30px;
+                    border:none;
+                    border-radius:10px;
+                    background:#4f46e5;
+                    color:white;
+                    cursor:pointer;
+                    font-size:16px;
+                "
+            >
+                ← Back
+            </button>
 
         </body>
+
         </html>
 
-        `);
+    `);
 
-    }
-
+    popup.document.close();
 }
-// REMOVE PROFILE IMAGE
 
-function removeProfileImage(){
+window.viewProfileImage =
+    viewProfileImage;
 
-    localStorage.removeItem("profileImage");
+// ======================================================
+// ================= REMOVE PROFILE IMAGE ===============
+// ======================================================
 
+function removeProfileImage() {
 
-    let img = document.getElementById("profileImg");
-    let letter = document.getElementById("profileLetter");
+    localStorage.removeItem(
+        "profileImage"
+    );
 
+    if (profileImg) {
 
-    if(img){
+        profileImg.src =
+            "";
 
-        img.style.display="none";
-
+        profileImg.style.display =
+            "none";
     }
 
-
-    if(letter){
-
-        let name =
-        document.getElementById("profileName").value || "User";
-
-        letter.innerText =
-        name.charAt(0).toUpperCase();
-
-        letter.style.display="flex";
-
-    }
-
+    showProfileLetter();
 
     closeImagePopup();
-
 }
+
+window.removeProfileImage =
+    removeProfileImage;
+
+// ======================================================
+// ================= NAME CHANGE LISTENER ================
+// ======================================================
+
+if (profileName) {
+
+    profileName.addEventListener(
+        "input",
+        function () {
+
+            updateProfileLetter();
+        }
+    );
+}
+
+// ======================================================
+// ================= CLOSE POPUP OUTSIDE =================
+// ======================================================
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const popup =
+            $("imageOptions");
+
+        if (!popup) {
+            return;
+        }
+
+        if (
+            popup.style.display ===
+            "flex"
+        ) {
+
+            const target =
+                event.target;
+
+            const insidePopup =
+                popup.contains(
+                    target
+                );
+
+            if (!insidePopup) {
+
+                popup.style.display =
+                    "none";
+            }
+        }
+    }
+);
+
+// ======================================================
+// ================= INITIAL LOAD ========================
+// ======================================================
+
+loadProfileImage();
+
+showProfileLetter();
+
+// If image exists, hide letter again
+const existingImage =
+    localStorage.getItem(
+        "profileImage"
+    );
+
+if (
+    existingImage &&
+    profileImg
+) {
+
+    profileImg.style.display =
+        "block";
+
+    if (profileLetter) {
+
+        profileLetter.style.display =
+            "none";
+    }
+}
+
+// ======================================================
+// ================= DEBUG ===============================
+// ======================================================
+
+console.log(
+    "======================================"
+);
+
+console.log(
+    "Profile JS Loaded ✅"
+);
+
+console.log(
+    "User:",
+    userEmail
+);
+
+console.log(
+    "Expense/Income LocalStorage:",
+    "DISABLED ✅"
+);
+
+console.log(
+    "======================================"
+);
