@@ -8,13 +8,6 @@
 // ================= API BASE ============================
 // ======================================================
 
-// IMPORTANT:
-// Put your CURRENT Railway BACKEND URL here.
-//
-// DO NOT use:
-// const API_BASE = "";
-//
-// Current backend URL:
 const API_BASE =
     "https://expense-tracker-pro-production-b745.up.railway.app";
 
@@ -98,12 +91,14 @@ if (loginForm) {
 
                 Swal.fire({
 
-                    title: "Missing Fields!",
+                    title:
+                        "Missing Fields!",
 
                     text:
                         "Please fill all fields",
 
-                    icon: "warning",
+                    icon:
+                        "warning",
 
                     confirmButtonColor:
                         "#4f46e5"
@@ -122,12 +117,14 @@ if (loginForm) {
 
                 Swal.fire({
 
-                    title: "Invalid Email!",
+                    title:
+                        "Invalid Email!",
 
                     text:
                         "Only Gmail address allowed",
 
-                    icon: "error",
+                    icon:
+                        "error",
 
                     confirmButtonColor:
                         "#4f46e5"
@@ -146,12 +143,14 @@ if (loginForm) {
 
                 Swal.fire({
 
-                    title: "Invalid Password!",
+                    title:
+                        "Invalid Password!",
 
                     text:
                         "Password must be exactly 6 digits",
 
-                    icon: "error",
+                    icon:
+                        "error",
 
                     confirmButtonColor:
                         "#4f46e5"
@@ -215,30 +214,25 @@ if (loginForm) {
                     await fetch(
                         loginURL,
                         {
-
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json",
 
                                 "Accept":
                                     "application/json"
-
                             },
 
                             body:
                                 JSON.stringify({
-
                                     email:
                                         email,
 
                                     password:
                                         password
-
                                 })
-
                         }
                     );
 
@@ -264,6 +258,7 @@ if (loginForm) {
 
 
                 let data = {};
+
 
                 try {
 
@@ -298,11 +293,8 @@ if (loginForm) {
                 if (!response.ok) {
 
                     throw new Error(
-
                         data.message ||
-
                         `Server Error (${response.status})`
-
                     );
                 }
 
@@ -331,7 +323,6 @@ if (loginForm) {
                             "userName",
                             data.user.name
                         );
-
                     }
 
 
@@ -342,7 +333,6 @@ if (loginForm) {
                             "userId",
                             String(data.user.id)
                         );
-
                     }
 
 
@@ -364,7 +354,6 @@ if (loginForm) {
 
                         message.innerHTML =
                             "Login Successful ✅";
-
                     }
 
 
@@ -396,9 +385,7 @@ if (loginForm) {
                     window.location.href =
                         "dashboard.html";
 
-
                     return;
-
                 }
 
 
@@ -472,7 +459,6 @@ if (loginForm) {
                     loginButton.innerHTML =
                         loginButton.dataset.originalText ||
                         '<i class="fas fa-right-to-bracket"></i> Login';
-
                 }
 
             }
@@ -521,6 +507,11 @@ async function forgotPassword() {
             confirmButtonColor:
                 "#4f46e5",
 
+            inputAttributes: {
+                autocomplete:
+                    "email"
+            },
+
             inputValidator:
                 (value) => {
 
@@ -528,7 +519,6 @@ async function forgotPassword() {
 
                         return
                             "Please enter your email";
-
                     }
 
 
@@ -546,14 +536,23 @@ async function forgotPassword() {
 
                         return
                             "Please enter a valid Gmail address";
-
                     }
 
-                    return undefined;
 
+                    return undefined;
                 }
 
         });
+
+
+    // ==================================================
+    // CANCEL CHECK
+    // ==================================================
+
+    if (!result.isConfirmed) {
+
+        return;
+    }
 
 
     // ==================================================
@@ -561,13 +560,14 @@ async function forgotPassword() {
     // ==================================================
 
     const email =
-        result.value;
+        result.value
+            .trim()
+            .toLowerCase();
 
 
     if (!email) {
 
         return;
-
     }
 
 
@@ -589,6 +589,9 @@ async function forgotPassword() {
             allowOutsideClick:
                 false,
 
+            allowEscapeKey:
+                false,
+
             didOpen:
                 () => {
 
@@ -608,8 +611,21 @@ async function forgotPassword() {
 
 
         console.log(
+            "================================"
+        );
+
+        console.log(
             "Forgot Password API URL:",
             forgotURL
+        );
+
+        console.log(
+            "Forgot Password Email:",
+            email
+        );
+
+        console.log(
+            "================================"
         );
 
 
@@ -619,11 +635,8 @@ async function forgotPassword() {
 
         const response =
             await fetch(
-
                 forgotURL,
-
                 {
-
                     method:
                         "POST",
 
@@ -642,13 +655,10 @@ async function forgotPassword() {
 
                             email:
                                 email
-                                    .trim()
-                                    .toLowerCase()
 
                         })
 
                 }
-
             );
 
 
@@ -665,7 +675,6 @@ async function forgotPassword() {
             response.status
         );
 
-
         console.log(
             "Forgot Password Raw Response:",
             responseText
@@ -673,6 +682,7 @@ async function forgotPassword() {
 
 
         let data = {};
+
 
         try {
 
@@ -691,30 +701,32 @@ async function forgotPassword() {
             throw new Error(
                 `Invalid server response (${response.status})`
             );
-
         }
 
 
+        console.log(
+            "Forgot Password Response:",
+            data
+        );
+
+
+        // CLOSE LOADING
         Swal.close();
 
 
         // ==================================================
-        // ERROR
+        // SERVER ERROR
         // ==================================================
 
         if (
             !response.ok ||
-            !data.success
+            data.success !== true
         ) {
 
             throw new Error(
-
                 data.message ||
-
                 `Server Error (${response.status})`
-
             );
-
         }
 
 
@@ -728,7 +740,7 @@ async function forgotPassword() {
                 "OTP Sent! 📧",
 
             text:
-                "OTP has been sent to your Gmail.",
+                `OTP has been sent to ${email}`,
 
             icon:
                 "success",
@@ -743,17 +755,12 @@ async function forgotPassword() {
 
 
         // ==================================================
-        // SAVE EMAIL
+        // SAVE RESET EMAIL
         // ==================================================
 
         sessionStorage.setItem(
-
             "resetEmail",
-
             email
-                .trim()
-                .toLowerCase()
-
         );
 
 
@@ -808,8 +815,8 @@ async function forgotPassword() {
 // ============== FORGOT PASSWORD LINK ==================
 // ======================================================
 
-// ONLY ONE declaration.
-// DO NOT declare this again inside index.html.
+// IMPORTANT:
+// Keep ONLY ONE declaration of this variable.
 
 const forgotPasswordLink =
     document.getElementById(
@@ -820,9 +827,7 @@ const forgotPasswordLink =
 if (forgotPasswordLink) {
 
     forgotPasswordLink.addEventListener(
-
         "click",
-
         function (e) {
 
             e.preventDefault();
@@ -830,7 +835,30 @@ if (forgotPasswordLink) {
             forgotPassword();
 
         }
-
     );
 
 }
+
+
+// ======================================================
+// ============== GLOBAL FUNCTION ========================
+// ======================================================
+
+// This makes onclick="forgotPassword()" work too.
+
+window.forgotPassword =
+    forgotPassword;
+
+
+// ======================================================
+// ================= DEBUG ===============================
+// ======================================================
+
+console.log(
+    "✅ auth.js loaded successfully"
+);
+
+console.log(
+    "🔗 API BASE:",
+    API_BASE
+);

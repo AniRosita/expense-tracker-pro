@@ -1,19 +1,19 @@
 function showToast(message, type = "success") {
-
     const toast = document.createElement("div");
 
     toast.className = "toast";
 
-    if(type === "error"){
+    if (type === "error") {
         toast.classList.add("error");
     }
 
-    toast.innerText = message;
+    toast.textContent = message;
 
     document.body.appendChild(toast);
 
     setTimeout(() => {
-        toast.remove();
+        if (toast && toast.parentNode) {
+            toast.remove();
+        }
     }, 3000);
-
 }
