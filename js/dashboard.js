@@ -193,7 +193,6 @@ function normalizeDate(value) {
         return "";
     }
 
-    // JS Date object
     if (value instanceof Date) {
 
         if (isNaN(value.getTime())) {
@@ -271,7 +270,6 @@ function normalizeDate(value) {
         const second =
             Number(match[2]);
 
-        // If first > 12, definitely DD/MM
         if (first > 12) {
 
             return (
@@ -283,7 +281,6 @@ function normalizeDate(value) {
             );
         }
 
-        // Otherwise treat as MM/DD
         return (
             match[3] +
             "-" +
@@ -293,7 +290,6 @@ function normalizeDate(value) {
         );
     }
 
-    // Normal JS date string
     const date =
         new Date(str);
 
@@ -2014,8 +2010,6 @@ function calculateTotals() {
         incomeTotal -
         expenseTotal;
 
-    // ---------------- UI ----------------
-
     if (totalIncome) {
 
         totalIncome.textContent =
@@ -2039,8 +2033,6 @@ function calculateTotals() {
                 balance
             );
     }
-
-    // ---------------- WARNING ----------------
 
     const warning =
         $("balanceWarning");
@@ -2150,19 +2142,26 @@ window.refreshDashboard =
 function normalizeHeader(value) {
 
     return String(value ?? "")
+        .replace(/^\uFEFF/, "")
         .trim()
         .toLowerCase()
-        .replace(/\s+/g, " ")
-        .replace(/[_-]+/g, " ");
+        .replace(/[_\-]+/g, " ")
+        .replace(/\s+/g, " ");
 }
 
-// Get value from Excel row using multiple possible headers
-function getExcelValue(row, possibleHeaders) {
+// Get value from Excel row
+function getExcelValue(
+    row,
+    possibleHeaders
+) {
 
     const rowKeys =
         Object.keys(row);
 
-    for (const wanted of possibleHeaders) {
+    // Exact normalized match
+    for (
+        const wanted of possibleHeaders
+    ) {
 
         const wantedNormalized =
             normalizeHeader(wanted);
@@ -2174,7 +2173,44 @@ function getExcelValue(row, possibleHeaders) {
                     wantedNormalized
             );
 
-        if (foundKey !== undefined) {
+        if (
+            foundKey !== undefined
+        ) {
+
+            const value =
+                row[foundKey];
+
+            if (
+                value !== null &&
+                value !== undefined &&
+                String(value).trim() !== ""
+            ) {
+
+                return value;
+            }
+        }
+    }
+
+    // Partial match
+    for (
+        const wanted of possibleHeaders
+    ) {
+
+        const wantedNormalized =
+            normalizeHeader(wanted);
+
+        const foundKey =
+            rowKeys.find(
+                key =>
+                    normalizeHeader(key)
+                        .includes(
+                            wantedNormalized
+                        )
+            );
+
+        if (
+            foundKey !== undefined
+        ) {
 
             const value =
                 row[foundKey];
@@ -2193,7 +2229,10 @@ function getExcelValue(row, possibleHeaders) {
     return "";
 }
 
-// Parse money value safely
+// ======================================================
+// ================= PARSE EXCEL AMOUNT ================
+// ======================================================
+
 function parseExcelAmount(value) {
 
     if (
@@ -2201,10 +2240,13 @@ function parseExcelAmount(value) {
         value === undefined ||
         value === ""
     ) {
+
         return NaN;
     }
 
-    if (typeof value === "number") {
+    if (
+        typeof value === "number"
+    ) {
 
         return Number(value);
     }
@@ -2213,48 +2255,35 @@ function parseExcelAmount(value) {
         String(value)
             .trim();
 
-    // Remove currency symbols/text
+    // Remove currency
     text =
-        text.replace(
-            /₹/gi,
-            ""
+        text
+            .replace(/₹/gi, "")
+            .replace(/rs\.?/gi, "")
+            .replace(/inr/gi, "")
+            .replace(/,/g, "")
+            .trim();
+
+    // Extract number from text
+    const match =
+        text.match(
+            /-?\d+(?:\.\d+)?/
         );
 
-    text =
-        text.replace(
-            /rs\.?/gi,
-            ""
-        );
+    if (!match) {
 
-    text =
-        text.replace(
-            /inr/gi,
-            ""
-        );
-
-    // Remove commas and spaces
-    text =
-        text.replace(
-            /,/g,
-            ""
-        )
-        .trim();
-
-    // Keep numbers, decimal and minus
-    text =
-        text.replace(
-            /[^0-9.-]/g,
-            ""
-        );
-
-    if (!text) {
         return NaN;
     }
 
-    return Number(text);
+    return Number(
+        match[0]
+    );
 }
 
-// Parse Excel date
+// ======================================================
+// ================= PARSE EXCEL DATE ===================
+// ======================================================
+
 function parseExcelDate(value) {
 
     if (
@@ -2262,7 +2291,35 @@ function parseExcelDate(value) {
         value === undefined ||
         value === ""
     ) {
+
         return "";
+    }
+
+    // Date object
+    if (
+        value instanceof Date
+    ) {
+
+        if (
+            isNaN(
+                value.getTime()
+            )
+        ) {
+
+            return "";
+        }
+
+        return (
+            value.getFullYear() +
+            "-" +
+            String(
+                value.getMonth() + 1
+            ).padStart(2, "0") +
+            "-" +
+            String(
+                value.getDate()
+            ).padStart(2, "0")
+        );
     }
 
     // Excel serial number
@@ -2283,46 +2340,25 @@ function parseExcelDate(value) {
             );
 
         if (
-            !isNaN(
+            isNaN(
                 excelDate.getTime()
             )
         ) {
 
-            return (
-                excelDate.getUTCFullYear() +
-                "-" +
-                String(
-                    excelDate.getUTCMonth() + 1
-                ).padStart(2, "0") +
-                "-" +
-                String(
-                    excelDate.getUTCDate()
-                ).padStart(2, "0")
-            );
+            return "";
         }
-    }
 
-    // Date object
-    if (value instanceof Date) {
-
-        if (
-            !isNaN(
-                value.getTime()
-            )
-        ) {
-
-            return (
-                value.getFullYear() +
-                "-" +
-                String(
-                    value.getMonth() + 1
-                ).padStart(2, "0") +
-                "-" +
-                String(
-                    value.getDate()
-                ).padStart(2, "0")
-            );
-        }
+        return (
+            excelDate.getUTCFullYear() +
+            "-" +
+            String(
+                excelDate.getUTCMonth() + 1
+            ).padStart(2, "0") +
+            "-" +
+            String(
+                excelDate.getUTCDate()
+            ).padStart(2, "0")
+        );
     }
 
     return normalizeDate(value);
@@ -2330,6 +2366,7 @@ function parseExcelDate(value) {
 
 // ======================================================
 // ================= EXCEL IMPORT ========================
+// ===================== ONLY ONE =========================
 // ======================================================
 
 if (
@@ -2342,7 +2379,7 @@ if (
         function () {
 
             console.log(
-                "Excel import clicked"
+                "📥 Excel import clicked"
             );
 
             expenseFileInput.click();
@@ -2360,7 +2397,13 @@ if (expenseFileInput) {
                 this.files &&
                 this.files[0];
 
-            if (!file) return;
+            if (!file) {
+                return;
+            }
+
+            // ==================================================
+            // CHECK XLSX
+            // ==================================================
 
             if (
                 typeof XLSX ===
@@ -2376,6 +2419,10 @@ if (expenseFileInput) {
                 return;
             }
 
+            // ==================================================
+            // CHECK LOGIN
+            // ==================================================
+
             const email =
                 localStorage.getItem(
                     "userEmail"
@@ -2387,7 +2434,8 @@ if (expenseFileInput) {
                     "Please login again."
                 );
 
-                this.value = "";
+                window.location.href =
+                    "index.html";
 
                 return;
             }
@@ -2395,12 +2443,18 @@ if (expenseFileInput) {
             let imported = 0;
             let skipped = 0;
 
+            const errors = [];
+
             try {
 
                 console.log(
-                    "📥 Excel file:",
+                    "📄 Reading Excel file:",
                     file.name
                 );
+
+                // ==================================================
+                // READ FILE
+                // ==================================================
 
                 const buffer =
                     await file.arrayBuffer();
@@ -2420,7 +2474,7 @@ if (expenseFileInput) {
                 ) {
 
                     alert(
-                        "No worksheet found in Excel file."
+                        "No Excel sheet found."
                     );
 
                     return;
@@ -2430,6 +2484,10 @@ if (expenseFileInput) {
                     workbook.Sheets[
                         workbook.SheetNames[0]
                     ];
+
+                // ==================================================
+                // EXCEL → JSON
+                // ==================================================
 
                 const rows =
                     XLSX.utils.sheet_to_json(
@@ -2455,13 +2513,13 @@ if (expenseFileInput) {
                 }
 
                 console.log(
-                    "📋 Excel first row:",
-                    rows[0]
+                    "📋 Excel Headers:",
+                    Object.keys(rows[0])
                 );
 
-                // ------------------------------------------
-                // PROCESS EVERY ROW
-                // ------------------------------------------
+                // ==================================================
+                // PROCESS EACH ROW
+                // ==================================================
 
                 for (
                     let index = 0;
@@ -2472,17 +2530,17 @@ if (expenseFileInput) {
                     const row =
                         rows[index];
 
-                    const excelRowNumber =
+                    const rowNumber =
                         index + 2;
 
                     console.log(
-                        `📄 Processing Excel row ${excelRowNumber}:`,
+                        `🔄 Processing Excel row ${rowNumber}:`,
                         row
                     );
 
-                    // --------------------------------------
+                    // ==================================================
                     // NAME
-                    // --------------------------------------
+                    // ==================================================
 
                     const rawName =
                         getExcelValue(
@@ -2491,10 +2549,12 @@ if (expenseFileInput) {
                                 "Name",
                                 "Expense",
                                 "Expense Name",
+                                "Expense Item",
                                 "Description",
                                 "Item",
-                                "Expense Item",
-                                "Title"
+                                "Title",
+                                "Particular",
+                                "Particulars"
                             ]
                         );
 
@@ -2503,9 +2563,9 @@ if (expenseFileInput) {
                             rawName ?? ""
                         ).trim();
 
-                    // --------------------------------------
+                    // ==================================================
                     // AMOUNT
-                    // --------------------------------------
+                    // ==================================================
 
                     const rawAmount =
                         getExcelValue(
@@ -2517,7 +2577,8 @@ if (expenseFileInput) {
                                 "Price",
                                 "Value",
                                 "Total",
-                                "Money"
+                                "Money",
+                                "Expense Cost"
                             ]
                         );
 
@@ -2526,9 +2587,9 @@ if (expenseFileInput) {
                             rawAmount
                         );
 
-                    // --------------------------------------
+                    // ==================================================
                     // CATEGORY
-                    // --------------------------------------
+                    // ==================================================
 
                     let category =
                         getExcelValue(
@@ -2543,16 +2604,19 @@ if (expenseFileInput) {
 
                     category =
                         String(
-                            category || "Others"
+                            category ||
+                            "Others"
                         ).trim();
 
                     if (!category) {
-                        category = "Others";
+
+                        category =
+                            "Others";
                     }
 
-                    // --------------------------------------
+                    // ==================================================
                     // DATE
-                    // --------------------------------------
+                    // ==================================================
 
                     const rawDate =
                         getExcelValue(
@@ -2561,7 +2625,7 @@ if (expenseFileInput) {
                                 "Date",
                                 "Expense Date",
                                 "Transaction Date",
-                                "Expense Date",
+                                "Purchase Date",
                                 "Created Date"
                             ]
                         );
@@ -2571,44 +2635,53 @@ if (expenseFileInput) {
                             rawDate
                         );
 
-                    // --------------------------------------
-                    // VALIDATION
-                    // --------------------------------------
+                    console.log(
+                        `📋 Row ${rowNumber} parsed:`,
+                        {
+                            name,
+                            rawAmount,
+                            amount,
+                            category,
+                            rawDate,
+                            date
+                        }
+                    );
 
-                    let rowError = "";
+                    // ==================================================
+                    // VALIDATION
+                    // ==================================================
 
                     if (!name) {
 
-                        rowError =
-                            "Name missing";
+                        skipped++;
 
-                    } else if (
+                        errors.push(
+                            `Row ${rowNumber}: Name missing`
+                        );
+
+                        console.warn(
+                            `⚠️ Row ${rowNumber} skipped: Name missing`,
+                            row
+                        );
+
+                        continue;
+                    }
+
+                    if (
                         !Number.isFinite(amount) ||
                         amount <= 0
                     ) {
 
-                        rowError =
-                            "Amount invalid";
-
-                    } else if (!date) {
-
-                        rowError =
-                            "Date invalid/missing";
-                    }
-
-                    if (rowError) {
-
                         skipped++;
 
+                        errors.push(
+                            `Row ${rowNumber}: Invalid amount`
+                        );
+
                         console.warn(
-                            `⏭️ Row ${excelRowNumber} skipped: ${rowError}`,
+                            `⚠️ Row ${rowNumber} skipped: Invalid amount`,
                             {
-                                name,
                                 rawAmount,
-                                amount,
-                                category,
-                                rawDate,
-                                date,
                                 row
                             }
                         );
@@ -2616,21 +2689,33 @@ if (expenseFileInput) {
                         continue;
                     }
 
-                    // --------------------------------------
-                    // SEND TO RAILWAY
-                    // --------------------------------------
+                    if (!date) {
+
+                        skipped++;
+
+                        errors.push(
+                            `Row ${rowNumber}: Invalid date`
+                        );
+
+                        console.warn(
+                            `⚠️ Row ${rowNumber} skipped: Invalid date`,
+                            {
+                                rawDate,
+                                row
+                            }
+                        );
+
+                        continue;
+                    }
+
+                    // ==================================================
+                    // SEND TO RAILWAY API
+                    // ==================================================
 
                     try {
 
                         console.log(
-                            `📤 Importing row ${excelRowNumber}:`,
-                            {
-                                email,
-                                name,
-                                amount,
-                                category,
-                                date
-                            }
+                            `🚀 Sending row ${rowNumber} to API...`
                         );
 
                         const result =
@@ -2650,6 +2735,11 @@ if (expenseFileInput) {
                                 }
                             );
 
+                        console.log(
+                            `⬅️ Row ${rowNumber} API response:`,
+                            result
+                        );
+
                         if (
                             result &&
                             result.success === true
@@ -2658,15 +2748,22 @@ if (expenseFileInput) {
                             imported++;
 
                             console.log(
-                                `✅ Row ${excelRowNumber} imported`
+                                `✅ Row ${rowNumber} imported successfully`
                             );
 
                         } else {
 
                             skipped++;
 
+                            errors.push(
+                                `Row ${rowNumber}: ${
+                                    result?.message ||
+                                    "Server rejected expense"
+                                }`
+                            );
+
                             console.warn(
-                                `❌ Row ${excelRowNumber} rejected by server:`,
+                                `❌ Row ${rowNumber} rejected:`,
                                 result
                             );
                         }
@@ -2675,18 +2772,26 @@ if (expenseFileInput) {
 
                         skipped++;
 
+                        errors.push(
+                            `Row ${rowNumber}: ${error.message}`
+                        );
+
                         console.error(
-                            `❌ Row ${excelRowNumber} API error:`,
+                            `❌ Row ${rowNumber} API error:`,
                             error
                         );
                     }
                 }
 
-                // ------------------------------------------
+                // ==================================================
                 // REFRESH DASHBOARD
-                // ------------------------------------------
+                // ==================================================
 
                 await refreshDashboard();
+
+                // ==================================================
+                // FINAL RESULT
+                // ==================================================
 
                 console.log(
                     "======================================"
@@ -2712,10 +2817,15 @@ if (expenseFileInput) {
                 );
 
                 console.log(
+                    "Errors:",
+                    errors
+                );
+
+                console.log(
                     "======================================"
                 );
 
-                alert(
+                let message =
                     "Excel Import Completed ✅\n\n" +
                     "Imported: " +
                     imported +
@@ -2724,8 +2834,20 @@ if (expenseFileInput) {
                     skipped +
                     "\n" +
                     "Total Rows: " +
-                    rows.length
-                );
+                    rows.length;
+
+                if (
+                    errors.length > 0
+                ) {
+
+                    message +=
+                        "\n\nErrors:\n" +
+                        errors
+                            .slice(0, 10)
+                            .join("\n");
+                }
+
+                alert(message);
 
             } catch (error) {
 
@@ -2741,6 +2863,7 @@ if (expenseFileInput) {
 
             } finally {
 
+                // Allow same file to be selected again
                 this.value = "";
             }
         }
@@ -2806,663 +2929,7 @@ if (
 
     initializeDashboard();
 }
-// ======================================================
-// ================= EXCEL IMPORT ========================
-// ======================================================
 
-if (importExpenseBtn && expenseFileInput) {
-
-    importExpenseBtn.addEventListener("click", function () {
-
-        console.log("📥 Excel import clicked");
-
-        expenseFileInput.click();
-
-    });
-}
-
-
-if (expenseFileInput) {
-
-    expenseFileInput.addEventListener("change", async function () {
-
-        const file = this.files && this.files[0];
-
-        if (!file) return;
-
-
-        // ==================================================
-        // CHECK XLSX
-        // ==================================================
-
-        if (typeof XLSX === "undefined") {
-
-            alert("Excel library not loaded.");
-
-            this.value = "";
-
-            return;
-        }
-
-
-        // ==================================================
-        // CHECK LOGIN
-        // ==================================================
-
-        const email = localStorage.getItem("userEmail");
-
-        if (!email) {
-
-            alert("Please login again.");
-
-            window.location.href = "index.html";
-
-            return;
-        }
-
-
-        let imported = 0;
-
-        let skipped = 0;
-
-        let errors = [];
-
-
-        try {
-
-            console.log("📄 Reading Excel file:", file.name);
-
-
-            // ==================================================
-            // READ FILE
-            // ==================================================
-
-            const buffer = await file.arrayBuffer();
-
-            const workbook = XLSX.read(buffer, {
-                type: "array",
-                cellDates: true
-            });
-
-
-            if (
-                !workbook.SheetNames ||
-                workbook.SheetNames.length === 0
-            ) {
-
-                alert("No Excel sheet found.");
-
-                return;
-            }
-
-
-            const sheetName = workbook.SheetNames[0];
-
-            const sheet = workbook.Sheets[sheetName];
-
-
-            // ==================================================
-            // CONVERT EXCEL TO JSON
-            // ==================================================
-
-            const rows = XLSX.utils.sheet_to_json(sheet, {
-                defval: "",
-                raw: true
-            });
-
-
-            console.log("📊 Excel rows found:", rows.length);
-
-
-            if (!rows.length) {
-
-                alert("Excel file is empty.");
-
-                return;
-            }
-
-
-            // ==================================================
-            // SHOW HEADERS
-            // ==================================================
-
-            console.log(
-                "📋 Excel Headers:",
-                Object.keys(rows[0])
-            );
-
-
-            // ==================================================
-            // NORMALIZE HEADER
-            // ==================================================
-
-            function getValue(row, possibleNames) {
-
-                const keys = Object.keys(row);
-
-
-                for (const wanted of possibleNames) {
-
-                    const exactKey = keys.find(
-                        key =>
-                            String(key)
-                                .trim()
-                                .toLowerCase() ===
-                            wanted.toLowerCase()
-                    );
-
-
-                    if (exactKey !== undefined) {
-
-                        return row[exactKey];
-                    }
-                }
-
-
-                // Partial match
-
-                for (const wanted of possibleNames) {
-
-                    const partialKey = keys.find(
-                        key =>
-                            String(key)
-                                .trim()
-                                .toLowerCase()
-                                .includes(wanted.toLowerCase())
-                    );
-
-
-                    if (partialKey !== undefined) {
-
-                        return row[partialKey];
-                    }
-                }
-
-
-                return "";
-            }
-
-
-            // ==================================================
-            // NUMBER PARSER
-            // ==================================================
-
-            function parseAmount(value) {
-
-                if (
-                    value === null ||
-                    value === undefined ||
-                    value === ""
-                ) {
-
-                    return NaN;
-                }
-
-
-                if (typeof value === "number") {
-
-                    return value;
-                }
-
-
-                let text = String(value).trim();
-
-
-                // Remove currency symbols and commas
-
-                text = text
-                    .replace(/₹/gi, "")
-                    .replace(/rs\.?/gi, "")
-                    .replace(/inr/gi, "")
-                    .replace(/,/g, "")
-                    .trim();
-
-
-                const number = Number(text);
-
-
-                return number;
-            }
-
-
-            // ==================================================
-            // DATE PARSER
-            // ==================================================
-
-            function parseExcelDate(value) {
-
-                if (
-                    value === null ||
-                    value === undefined ||
-                    value === ""
-                ) {
-
-                    return "";
-                }
-
-
-                // JavaScript Date
-
-                if (value instanceof Date) {
-
-                    if (isNaN(value.getTime())) {
-
-                        return "";
-                    }
-
-
-                    return (
-                        value.getFullYear() +
-                        "-" +
-                        String(value.getMonth() + 1).padStart(2, "0") +
-                        "-" +
-                        String(value.getDate()).padStart(2, "0")
-                    );
-                }
-
-
-                // Excel serial number
-
-                if (typeof value === "number") {
-
-                    const excelDate = new Date(
-                        Date.UTC(
-                            1899,
-                            11,
-                            30
-                        ) +
-                        value * 86400000
-                    );
-
-
-                    if (isNaN(excelDate.getTime())) {
-
-                        return "";
-                    }
-
-
-                    return excelDate
-                        .toISOString()
-                        .slice(0, 10);
-                }
-
-
-                const text = String(value).trim();
-
-
-                // YYYY-MM-DD
-
-                if (
-                    /^\d{4}-\d{1,2}-\d{1,2}$/.test(text)
-                ) {
-
-                    const parts = text.split("-");
-
-                    return (
-                        parts[0] +
-                        "-" +
-                        parts[1].padStart(2, "0") +
-                        "-" +
-                        parts[2].padStart(2, "0")
-                    );
-                }
-
-
-                // DD/MM/YYYY
-
-                let match = text.match(
-                    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
-                );
-
-
-                if (match) {
-
-                    return (
-                        match[3] +
-                        "-" +
-                        match[2].padStart(2, "0") +
-                        "-" +
-                        match[1].padStart(2, "0")
-                    );
-                }
-
-
-                // DD-MM-YYYY
-
-                match = text.match(
-                    /^(\d{1,2})-(\d{1,2})-(\d{4})$/
-                );
-
-
-                if (match) {
-
-                    return (
-                        match[3] +
-                        "-" +
-                        match[2].padStart(2, "0") +
-                        "-" +
-                        match[1].padStart(2, "0")
-                    );
-                }
-
-
-                // Try normal JS date
-
-                const date = new Date(text);
-
-
-                if (!isNaN(date.getTime())) {
-
-                    return (
-                        date.getFullYear() +
-                        "-" +
-                        String(date.getMonth() + 1).padStart(2, "0") +
-                        "-" +
-                        String(date.getDate()).padStart(2, "0")
-                    );
-                }
-
-
-                return "";
-            }
-
-
-            // ==================================================
-            // PROCESS EACH ROW
-            // ==================================================
-
-            for (let i = 0; i < rows.length; i++) {
-
-                const row = rows[i];
-
-                const rowNumber = i + 2;
-
-
-                console.log(
-                    `🔄 Processing Excel row ${rowNumber}:`,
-                    row
-                );
-
-
-                // ==================================================
-                // NAME
-                // ==================================================
-
-                const name = String(
-                    getValue(row, [
-                        "Name",
-                        "Expense",
-                        "Expense Name",
-                        "Description",
-                        "Item",
-                        "Title"
-                    ])
-                ).trim();
-
-
-                // ==================================================
-                // AMOUNT
-                // ==================================================
-
-                const rawAmount = getValue(row, [
-                    "Amount",
-                    "Expense Amount",
-                    "Cost",
-                    "Price",
-                    "Value"
-                ]);
-
-
-                const amount = parseAmount(rawAmount);
-
-
-                // ==================================================
-                // CATEGORY
-                // ==================================================
-
-                let category = String(
-                    getValue(row, [
-                        "Category",
-                        "Expense Category",
-                        "Type"
-                    ])
-                ).trim();
-
-
-                if (!category) {
-
-                    category = "Others";
-                }
-
-
-                // ==================================================
-                // DATE
-                // ==================================================
-
-                const rawDate = getValue(row, [
-                    "Date",
-                    "Expense Date",
-                    "Transaction Date",
-                    "Purchase Date"
-                ]);
-
-
-                const date = parseExcelDate(rawDate);
-
-
-                console.log(
-                    `Row ${rowNumber} parsed:`,
-                    {
-                        name,
-                        amount,
-                        category,
-                        date
-                    }
-                );
-
-
-                // ==================================================
-                // VALIDATION
-                // ==================================================
-
-                if (!name) {
-
-                    skipped++;
-
-                    errors.push(
-                        `Row ${rowNumber}: Name missing`
-                    );
-
-                    console.warn(
-                        `⚠️ Row ${rowNumber} skipped: Name missing`
-                    );
-
-                    continue;
-                }
-
-
-                if (
-                    !Number.isFinite(amount) ||
-                    amount <= 0
-                ) {
-
-                    skipped++;
-
-                    errors.push(
-                        `Row ${rowNumber}: Invalid amount`
-                    );
-
-                    console.warn(
-                        `⚠️ Row ${rowNumber} skipped: Invalid amount`,
-                        rawAmount
-                    );
-
-                    continue;
-                }
-
-
-                if (!date) {
-
-                    skipped++;
-
-                    errors.push(
-                        `Row ${rowNumber}: Invalid date`
-                    );
-
-                    console.warn(
-                        `⚠️ Row ${rowNumber} skipped: Invalid date`,
-                        rawDate
-                    );
-
-                    continue;
-                }
-
-
-                // ==================================================
-                // SEND TO RAILWAY API
-                // ==================================================
-
-                try {
-
-                    console.log(
-                        `🚀 Sending row ${rowNumber} to API...`
-                    );
-
-
-                    const result = await apiRequest(
-                        "/expenses",
-                        {
-                            method: "POST",
-
-                            body: JSON.stringify({
-
-                                email: email,
-
-                                name: name,
-
-                                amount: amount,
-
-                                category: category,
-
-                                date: date
-
-                            })
-                        }
-                    );
-
-
-                    console.log(
-                        `⬅️ Row ${rowNumber} API response:`,
-                        result
-                    );
-
-
-                    if (
-                        result &&
-                        result.success === true
-                    ) {
-
-                        imported++;
-
-                        console.log(
-                            `✅ Row ${rowNumber} imported`
-                        );
-
-                    } else {
-
-                        skipped++;
-
-                        errors.push(
-                            `Row ${rowNumber}: ${
-                                result?.message ||
-                                "API rejected row"
-                            }`
-                        );
-
-                    }
-
-                } catch (error) {
-
-                    skipped++;
-
-                    errors.push(
-                        `Row ${rowNumber}: ${error.message}`
-                    );
-
-
-                    console.error(
-                        `❌ Row ${rowNumber} API error:`,
-                        error
-                    );
-                }
-            }
-
-
-            // ==================================================
-            // REFRESH DASHBOARD
-            // ==================================================
-
-            await refreshDashboard();
-
-
-            // ==================================================
-            // RESULT
-            // ==================================================
-
-            console.log("======================================");
-
-            console.log("📊 EXCEL IMPORT RESULT");
-
-            console.log("Imported:", imported);
-
-            console.log("Skipped:", skipped);
-
-            console.log("Errors:", errors);
-
-            console.log("======================================");
-
-
-            let message =
-                "Excel Import Completed ✅\n\n" +
-                "Imported: " +
-                imported +
-                "\n" +
-                "Skipped: " +
-                skipped;
-
-
-            if (errors.length > 0) {
-
-                message +=
-                    "\n\nFirst errors:\n" +
-                    errors.slice(0, 10).join("\n");
-            }
-
-
-            alert(message);
-
-
-        } catch (error) {
-
-            console.error(
-                "❌ Excel import error:",
-                error
-            );
-
-
-            alert(
-                "Excel import failed.\n\n" +
-                error.message
-            );
-
-
-        } finally {
-
-            this.value = "";
-        }
-
-    });
-}
 // ======================================================
 // ================= GLOBAL EXPORTS ======================
 // ======================================================
@@ -3488,6 +2955,9 @@ window.refreshDashboard =
 window.calculateTotals =
     calculateTotals;
 
+window.openProfile =
+    openProfile;
+
 console.log(
     "======================================"
 );
@@ -3497,5 +2967,4 @@ console.log(
 );
 
 console.log(
-    "======================================"
-);
+    "======================================");
