@@ -432,7 +432,8 @@ async function registerUser(req, res) {
 
             return res.status(400).json({
                 success: false,
-                message: "All fields are required"
+                message:
+                    "All fields are required"
             });
         }
 
@@ -588,7 +589,6 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
-
             user: {
                 id: user.id,
                 name: user.name,
@@ -2333,7 +2333,6 @@ app.get(
                 users,
                 expenses,
                 income,
-
                 counts: {
                     users: users.length,
                     expenses: expenses.length,
