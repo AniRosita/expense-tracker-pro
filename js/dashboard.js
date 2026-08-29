@@ -2505,3 +2505,53 @@ document.addEventListener(
         );
     }
 );
+// ======================================================
+// ============== DASHBOARD PROFILE LETTER ==============
+// ======================================================
+
+function loadDashboardProfileLetter() {
+
+    const profileLetter = $("profileLetter");
+
+    if (!profileLetter) {
+        return;
+    }
+
+    let name = "";
+
+    // Get saved user name
+    const userName =
+        localStorage.getItem("userName") ||
+        sessionStorage.getItem("userName");
+
+    if (userName && userName.trim()) {
+        name = userName.trim();
+    }
+
+    // If name not available, use email
+    if (!name) {
+        const email = getUserEmail();
+
+        if (email) {
+            name = email.split("@")[0];
+        }
+    }
+
+    if (!name) {
+        name = "User";
+    }
+
+    // Show first letter only
+    profileLetter.textContent =
+        name.charAt(0).toUpperCase();
+
+    profileLetter.style.display = "flex";
+}
+
+// Load after dashboard DOM is ready
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        loadDashboardProfileLetter();
+    }
+);
