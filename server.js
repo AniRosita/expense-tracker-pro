@@ -294,8 +294,40 @@ async function createRequiredTables() {
     console.log("password_resets table ready");
 
     // IMPORTANT
-    await db.promise().query(profileSQL);
-    console.log("user_profiles table ready");
+await db.promise().query(profileSQL);
+console.log("user_profiles table ready");
+
+// ==================================================
+// PROFILE IMAGE COLUMN MIGRATION
+// ==================================================
+
+try {
+
+    await db.promise().query(`
+        ALTER TABLE user_profiles
+        ADD COLUMN profile_image MEDIUMTEXT NULL
+    `);
+
+    console.log("profile_image column added ✅");
+
+} catch (error) {
+
+    if (error.code === "ER_DUP_FIELDNAME") {
+
+        console.log(
+            "profile_image column already exists ✅"
+        );
+
+    } else {
+
+        console.error(
+            "PROFILE IMAGE MIGRATION ERROR:",
+            error.message
+        );
+
+        throw error;
+    }
+}
 }
 // ======================================================
 // DATABASE INIT
@@ -2381,46 +2413,7 @@ app.get(
         }
     }
 );
-// ======================================================
-// ================= USER PROFILE =======================
-// ======================================================
 
-// Create profile table if it does not exist
-async function createProfileTable() {
-    const profileSQL = `
-        CREATE TABLE IF NOT EXISTS user_profiles (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            email VARCHAR(255) NOT NULL UNIQUE,
-            country VARCHAR(100) DEFAULT '',
-            currency VARCHAR(10) DEFAULT 'INR',
-            minimum_balance DECIMAL(10,2) DEFAULT 0,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_user_profile_email (email)
-        )
-    `;
-
-    await db.promise().query(profileSQL);
-
-    try {
-    await db.promise().query(`
-        ALTER TABLE user_profiles
-        ADD COLUMN profile_image MEDIUMTEXT NULL
-    `);
-
-    console.log("profile_image column added");
-
-} catch (error) {
-
-    if (error.code === "ER_DUP_FIELDNAME") {
-        console.log("profile_image column already exists");
-    } else {
-        throw error;
-    }
-}
-
-    console.log("user_profiles table ready");
-}
 // ======================================================
 // GET USER PROFILE
 // Profile is OPTIONAL
