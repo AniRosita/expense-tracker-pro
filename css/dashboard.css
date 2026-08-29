@@ -762,3 +762,34 @@ body.light-mode .popup h3 {
     }
 }
 ```
+/* ======================================================
+   GLOBAL THEME TRANSITION - DASHBOARD
+   ====================================================== */
+
+html,
+body,
+body *,
+html * {
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease !important;
+}
+
+/* ======================================================
+   HTML LIGHT MODE SUPPORT
+   ====================================================== */
+
+html.light-mode {
+    background: #f8fafc;
+}
+
+html.light-mode body {
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #f8fafc
+    );
+    color: #111827;
+}
