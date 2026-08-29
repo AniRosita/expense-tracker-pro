@@ -31,23 +31,38 @@ function $(id) {
 // ======================================================
 
 function getUserEmail() {
-    const email = sessionStorage.getItem("userEmail");
+    const userEmail =
+        localStorage.getItem("userEmail") ||
+        sessionStorage.getItem("userEmail");
 
-    if (!email || !String(email).trim()) {
-        console.warn("No logged-in user found.");
-        window.location.href = "index.html";
-        return null;
+    if (userEmail && userEmail.trim()) {
+        return userEmail.trim().toLowerCase();
     }
 
-    return String(email).trim().toLowerCase();
+    const userData =
+        localStorage.getItem("user") ||
+        sessionStorage.getItem("user");
+
+    if (userData) {
+        try {
+            const user = JSON.parse(userData);
+
+            if (user && user.email) {
+                return String(user.email)
+                    .trim()
+                    .toLowerCase();
+            }
+        } catch (error) {
+            console.error(
+                "Invalid user session data:",
+                error
+            );
+        }
+    }
+
+    console.error("No logged-in user found.");
+    return null;
 }
-
-const userEmail = getUserEmail();
-
-if (!userEmail) {
-    throw new Error("User session not found.");
-}
-
 // ======================================================
 // ================= GLOBAL DATA =========================
 // ======================================================
