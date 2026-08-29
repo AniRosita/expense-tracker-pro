@@ -153,20 +153,43 @@ function showProfileLetter() {
 
 // ======================================================
 // ================= SHOW PROFILE IMAGE =================
+// ================= BROKEN IMAGE FIX ===================
 // ======================================================
 
 function showProfileImage(image) {
 
     if (!profileImg || !image) {
+        hideProfileImage();
         return;
     }
 
-    profileImg.src = image;
-    profileImg.style.display = "block";
+    // Clear previous error handler
+    profileImg.onerror = null;
 
-    if (profileLetter) {
-        profileLetter.style.display = "none";
-    }
+    // If image fails to load
+    profileImg.onerror = function () {
+
+        console.error(
+            "PROFILE IMAGE LOAD FAILED"
+        );
+
+        savedProfileImage = "";
+        selectedProfileImage = "";
+
+        hideProfileImage();
+    };
+
+    profileImg.onload = function () {
+
+        profileImg.style.display = "block";
+
+        if (profileLetter) {
+            profileLetter.style.display = "none";
+        }
+
+    };
+
+    profileImg.src = image;
 }
 
 // ======================================================
