@@ -311,7 +311,6 @@ async function initializeDatabase() {
 function checkDatabase(req, res, next) {
 
     if (!databaseReady) {
-
         return res.status(503).json({
             success: false,
             message:
@@ -589,7 +588,6 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
-
             user: {
                 id: user.id,
                 name: user.name,
@@ -1632,14 +1630,12 @@ async function sendOTPEmail(
 ) {
 
     if (!BREVO_API_KEY) {
-
         throw new Error(
             "BREVO_API_KEY is missing in Railway Variables"
         );
     }
 
     if (!BREVO_FROM_EMAIL) {
-
         throw new Error(
             "BREVO_FROM_EMAIL is missing in Railway Variables"
         );
@@ -1690,9 +1686,7 @@ padding:20px;
 border-radius:12px;
 margin:25px 0;
 ">
-
 ${otp}
-
 </div>
 
 <p>
@@ -1711,9 +1705,7 @@ please ignore this email.
 color:#777;
 font-size:13px;
 ">
-
 Expense Tracker Pro
-
 </p>
 
 </div>
@@ -1845,11 +1837,11 @@ async function forgotPassword(req, res) {
 
         const expiresAt =
             new Date(
-                Date.now() +
-                10 * 60 * 1000
+                Date.now() + 10 * 60 * 1000
             );
 
         // Delete previous OTP
+
         await db.promise().query(
             `
             DELETE FROM password_resets
@@ -1859,6 +1851,7 @@ async function forgotPassword(req, res) {
         );
 
         // Save new OTP
+
         const [result] =
             await db.promise().query(
                 `
@@ -2334,7 +2327,6 @@ app.get(
                 users,
                 expenses,
                 income,
-
                 counts: {
                     users: users.length,
                     expenses: expenses.length,
