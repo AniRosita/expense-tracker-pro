@@ -1,3 +1,4 @@
+```javascript
 // ======================================================
 // ================= EXPENSE TRACKER PRO =================
 // ===================== THEME JS =========================
@@ -6,20 +7,60 @@
 "use strict";
 
 // ======================================================
+// ================= GET SAVED THEME ====================
+// ======================================================
+
+function getSavedTheme() {
+
+    const savedTheme = localStorage.getItem("theme");
+
+    return savedTheme === "light"
+        ? "light"
+        : "dark";
+}
+
+// ======================================================
+// ================= APPLY GLOBAL THEME =================
+// ======================================================
+
+function applyGlobalTheme(theme) {
+
+    const body = document.body;
+
+    if (!body) {
+        return;
+    }
+
+    // Smooth theme transition
+    body.classList.add("theme-transition");
+
+    if (theme === "light") {
+        body.classList.add("light-mode");
+    } else {
+        body.classList.remove("light-mode");
+    }
+
+    // Remove transition class after animation
+    window.requestAnimationFrame(function () {
+
+        setTimeout(function () {
+            body.classList.remove("theme-transition");
+        }, 350);
+
+    });
+
+    updateGlobalThemeButton();
+}
+
+// ======================================================
 // ================= LOAD GLOBAL THEME ==================
 // ======================================================
 
 function loadGlobalTheme() {
 
-    const savedTheme = localStorage.getItem("theme");
+    const savedTheme = getSavedTheme();
 
-    if (savedTheme === "light") {
-        document.body.classList.add("light-mode");
-    } else {
-        document.body.classList.remove("light-mode");
-    }
-
-    updateGlobalThemeButton();
+    applyGlobalTheme(savedTheme);
 }
 
 // ======================================================
@@ -33,6 +74,7 @@ function updateGlobalThemeButton() {
     );
 
     const isLight =
+        document.body &&
         document.body.classList.contains("light-mode");
 
     themeButtons.forEach(function (button) {
@@ -50,19 +92,20 @@ function updateGlobalThemeButton() {
 
 function toggleGlobalTheme() {
 
-    document.body.classList.toggle("light-mode");
-
     const isLight =
         document.body.classList.contains("light-mode");
 
-    // Save theme globally
+    const newTheme =
+        isLight ? "dark" : "light";
+
+    // Save globally BEFORE changing page
     localStorage.setItem(
         "theme",
-        isLight ? "light" : "dark"
+        newTheme
     );
 
-    // Update all theme buttons
-    updateGlobalThemeButton();
+    // Apply immediately
+    applyGlobalTheme(newTheme);
 }
 
 // ======================================================
@@ -82,6 +125,7 @@ document.addEventListener("click", function (event) {
     event.preventDefault();
 
     toggleGlobalTheme();
+
 });
 
 // ======================================================
@@ -90,6 +134,7 @@ document.addEventListener("click", function (event) {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    // Apply saved theme to current page
     loadGlobalTheme();
 
 });
@@ -97,6 +142,12 @@ document.addEventListener("DOMContentLoaded", function () {
 // ======================================================
 // ================= GLOBAL FUNCTIONS ====================
 // ======================================================
+
+window.getSavedTheme =
+    getSavedTheme;
+
+window.applyGlobalTheme =
+    applyGlobalTheme;
 
 window.loadGlobalTheme =
     loadGlobalTheme;
@@ -106,3 +157,4 @@ window.toggleGlobalTheme =
 
 window.updateGlobalThemeButton =
     updateGlobalThemeButton;
+```

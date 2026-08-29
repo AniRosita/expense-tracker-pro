@@ -9,7 +9,15 @@
 <title>Expense History</title>
 <link rel="icon" type="image/png" href="assets/profile.png">
 
+<script>
+(function () {
+    const theme = localStorage.getItem("theme");
 
+    if (theme === "light") {
+        document.documentElement.classList.add("light-mode");
+    }
+})();
+</script>
 <link rel="stylesheet" href="css/expense.css">
 
 </head>
@@ -185,9 +193,10 @@ onclick="goDashboard()">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<script src="js/theme.js"></script>
 
 <script src="js/expense.js"></script>
-<script src="js/theme.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 

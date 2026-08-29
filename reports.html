@@ -15,6 +15,16 @@
         rel="icon"
         type="image/png"
         href="assets/profile.png">
+    
+    <script>
+(function () {
+    const theme = localStorage.getItem("theme");
+
+    if (theme === "light") {
+        document.documentElement.classList.add("light-mode");
+    }
+})();
+</script>
 
     <link
         rel="stylesheet"
@@ -380,12 +390,12 @@
     src="js/currency.js">
 </script>
 
-
+<script src="js/theme.js"></script>
 <script
     src="js/reports.js">
     
 </script>
-<script src="js/theme.js"></script>
+
 
 
 <script
