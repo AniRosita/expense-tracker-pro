@@ -357,57 +357,6 @@ function escapeHTML(value) {
 
 window.escapeHTML = escapeHTML;
 
-// ======================================================
-// ================= THEME ===============================
-// ======================================================
-
-function updateThemeButton() {
-    if (!themeBtn) {
-        return;
-    }
-
-    const isLight =
-        document.body.classList.contains("light-mode");
-
-    themeBtn.innerHTML =
-        isLight
-            ? "🌙 Dark Mode"
-            : "☀️ Light Mode";
-}
-
-function loadTheme() {
-    const theme =
-        sessionStorage.getItem("theme");
-
-    if (theme === "light") {
-        document.body.classList.add("light-mode");
-    } else {
-        document.body.classList.remove("light-mode");
-    }
-
-    updateThemeButton();
-}
-
-if (themeBtn) {
-    themeBtn.addEventListener(
-        "click",
-        function () {
-            document.body.classList.toggle("light-mode");
-
-            const isLight =
-                document.body.classList.contains("light-mode");
-
-            sessionStorage.setItem(
-                "theme",
-                isLight ? "light" : "dark"
-            );
-
-            updateThemeButton();
-        }
-    );
-}
-
-loadTheme();
 
 // ======================================================
 // ================= SIDEBAR =============================

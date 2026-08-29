@@ -1,18 +1,24 @@
-/* ================= DELETE HISTORY ================= */
+/* ======================================================
+   EXPENSE TRACKER PRO - DELETE HISTORY CSS
+   GLOBAL THEME COMPATIBLE
+   ====================================================== */
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: 'Poppins', sans-serif;
 }
+
+/* ================= BODY ================= */
 
 body {
-    font-family: 'Poppins', sans-serif;
-    background: #f5f7fb;
-    color: #222;
+    background: #0f172a;
+    color: #f8fafc;
     min-height: 100vh;
+    padding: 30px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
-
 
 /* ================= NAVBAR ================= */
 
@@ -26,34 +32,40 @@ body {
 
     padding: 15px 30px;
 
-    background: #ffffff;
+    background: #111827;
+    border-bottom: 1px solid #374151;
 
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .navbar h2 {
     font-size: 22px;
     font-weight: 600;
+    color: #c084fc;
 }
 
 .navbar button {
     border: none;
-    background: #667eea;
+    background: #a855f7;
     color: white;
 
     padding: 10px 18px;
-
     border-radius: 8px;
 
     cursor: pointer;
-
     font-size: 14px;
+
+    transition: 0.3s;
 }
 
 .navbar button:hover {
-    opacity: 0.9;
+    background: #9333ea;
+    transform: translateY(-2px);
 }
-
 
 /* ================= MAIN CONTENT ================= */
 
@@ -62,10 +74,8 @@ body {
     max-width: 1100px;
 
     margin: 0 auto;
-
     padding: 35px 20px;
 }
-
 
 /* ================= PAGE TITLE ================= */
 
@@ -76,62 +86,78 @@ body {
 .page-title h1 {
     font-size: 30px;
     margin-bottom: 8px;
+    color: #c084fc;
 }
 
 .page-title p {
-    color: #777;
+    color: #cbd5e1;
     font-size: 15px;
 }
-
 
 /* ================= FILTER CARD ================= */
 
 .filter-card {
-    background: #ffffff;
+    background: #1e293b;
 
     padding: 20px;
-
-    border-radius: 12px;
+    border-radius: 15px;
 
     display: flex;
     gap: 15px;
 
     margin-bottom: 25px;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #334155;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .filter-card select {
     padding: 11px 15px;
 
-    border: 1px solid #ddd;
-
+    border: 1px solid #475569;
     border-radius: 8px;
 
-    background: #fff;
+    background: #0f172a;
+    color: white;
 
     font-family: 'Poppins', sans-serif;
 
     cursor: pointer;
+    outline: none;
+
+    transition: 0.3s;
 }
 
+.filter-card select:focus {
+    border-color: #a855f7;
+}
 
 /* ================= HISTORY CARD ================= */
 
 .history-card {
-    background: #ffffff;
+    background: #1e293b;
 
     padding: 25px;
+    border-radius: 15px;
 
-    border-radius: 12px;
+    border: 1px solid #334155;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .history-card h2 {
     margin-bottom: 20px;
+    color: #dbeafe;
 }
-
 
 /* ================= HISTORY ITEM ================= */
 
@@ -139,32 +165,72 @@ body {
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
     padding: 15px;
 
-    border: 1px solid #eee;
-
+    border: 1px solid #334155;
     border-radius: 10px;
 
     margin-bottom: 12px;
 
-    background: #fafafa;
+    background: #1e293b;
+
+    transition: 0.3s;
 }
 
 .history-item:last-child {
     margin-bottom: 0;
 }
 
+.history-item:hover {
+    background: #263449;
+}
 
-/* ================= DELETE / RESTORE BUTTONS ================= */
+/* ================= HISTORY TABLE ================= */
+
+.history-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-card th,
+.history-card td {
+    padding: 12px;
+
+    text-align: left;
+
+    border-bottom: 1px solid #334155;
+}
+
+.history-card th {
+    background: #263449;
+    color: #c084fc;
+}
+
+.history-card td {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+.history-card tr:hover td {
+    background: #263449;
+}
+
+/* ================= SECONDARY TEXT ================= */
+
+.history-card small,
+.history-card .date,
+.history-card .secondary-text {
+    color: #94a3b8;
+}
+
+/* ================= RESTORE BUTTON ================= */
 
 .restore-btn {
     border: none;
 
-    background: #28a745;
-
+    background: #22c55e;
     color: white;
 
     padding: 8px 14px;
@@ -172,17 +238,21 @@ body {
     border-radius: 7px;
 
     cursor: pointer;
+
+    transition: 0.3s;
 }
 
 .restore-btn:hover {
-    opacity: 0.9;
+    background: #16a34a;
+    transform: translateY(-2px);
 }
+
+/* ================= PERMANENT DELETE BUTTON ================= */
 
 .permanent-delete-btn {
     border: none;
 
-    background: #dc3545;
-
+    background: #ef4444;
     color: white;
 
     padding: 8px 14px;
@@ -192,8 +262,35 @@ body {
     cursor: pointer;
 
     margin-left: 8px;
+
+    transition: 0.3s;
 }
 
+.permanent-delete-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+/* ================= DELETE BUTTON ================= */
+
+.delete-btn {
+    border: none;
+
+    background: #ef4444;
+    color: white;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
 
 /* ================= EMPTY HISTORY ================= */
 
@@ -202,46 +299,185 @@ body {
 
     padding: 40px 20px;
 
-    color: #888;
+    color: #94a3b8;
 }
 
+/* ======================================================
+   ================= LIGHT MODE ========================
+   ====================================================== */
 
-/* ================= DARK MODE ================= */
+body.light-mode {
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #f8fafc
+    );
 
-body.dark-mode {
-    background: #121212;
-
-    color: #ffffff;
+    color: #111827;
 }
 
-body.dark-mode .navbar,
-body.dark-mode .filter-card,
-body.dark-mode .history-card {
-    background: #1e1e1e;
+/* ================= LIGHT NAVBAR ================= */
+
+body.light-mode .navbar {
+    background: #ffffff;
+    color: #111827;
+
+    border-bottom: 2px solid #d1d5db;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
-body.dark-mode .page-title p {
-    color: #aaa;
+body.light-mode .navbar h2 {
+    color: #7c3aed;
 }
 
-body.dark-mode .filter-card select {
-    background: #2a2a2a;
-
-    color: #fff;
-
-    border-color: #444;
+body.light-mode .navbar button {
+    background: #a855f7;
+    color: white;
 }
 
-body.dark-mode .history-item {
-    background: #252525;
+/* ================= LIGHT MAIN ================= */
 
-    border-color: #444;
+body.light-mode .main-content {
+    background: transparent;
+    color: #111827;
 }
 
+/* ================= LIGHT TITLE ================= */
 
-/* ================= MOBILE ================= */
+body.light-mode .page-title h1 {
+    color: #7c3aed;
+}
+
+body.light-mode .page-title p {
+    color: #6b7280;
+}
+
+/* ================= LIGHT FILTER ================= */
+
+body.light-mode .filter-card {
+    background: #ffffff;
+    color: #111827;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .filter-card select {
+    background: #ffffff;
+    color: #111827;
+
+    border: 1px solid #d1d5db;
+}
+
+/* ================= LIGHT HISTORY ================= */
+
+body.light-mode .history-card {
+    background: #ffffff;
+    color: #111827;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .history-card h2 {
+    color: #111827;
+}
+
+/* ================= LIGHT HISTORY ITEM ================= */
+
+body.light-mode .history-item {
+    background: #ffffff;
+    color: #111827;
+
+    border: 1px solid #e5e7eb;
+}
+
+body.light-mode .history-item:hover {
+    background: #f8fafc;
+}
+
+/* ================= LIGHT TABLE ================= */
+
+body.light-mode .history-card table {
+    background: #ffffff;
+    color: #111827;
+}
+
+body.light-mode .history-card th {
+    background: #f3f4f6;
+    color: #7c3aed;
+
+    border-color: #d1d5db;
+}
+
+body.light-mode .history-card td {
+    background: #ffffff;
+    color: #111827;
+
+    border-color: #d1d5db;
+}
+
+body.light-mode .history-card tr:hover td {
+    background: #f8fafc;
+}
+
+/* ================= LIGHT SECONDARY TEXT ================= */
+
+body.light-mode .history-card small,
+body.light-mode .history-card .date,
+body.light-mode .history-card .secondary-text {
+    color: #6b7280;
+}
+
+/* ================= LIGHT EMPTY ================= */
+
+body.light-mode .empty-history {
+    color: #6b7280;
+}
+
+/* ================= SCROLLBAR ================= */
+
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #a855f7;
+}
+
+body.light-mode::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+body.light-mode::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+}
+
+body.light-mode::-webkit-scrollbar-thumb:hover {
+    background: #a855f7;
+}
+
+/* ======================================================
+   ================= MOBILE ============================
+   ====================================================== */
 
 @media (max-width: 600px) {
+
+    body {
+        padding: 15px;
+    }
 
     .navbar {
         padding: 12px 15px;
@@ -274,207 +510,12 @@ body.dark-mode .history-item {
 
     .history-item {
         flex-direction: column;
-
         align-items: flex-start;
-
         gap: 12px;
     }
 
-}
-/* ======================================================
-   ============== GLOBAL DARK THEME ====================
-   ============== MATCH DASHBOARD / REPORTS ============
-   ====================================================== */
+    .permanent-delete-btn {
+        margin-left: 5px;
+    }
 
-body {
-    background: #0f172a;
-    color: #f8fafc;
-    transition:
-        background 0.3s ease,
-        color 0.3s ease;
-}
-
-
-/* ================= NAVBAR ================= */
-
-body:not(.light-mode) .navbar {
-    background: #0f172a;
-    color: #ffffff;
-    border-bottom: 1px solid #263449;
-}
-
-
-/* Navbar heading */
-
-body:not(.light-mode) .navbar h2 {
-    color: #c04bdc;
-}
-
-
-/* Dashboard button */
-
-body:not(.light-mode) .navbar button {
-    background: #a855f7;
-    color: #ffffff;
-    border: none;
-}
-
-
-/* ================= MAIN CONTENT ================= */
-
-body:not(.light-mode) .main-content {
-    background: #0f172a;
-    color: #ffffff;
-}
-
-
-/* ================= PAGE TITLE ================= */
-
-body:not(.light-mode) .page-title h1 {
-    color: #c04bdc;
-}
-
-
-body:not(.light-mode) .page-title p {
-    color: #cbd5e1;
-}
-
-
-/* ================= FILTER CARD ================= */
-
-body:not(.light-mode) .filter-card {
-    background: #1e293b;
-    color: #ffffff;
-    border: 1px solid #2d3a4f;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-}
-
-
-/* ================= SELECT ================= */
-
-body:not(.light-mode) .filter-card select {
-    background: #1e293b;
-    color: #ffffff;
-    border: 1px solid #475569;
-}
-
-
-body:not(.light-mode) .filter-card select:focus {
-    border-color: #a855f7;
-    outline: none;
-}
-
-
-/* ================= HISTORY CARD ================= */
-
-body:not(.light-mode) .history-card {
-    background: #1e293b;
-    color: #ffffff;
-    border: 1px solid #2d3a4f;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-}
-
-
-/* History heading */
-
-body:not(.light-mode) .history-card h2 {
-    color: #dbeafe;
-}
-
-
-/* ================= HISTORY TABLE ================= */
-
-body:not(.light-mode) .history-card table {
-    background: #1e293b;
-    color: #ffffff;
-}
-
-
-/* Table heading */
-
-body:not(.light-mode) .history-card th {
-    background: #263449;
-    color: #dbeafe;
-    border-color: #334155;
-}
-
-
-/* Table data */
-
-body:not(.light-mode) .history-card td {
-    background: #1e293b;
-    color: #f8fafc;
-    border-color: #334155;
-}
-
-
-/* Table hover */
-
-body:not(.light-mode) .history-card tr:hover td {
-    background: #263449;
-}
-
-
-/* ================= DELETED EXPENSE ================= */
-
-body:not(.light-mode) .expense-item,
-body:not(.light-mode) .history-item {
-    background: #1e293b;
-    color: #ffffff;
-    border-color: #334155;
-}
-
-
-/* ================= DATE / SECONDARY TEXT ================= */
-
-body:not(.light-mode) .history-card small,
-body:not(.light-mode) .history-card .date,
-body:not(.light-mode) .history-card .secondary-text {
-    color: #94a3b8;
-}
-
-
-/* ================= RESTORE BUTTON ================= */
-
-body:not(.light-mode) .restore-btn {
-    background: #22c55e;
-    color: #ffffff;
-    border: none;
-}
-
-
-body:not(.light-mode) .restore-btn:hover {
-    background: #16a34a;
-}
-
-
-/* ================= DELETE BUTTON ================= */
-
-body:not(.light-mode) .delete-btn {
-    background: #ef4444;
-    color: #ffffff;
-    border: none;
-}
-
-
-/* ================= SCROLLBAR ================= */
-
-body:not(.light-mode)::-webkit-scrollbar {
-    width: 8px;
-}
-
-
-body:not(.light-mode)::-webkit-scrollbar-track {
-    background: #0f172a;
-}
-
-
-body:not(.light-mode)::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 10px;
-}
-
-
-body:not(.light-mode)::-webkit-scrollbar-thumb:hover {
-    background: #a855f7;
 }
