@@ -55,8 +55,6 @@ function formatReminderAmount(amount) {
     const value =
         Number(amount) || 0;
 
-    // Dashboard currency.js / dashboard.js
-    // already has formatCurrency()
     if (
         typeof window.formatCurrency ===
         "function"
@@ -77,7 +75,6 @@ function formatReminderAmount(amount) {
         }
     }
 
-    // Fallback
     return (
         "₹" +
         value.toLocaleString(
@@ -307,29 +304,25 @@ if (saveReminderBtn) {
                 "daily"
             ) {
 
-                normalizedType =
-                    "daily";
+                normalizedType = "daily";
 
             } else if (
                 normalizedType ===
                 "weekly"
             ) {
 
-                normalizedType =
-                    "weekly";
+                normalizedType = "weekly";
 
             } else if (
                 normalizedType ===
                 "monthly"
             ) {
 
-                normalizedType =
-                    "monthly";
+                normalizedType = "monthly";
 
             } else {
 
-                normalizedType =
-                    "onetime";
+                normalizedType = "onetime";
             }
 
             // ==================================================
@@ -386,7 +379,6 @@ if (saveReminderBtn) {
                 ) {
 
                     reminders = [];
-
                 }
 
             } catch (error) {
@@ -460,7 +452,6 @@ async function requestNotificationPermission() {
     ) {
 
         return;
-
     }
 
     try {
@@ -487,10 +478,6 @@ async function requestNotificationPermission() {
         );
     }
 }
-
-// ======================================================
-// ================= REQUEST NOTIFICATION ================
-// ======================================================
 
 requestNotificationPermission();
 
@@ -584,7 +571,6 @@ function shouldShowReminder(
     if (!reminder) {
 
         return false;
-
     }
 
     const today =
@@ -594,7 +580,19 @@ function shouldShowReminder(
         getTodayDate();
 
     const lastAdded =
-        reminder.lastAdded || "";
+        String(
+            reminder.lastAdded || ""
+        );
+
+    const lastShown =
+        String(
+            reminder.lastShown || ""
+        );
+
+    const type =
+        String(
+            reminder.type || "onetime"
+        ).toLowerCase();
 
     // ==================================================
     // ALREADY ADDED TODAY
@@ -606,7 +604,18 @@ function shouldShowReminder(
     ) {
 
         return false;
+    }
 
+    // ==================================================
+    // ALREADY SHOWN TODAY
+    // ==================================================
+
+    if (
+        lastShown ===
+        todayDate
+    ) {
+
+        return false;
     }
 
     // ==================================================
@@ -614,16 +623,13 @@ function shouldShowReminder(
     // ==================================================
 
     if (
-        String(
-            reminder.type
-        ).toLowerCase() ===
+        type ===
         "onetime"
     ) {
 
         return (
             lastAdded === ""
         );
-
     }
 
     // ==================================================
@@ -631,14 +637,11 @@ function shouldShowReminder(
     // ==================================================
 
     if (
-        String(
-            reminder.type
-        ).toLowerCase() ===
+        type ===
         "daily"
     ) {
 
         return true;
-
     }
 
     // ==================================================
@@ -646,16 +649,13 @@ function shouldShowReminder(
     // ==================================================
 
     if (
-        String(
-            reminder.type
-        ).toLowerCase() ===
+        type ===
         "weekly"
     ) {
 
         if (!lastAdded) {
 
             return true;
-
         }
 
         const lastDate =
@@ -671,7 +671,6 @@ function shouldShowReminder(
         ) {
 
             return true;
-
         }
 
         const diff =
@@ -698,16 +697,13 @@ function shouldShowReminder(
     // ==================================================
 
     if (
-        String(
-            reminder.type
-        ).toLowerCase() ===
+        type ===
         "monthly"
     ) {
 
         if (!lastAdded) {
 
             return true;
-
         }
 
         const lastDate =
@@ -723,7 +719,6 @@ function shouldShowReminder(
         ) {
 
             return true;
-
         }
 
         return (
@@ -734,7 +729,6 @@ function shouldShowReminder(
             ||
 
             (
-
                 today.getFullYear() ===
                     lastDate.getFullYear()
 
@@ -742,9 +736,7 @@ function shouldShowReminder(
 
                 today.getMonth() >
                     lastDate.getMonth()
-
             )
-
         );
     }
 
@@ -762,7 +754,6 @@ function checkReminder() {
     ) {
 
         return;
-
     }
 
     reminderCheckRunning =
@@ -788,7 +779,6 @@ function checkReminder() {
             ) {
 
                 reminders = [];
-
             }
 
         } catch (error) {
@@ -806,7 +796,6 @@ function checkReminder() {
         ) {
 
             return;
-
         }
 
         const currentTime =
@@ -827,19 +816,39 @@ function checkReminder() {
             if (!reminder) {
 
                 continue;
-
             }
 
-            if (
+            const reminderTime =
                 String(
-                    reminder.time
-                ) !==
-                currentTime
+                    reminder.time || ""
+                ).trim();
+
+            // ==================================================
+            // INVALID TIME
+            // ==================================================
+
+            if (!reminderTime) {
+
+                continue;
+            }
+
+            // ==================================================
+            // IMPORTANT:
+            // SHOW WHEN CURRENT TIME REACHES
+            // OR PASSES REMINDER TIME
+            // ==================================================
+
+            if (
+                currentTime <
+                reminderTime
             ) {
 
                 continue;
-
             }
+
+            // ==================================================
+            // CHECK FREQUENCY
+            // ==================================================
 
             if (
                 !shouldShowReminder(
@@ -848,7 +857,6 @@ function checkReminder() {
             ) {
 
                 continue;
-
             }
 
             const reminderKey =
@@ -866,7 +874,6 @@ function checkReminder() {
             ) {
 
                 continue;
-
             }
 
             lastShownReminderKey =
@@ -876,21 +883,27 @@ function checkReminder() {
             // STORE LAST SHOWN
             // ==================================================
 
-            let updatedReminders =
+            const updatedReminders =
                 reminders.map(
                     item => {
 
                         if (
-                            item.id ===
-                            reminder.id
+                            Number(
+                                item.id
+                            ) ===
+                            Number(
+                                reminder.id
+                            )
                         ) {
 
-                            item.lastShown =
-                                today;
+                            return {
+                                ...item,
+                                lastShown:
+                                    today
+                            };
                         }
 
                         return item;
-
                     }
                 );
 
@@ -902,7 +915,7 @@ function checkReminder() {
             );
 
             // ==================================================
-            // SHOW
+            // SHOW REMINDER
             // ==================================================
 
             showReminder(
@@ -924,7 +937,6 @@ function checkReminder() {
 
         reminderCheckRunning =
             false;
-
     }
 }
 
@@ -959,7 +971,6 @@ function showReminder(
             ` for ` +
 
             `<b>${safeName}</b>?`;
-
     }
 
     if (
@@ -968,7 +979,6 @@ function showReminder(
 
         reminderPopup.style.display =
             "block";
-
     }
 
     // ==================================================
@@ -991,7 +1001,6 @@ function showReminder(
                         `Add ${formatReminderAmount(
                             reminder.amount
                         )} ${reminder.name} expense?`
-
                 }
             );
 
@@ -1056,8 +1065,15 @@ async function addReminderExpense(
     reminder
 ) {
 
+    // ==================================================
+    // GET USER EMAIL
+    // ==================================================
+
     const email =
         localStorage.getItem(
+            "userEmail"
+        ) ||
+        sessionStorage.getItem(
             "userEmail"
         );
 
@@ -1093,7 +1109,7 @@ async function addReminderExpense(
     const payload = {
 
         email:
-            email,
+            email.trim().toLowerCase(),
 
         name:
             String(
@@ -1127,7 +1143,6 @@ async function addReminderExpense(
         throw new Error(
             "Reminder name is missing."
         );
-
     }
 
     if (
@@ -1140,7 +1155,6 @@ async function addReminderExpense(
         throw new Error(
             "Reminder amount is invalid."
         );
-
     }
 
     console.log(
@@ -1184,7 +1198,6 @@ async function addReminderExpense(
             );
 
             return true;
-
         }
 
         throw new Error(
@@ -1231,7 +1244,6 @@ if (
             ) {
 
                 return;
-
             }
 
             // ==================================================
@@ -1260,7 +1272,7 @@ if (
                 );
 
             // ==================================================
-            // SUCCESS
+            // SUCCESS ONLY
             // ==================================================
 
             if (added) {
@@ -1283,13 +1295,11 @@ if (
                     ) {
 
                         reminders = [];
-
                     }
 
                 } catch {
 
                     reminders = [];
-
                 }
 
                 const today =
@@ -1312,15 +1322,16 @@ if (
                                 )
                             ) {
 
-                                item.lastAdded =
-                                    today;
-
-                                item.lastShown =
-                                    today;
+                                return {
+                                    ...item,
+                                    lastAdded:
+                                        today,
+                                    lastShown:
+                                        today
+                                };
                             }
 
                             return item;
-
                         }
                     );
 
@@ -1346,7 +1357,6 @@ if (
                                     reminderToAdd.id
                                 )
                         );
-
                 }
 
                 // ==================================================
@@ -1370,7 +1380,6 @@ if (
 
                     reminderPopup.style.display =
                         "none";
-
                 }
 
                 currentReminder =
@@ -1406,7 +1415,6 @@ if (
                     ) {
 
                         await window.loadExpenses();
-
                     }
 
                     if (
@@ -1415,7 +1423,6 @@ if (
                     ) {
 
                         await window.loadIncome();
-
                     }
 
                     if (
@@ -1424,7 +1431,6 @@ if (
                     ) {
 
                         window.displayTransactions();
-
                     }
 
                     if (
@@ -1433,10 +1439,8 @@ if (
                     ) {
 
                         window.calculateTotals();
-
                     }
                 }
-
             }
 
             // ==================================================
@@ -1472,7 +1476,6 @@ if (
 
                 reminderPopup.style.display =
                     "none";
-
             }
 
             currentReminder =
@@ -1481,7 +1484,6 @@ if (
             console.log(
                 "Reminder skipped."
             );
-
         }
     );
 }
@@ -1490,7 +1492,6 @@ if (
 // ================= CLOSE POPUP ========================
 // ======================================================
 
-// If your popup has a close button
 const closeReminderBtn =
     document.getElementById(
         "closeReminderBtn"
@@ -1510,7 +1511,6 @@ if (
 
                 reminderPopup.style.display =
                     "none";
-
             }
 
             currentReminder =
