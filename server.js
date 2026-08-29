@@ -264,18 +264,19 @@ async function createRequiredTables() {
     // USER PROFILE TABLE
     // ==================================================
 
-    const profileSQL = `
-        CREATE TABLE IF NOT EXISTS user_profiles (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            email VARCHAR(255) NOT NULL UNIQUE,
-            country VARCHAR(100) DEFAULT '',
-            currency VARCHAR(10) DEFAULT 'INR',
-            minimum_balance DECIMAL(10,2) DEFAULT 0,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_user_profile_email (email)
-        )
-    `;
+   const profileSQL = `
+    CREATE TABLE IF NOT EXISTS user_profiles (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        country VARCHAR(100) DEFAULT '',
+        currency VARCHAR(10) DEFAULT 'INR',
+        minimum_balance DECIMAL(10,2) DEFAULT 0,
+        profile_image MEDIUMTEXT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_user_profile_email (email)
+    )
+`;
 
     await db.promise().query(usersSQL);
     console.log("users table ready");
@@ -2401,6 +2402,23 @@ async function createProfileTable() {
 
     await db.promise().query(profileSQL);
 
+    try {
+    await db.promise().query(`
+        ALTER TABLE user_profiles
+        ADD COLUMN profile_image MEDIUMTEXT NULL
+    `);
+
+    console.log("profile_image column added");
+
+} catch (error) {
+
+    if (error.code === "ER_DUP_FIELDNAME") {
+        console.log("profile_image column already exists");
+    } else {
+        throw error;
+    }
+}
+
     console.log("user_profiles table ready");
 }
 // ======================================================
@@ -2459,7 +2477,8 @@ app.get(
                 SELECT
                     country,
                     currency,
-                    minimum_balance
+                    minimum_balance,
+                     profile_image
                 FROM user_profiles
                 WHERE LOWER(TRIM(email)) = ?
                 LIMIT 1
@@ -2472,7 +2491,8 @@ app.get(
                 : {
                     country: "",
                     currency: "INR",
-                    minimum_balance: 0
+                    minimum_balance: 0,
+                    profile_image: ""
                 };
 
             // ------------------------------------------
@@ -2547,7 +2567,11 @@ app.get(
                     minimumBalance:
                         Number(
                             profile.minimum_balance || 0
+                    
                         ),
+
+                    profileImage:
+                        profile.profile_image || "",
 
                     totalIncome,
 
@@ -2652,7 +2676,11 @@ app.put(
                 minimumBalanceRaw === ""
                     ? 0
                     : Number(minimumBalanceRaw);
-
+            
+            const profileImage =
+                 req.body.profileImage !== undefined
+                   ? String(req.body.profileImage)
+                   : "";
             // ------------------------------------------
             // Validate currency
             // ------------------------------------------
@@ -2717,44 +2745,46 @@ app.put(
                 );
             }
 
-            // ------------------------------------------
-            // SAVE PROFILE
-            // ------------------------------------------
+           // ------------------------------------------
+// SAVE PROFILE
+// ------------------------------------------
 
-            await db.promise().query(
-                `
-                INSERT INTO user_profiles
-                (
-                    email,
-                    country,
-                    currency,
-                    minimum_balance
-                )
-                VALUES (?, ?, ?, ?)
+await db.promise().query(
+    `
+    INSERT INTO user_profiles
+    (
+        email,
+        country,
+        currency,
+        minimum_balance,
+        profile_image
+    )
+    VALUES (?, ?, ?, ?, ?)
 
-                ON DUPLICATE KEY UPDATE
+    ON DUPLICATE KEY UPDATE
 
-                    country =
-                        VALUES(country),
+        country = VALUES(country),
 
-                    currency =
-                        VALUES(currency),
+        currency = VALUES(currency),
 
-                    minimum_balance =
-                        VALUES(minimum_balance)
-                `,
-                [
-                    email,
-                    country,
-                    currency,
-                    minimumBalance
-                ]
-            );
+        minimum_balance = VALUES(minimum_balance),
 
-            console.log(
-                "PROFILE SAVED:",
-                email
-            );
+        profile_image = VALUES(profile_image)
+    `,
+    [
+        email,
+        country,
+        currency,
+        minimumBalance,
+        profileImage
+    ]
+);
+
+console.log(
+    "PROFILE SAVED:",
+    email
+);
+
 
             // ------------------------------------------
             // RESPONSE
@@ -2777,7 +2807,9 @@ app.put(
 
                     currency,
 
-                    minimumBalance
+                    minimumBalance,
+
+                    profileImage
                 }
 
             });

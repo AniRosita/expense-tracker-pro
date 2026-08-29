@@ -2,6 +2,7 @@
 // ============== EXPENSE TRACKER PRO ===================
 // ===================== PROFILE JS ======================
 // ============== SERVER API VERSION ====================
+// ============== PROFILE IMAGE SUPPORT =================
 // ======================================================
 
 "use strict";
@@ -23,7 +24,8 @@ console.log("======================================");
 // ======================================================
 
 const userEmail =
-    localStorage.getItem("userEmail");
+    localStorage.getItem("userEmail") ||
+    sessionStorage.getItem("userEmail");
 
 if (!userEmail) {
     window.location.href = "index.html";
@@ -69,39 +71,39 @@ const saveProfileBtn =
     $("saveProfile");
 
 // ======================================================
+// ================= PROFILE IMAGE DATA =================
+// ======================================================
+
+let selectedProfileImage = "";
+let savedProfileImage = "";
+
+// ======================================================
 // ================= API HELPER ==========================
 // ======================================================
 
-async function profileAPI(
-    endpoint,
-    options = {}
-) {
+async function profileAPI(endpoint, options = {}) {
 
-    const response =
-        await fetch(
-            API_BASE + endpoint,
-            {
-                ...options,
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                    ...(options.headers || {})
-                }
+    const response = await fetch(
+        API_BASE + endpoint,
+        {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                ...(options.headers || {})
             }
-        );
+        }
+    );
 
-    let data;
+    let data = {};
 
     try {
         data = await response.json();
-    } catch {
-        throw new Error(
-            "Invalid server response"
-        );
+    } catch (error) {
+        throw new Error("Invalid server response");
     }
 
     if (!response.ok) {
-
         throw new Error(
             data.message ||
             "Profile API request failed"
@@ -127,13 +129,11 @@ function showProfileLetter() {
         profileName &&
         profileName.value
     ) {
-
         name =
             profileName.value.trim();
     }
 
     if (!name && userEmail) {
-
         name =
             userEmail
                 .split("@")[0]
@@ -145,12 +145,42 @@ function showProfileLetter() {
     }
 
     profileLetter.innerText =
-        name
-            .charAt(0)
-            .toUpperCase();
+        name.charAt(0).toUpperCase();
 
     profileLetter.style.display =
         "flex";
+}
+
+// ======================================================
+// ================= SHOW PROFILE IMAGE =================
+// ======================================================
+
+function showProfileImage(image) {
+
+    if (!profileImg || !image) {
+        return;
+    }
+
+    profileImg.src = image;
+    profileImg.style.display = "block";
+
+    if (profileLetter) {
+        profileLetter.style.display = "none";
+    }
+}
+
+// ======================================================
+// ================= HIDE PROFILE IMAGE =================
+// ======================================================
+
+function hideProfileImage() {
+
+    if (profileImg) {
+        profileImg.src = "";
+        profileImg.style.display = "none";
+    }
+
+    showProfileLetter();
 }
 
 // ======================================================
@@ -166,8 +196,7 @@ function updateProfileLetter() {
     ) {
 
         if (profileLetter) {
-            profileLetter.style.display =
-                "none";
+            profileLetter.style.display = "none";
         }
 
         return;
@@ -203,7 +232,6 @@ async function loadProfile() {
             !data.success ||
             !data.profile
         ) {
-
             throw new Error(
                 "Profile data not received"
             );
@@ -212,63 +240,84 @@ async function loadProfile() {
         const profile =
             data.profile;
 
-        // ----------------------------------------------
+        // ==================================================
         // NAME
-        // ----------------------------------------------
+        // ==================================================
 
         if (profileName) {
-
             profileName.value =
                 profile.name || "";
         }
 
-        // ----------------------------------------------
+        // ==================================================
         // EMAIL
-        // ----------------------------------------------
+        // ==================================================
 
         if (profileEmail) {
-
             profileEmail.value =
                 profile.email ||
                 userEmail;
         }
 
-        // ----------------------------------------------
+        // ==================================================
         // COUNTRY
-        // ----------------------------------------------
+        // ==================================================
 
         if (profileCountry) {
-
             profileCountry.value =
                 profile.country || "";
         }
 
-        // ----------------------------------------------
+        // ==================================================
         // CURRENCY
-        // ----------------------------------------------
+        // ==================================================
 
         if (profileCurrency) {
-
             profileCurrency.value =
                 profile.currency ||
                 "INR";
         }
 
-        // ----------------------------------------------
+        // ==================================================
         // MINIMUM BALANCE
-        // ----------------------------------------------
+        // ==================================================
 
         if (minimumBalance) {
-
             minimumBalance.value =
                 profile.minimumBalance ?? 0;
         }
 
-        // ----------------------------------------------
-        // PROFILE LETTER
-        // ----------------------------------------------
+        // ==================================================
+        // PROFILE IMAGE
+        // ==================================================
 
-        updateProfileLetter();
+        const serverImage =
+            profile.profileImage ||
+            profile.profile_image ||
+            profile.image ||
+            profile.imageUrl ||
+            profile.image_url ||
+            "";
+
+        if (serverImage) {
+
+            savedProfileImage =
+                serverImage;
+
+            selectedProfileImage =
+                serverImage;
+
+            showProfileImage(
+                serverImage
+            );
+
+        } else {
+
+            savedProfileImage = "";
+            selectedProfileImage = "";
+
+            hideProfileImage();
+        }
 
         console.log(
             "Profile loaded successfully ✅",
@@ -282,9 +331,6 @@ async function loadProfile() {
             error
         );
 
-        // If profile doesn't exist,
-        // use default values
-
         if (profileEmail) {
             profileEmail.value =
                 userEmail;
@@ -294,7 +340,6 @@ async function loadProfile() {
             profileCurrency &&
             !profileCurrency.value
         ) {
-
             profileCurrency.value =
                 "INR";
         }
@@ -303,7 +348,6 @@ async function loadProfile() {
             minimumBalance &&
             !minimumBalance.value
         ) {
-
             minimumBalance.value =
                 "0";
         }
@@ -330,9 +374,9 @@ if (profileUpload) {
                 return;
             }
 
-            // ------------------------------------------
+            // ==================================================
             // IMAGE TYPE
-            // ------------------------------------------
+            // ==================================================
 
             if (
                 !file.type.startsWith("image/")
@@ -343,13 +387,12 @@ if (profileUpload) {
                 );
 
                 this.value = "";
-
                 return;
             }
 
-            // ------------------------------------------
+            // ==================================================
             // IMAGE SIZE
-            // ------------------------------------------
+            // ==================================================
 
             const maxSize =
                 5 * 1024 * 1024;
@@ -361,13 +404,12 @@ if (profileUpload) {
                 );
 
                 this.value = "";
-
                 return;
             }
 
-            // ------------------------------------------
-            // PREVIEW ONLY
-            // ------------------------------------------
+            // ==================================================
+            // READ IMAGE
+            // ==================================================
 
             const reader =
                 new FileReader();
@@ -378,27 +420,16 @@ if (profileUpload) {
                     const imageData =
                         event.target.result;
 
-                    if (profileImg) {
+                    selectedProfileImage =
+                        imageData;
 
-                        profileImg.src =
-                            imageData;
+                    showProfileImage(
+                        imageData
+                    );
 
-                        profileImg.style.display =
-                            "block";
-                    }
-
-                    if (profileLetter) {
-
-                        profileLetter.style.display =
-                            "none";
-                    }
-
-                    /*
-                     * IMPORTANT
-                     *
-                     * Image is previewed here.
-                     * It is NOT stored in localStorage.
-                     */
+                    console.log(
+                        "Profile image selected ✅"
+                    );
                 };
 
             reader.onerror =
@@ -444,9 +475,9 @@ if (saveProfileBtn) {
                     ? minimumBalance.value.trim()
                     : "0";
 
-            // ------------------------------------------
+            // ==================================================
             // VALIDATION
-            // ------------------------------------------
+            // ==================================================
 
             if (!name) {
 
@@ -483,15 +514,17 @@ if (saveProfileBtn) {
                 return;
             }
 
-            // ------------------------------------------
-            // MINIMUM BALANCE VALIDATION
-            // ------------------------------------------
+            // ==================================================
+            // MINIMUM BALANCE
+            // ==================================================
 
             const minimumValue =
                 Number(minimum);
 
             if (
-                !Number.isFinite(minimumValue) ||
+                !Number.isFinite(
+                    minimumValue
+                ) ||
                 minimumValue < 0
             ) {
 
@@ -524,9 +557,9 @@ if (saveProfileBtn) {
                 return;
             }
 
-            // ------------------------------------------
+            // ==================================================
             // SHOW LOADING
-            // ------------------------------------------
+            // ==================================================
 
             if (
                 typeof Swal !==
@@ -543,11 +576,9 @@ if (saveProfileBtn) {
                     allowOutsideClick:
                         false,
 
-                    didOpen:
-                        () => {
-
-                            Swal.showLoading();
-                        }
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
             }
 
@@ -557,28 +588,63 @@ if (saveProfileBtn) {
                     "Saving profile to server..."
                 );
 
+                // ==================================================
+                // PROFILE DATA
+                // ==================================================
+
+                const profileData = {
+
+                    name:
+                        name,
+
+                    country:
+                        country,
+
+                    currency:
+                        currency,
+
+                    minimumBalance:
+                        minimumValue,
+
+                    // PROFILE IMAGE
+                    profileImage:
+                        selectedProfileImage || ""
+                };
+
+                console.log(
+                    "Profile data being sent:",
+                    {
+                        name:
+                            name,
+                        country:
+                            country,
+                        currency:
+                            currency,
+                        minimumBalance:
+                            minimumValue,
+                        hasProfileImage:
+                            !!selectedProfileImage
+                    }
+                );
+
+                // ==================================================
+                // SAVE TO SERVER
+                // ==================================================
+
                 const data =
                     await profileAPI(
                         "/api/profile/" +
-                        encodeURIComponent(userEmail),
+                        encodeURIComponent(
+                            userEmail
+                        ),
                         {
-                            method: "PUT",
+                            method:
+                                "PUT",
 
                             body:
-                                JSON.stringify({
-
-                                    name:
-                                        name,
-
-                                    country:
-                                        country,
-
-                                    currency:
-                                        currency,
-
-                                    minimumBalance:
-                                        minimumValue
-                                })
+                                JSON.stringify(
+                                    profileData
+                                )
                         }
                     );
 
@@ -587,15 +653,21 @@ if (saveProfileBtn) {
                     data
                 );
 
-                // --------------------------------------
-                // UPDATE LETTER
-                // --------------------------------------
+                // ==================================================
+                // UPDATE LOCAL IMAGE STATE
+                // ==================================================
 
-                updateProfileLetter();
+                if (
+                    selectedProfileImage
+                ) {
 
-                // --------------------------------------
+                    savedProfileImage =
+                        selectedProfileImage;
+                }
+
+                // ==================================================
                 // SUCCESS
-                // --------------------------------------
+                // ==================================================
 
                 if (
                     typeof Swal !==
@@ -624,9 +696,9 @@ if (saveProfileBtn) {
                     );
                 }
 
-                // --------------------------------------
-                // DASHBOARD
-                // --------------------------------------
+                // ==================================================
+                // GO DASHBOARD
+                // ==================================================
 
                 window.location.href =
                     "dashboard.html";
@@ -779,11 +851,8 @@ function viewProfileImage() {
     const img =
         $("profileImg");
 
-    if (!img) {
-        return;
-    }
-
     if (
+        !img ||
         !img.src ||
         img.style.display === "none"
     ) {
@@ -897,17 +966,20 @@ window.viewProfileImage =
 
 function removeProfileImage() {
 
-    if (profileImg) {
+    selectedProfileImage = "";
+    savedProfileImage = "";
 
-        profileImg.src = "";
+    hideProfileImage();
 
-        profileImg.style.display =
-            "none";
+    if (profileUpload) {
+        profileUpload.value = "";
     }
 
-    showProfileLetter();
-
     closeImagePopup();
+
+    console.log(
+        "Profile image removed from current profile ✅"
+    );
 }
 
 window.removeProfileImage =
@@ -966,18 +1038,17 @@ document.addEventListener(
 // ================= INITIAL LOAD ========================
 // ======================================================
 
-if (
-    profileImg &&
-    !profileImg.src
-) {
-
+if (profileImg) {
     profileImg.style.display =
         "none";
 }
 
 showProfileLetter();
 
-// Load profile from Railway API
+// ======================================================
+// LOAD PROFILE FROM RAILWAY API
+// ======================================================
+
 loadProfile();
 
 // ======================================================
@@ -1005,6 +1076,11 @@ console.log(
 console.log(
     "Profile API:",
     "CONNECTED ✅"
+);
+
+console.log(
+    "Profile Image:",
+    "SERVER SYNC ENABLED ✅"
 );
 
 console.log(
