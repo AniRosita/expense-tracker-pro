@@ -772,18 +772,6 @@ td {
     transform: translateX(5px);
 }
 
-/* ======================================================
-   DELETE HISTORY SIDEBAR ITEM
-   ====================================================== */
-
-.side-menu a[href="delete.html"] {
-    background: #334155;
-}
-
-.side-menu a[href="delete.html"]:hover {
-    background: #ef4444;
-    color: #ffffff;
-}
 
 /* ======================================================
    THEME BUTTON
@@ -1044,17 +1032,6 @@ body.light-mode .side-menu a:hover {
     color: #ffffff;
 }
 
-html.light-mode .side-menu a[href="delete.html"],
-body.light-mode .side-menu a[href="delete.html"] {
-    background: #e5e7eb;
-    color: #111827;
-}
-
-html.light-mode .side-menu a[href="delete.html"]:hover,
-body.light-mode .side-menu a[href="delete.html"]:hover {
-    background: #ef4444;
-    color: #ffffff;
-}
 
 /* ======================================================
    LIGHT THEME BUTTON
