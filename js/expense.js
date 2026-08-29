@@ -858,9 +858,7 @@ function setupImportUI() {
     importButton.type =
         "button";
 
-    importButton.innerHTML =
-        "📥 Import Excel / CSV";
-
+    
     const fileInput =
         document.createElement(
             "input"
