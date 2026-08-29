@@ -16,11 +16,13 @@
 
 <script>
 (function () {
+
     const theme = localStorage.getItem("theme");
 
     if (theme === "light") {
         document.documentElement.classList.add("light-mode");
     }
+
 })();
 </script>
 
@@ -40,6 +42,7 @@
 >
 
 </head>
+
 
 <body>
 
@@ -62,6 +65,7 @@
 
     <div class="nav-right">
 
+
         <!-- ================= PROFILE ================= -->
 
         <div
@@ -69,14 +73,61 @@
             onclick="openProfile()"
         >
 
-            <div id="profileCircle">
-                <span id="profileInitial"></span>
+
+            <!-- PROFILE CIRCLE -->
+
+            <div
+                id="profileCircle"
+                style="
+                    width:48px;
+                    height:48px;
+                    min-width:48px;
+                    min-height:48px;
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    overflow:hidden;
+                    background:#a855f7;
+                    color:#ffffff;
+                    font-size:22px;
+                    font-weight:700;
+                    line-height:1;
+                    text-align:center;
+                    padding:0;
+                    margin:0;
+                    box-sizing:border-box;
+                "
+            >
+
+                <span
+                    id="profileInitial"
+                    style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        width:100%;
+                        height:100%;
+                        color:#ffffff;
+                        font-size:22px;
+                        font-weight:700;
+                        line-height:1;
+                        text-align:center;
+                        margin:0;
+                        padding:0;
+                    "
+                ></span>
+
             </div>
+
+
+            <!-- PROFILE TEXT -->
 
             <span>
                 <i class="fa-solid fa-user"></i>
                 Profile
             </span>
+
 
         </div>
 
@@ -90,6 +141,7 @@
             Theme
 
         </button>
+
 
     </div>
 
@@ -782,78 +834,278 @@
 <script src="js/reminder.js"></script>
 
 
+
+<!-- ================================================== -->
+<!-- ================= PROFILE SCRIPT ================== -->
+<!-- ================================================== -->
+
 <script>
 
 function openProfile() {
 
-    window.location.href =
-        "profile.html";
+    window.location.href = "profile.html";
 
 }
 
 
 /* ======================================================
-   PROFILE FIRST LETTER
+   GET USER NAME
+   ====================================================== */
+
+function getDashboardUserName() {
+
+    const possibleKeys = [
+
+        "userName",
+        "name",
+        "username",
+        "profileName",
+        "fullName",
+        "user_name",
+        "displayName"
+
+    ];
+
+
+    /* -----------------------------------------------
+       Check normal localStorage keys
+       ----------------------------------------------- */
+
+    for (const key of possibleKeys) {
+
+        const value = localStorage.getItem(key);
+
+        if (
+            value &&
+            value.trim() &&
+            value !== "null" &&
+            value !== "undefined"
+        ) {
+
+            return value.trim();
+
+        }
+
+    }
+
+
+    /* -----------------------------------------------
+       Check currentUser object
+       ----------------------------------------------- */
+
+    const currentUser =
+        localStorage.getItem("currentUser");
+
+
+    if (currentUser) {
+
+        try {
+
+            const user =
+                JSON.parse(currentUser);
+
+
+            if (user && typeof user === "object") {
+
+                const objectName =
+                    user.name ||
+                    user.userName ||
+                    user.username ||
+                    user.fullName ||
+                    user.displayName;
+
+
+                if (
+                    objectName &&
+                    String(objectName).trim()
+                ) {
+
+                    return String(
+                        objectName
+                    ).trim();
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.log(
+                "currentUser is not JSON"
+            );
+
+        }
+
+    }
+
+
+    /* -----------------------------------------------
+       Check loggedUser object
+       ----------------------------------------------- */
+
+    const loggedUser =
+        localStorage.getItem("loggedUser");
+
+
+    if (loggedUser) {
+
+        try {
+
+            const user =
+                JSON.parse(loggedUser);
+
+
+            if (user && typeof user === "object") {
+
+                const objectName =
+                    user.name ||
+                    user.userName ||
+                    user.username ||
+                    user.fullName ||
+                    user.displayName;
+
+
+                if (
+                    objectName &&
+                    String(objectName).trim()
+                ) {
+
+                    return String(
+                        objectName
+                    ).trim();
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.log(
+                "loggedUser is not JSON"
+            );
+
+        }
+
+    }
+
+
+    /* -----------------------------------------------
+       Email fallback
+       ----------------------------------------------- */
+
+    const emailKeys = [
+
+        "userEmail",
+        "email",
+        "loggedInEmail",
+        "currentUserEmail"
+
+    ];
+
+
+    for (const key of emailKeys) {
+
+        const email =
+            localStorage.getItem(key);
+
+
+        if (
+            email &&
+            email.trim()
+        ) {
+
+            return email.trim();
+
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+
+/* ======================================================
+   SET PROFILE FIRST LETTER
+   ====================================================== */
+
+function setDashboardProfileInitial() {
+
+    const profileInitial =
+        document.getElementById(
+            "profileInitial"
+        );
+
+
+    if (!profileInitial) {
+        return;
+    }
+
+
+    const userName =
+        getDashboardUserName();
+
+
+    if (!userName) {
+
+        profileInitial.textContent = "";
+
+        return;
+
+    }
+
+
+    const firstLetter =
+        userName
+            .trim()
+            .charAt(0)
+            .toUpperCase();
+
+
+    profileInitial.textContent =
+        firstLetter;
+
+
+    console.log(
+        "Dashboard Profile Name:",
+        userName
+    );
+
+
+    console.log(
+        "Dashboard Profile Initial:",
+        firstLetter
+    );
+
+}
+
+
+
+/* ======================================================
+   RUN AFTER PAGE LOAD
    ====================================================== */
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const profileInitial =
-            document.getElementById(
-                "profileInitial"
-            );
+        setDashboardProfileInitial();
 
-        if (!profileInitial) {
-            return;
-        }
+    }
+);
 
-        /*
-         * Try to get user's name
-         * from localStorage.
-         */
-        const userName =
-            localStorage.getItem("userName") ||
-            localStorage.getItem("name") ||
-            localStorage.getItem("username") ||
-            "";
 
-        if (userName.trim()) {
+/* ======================================================
+   ALSO RUN AFTER FULL PAGE LOAD
+   ====================================================== */
 
-            profileInitial.textContent =
-                userName
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase();
+window.addEventListener(
+    "load",
+    function () {
 
-        } else {
-
-            /*
-             * If name is not available,
-             * use email first letter.
-             */
-            const email =
-                localStorage.getItem(
-                    "userEmail"
-                ) || "";
-
-            if (email.trim()) {
-
-                profileInitial.textContent =
-                    email
-                        .trim()
-                        .charAt(0)
-                        .toUpperCase();
-
-            } else {
-
-                profileInitial.textContent =
-                    "";
-
-            }
-
-        }
+        setDashboardProfileInitial();
 
     }
 );
