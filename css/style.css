@@ -190,3 +190,42 @@ button:hover{
         padding:25px; 
     } 
 }
+/* ======================================================
+   GLOBAL SMOOTH THEME TRANSITION
+   ====================================================== */
+
+html {
+    background: #0f172a;
+    transition: background-color 0.4s ease;
+}
+
+body,
+.navbar,
+.side-menu,
+.card,
+.expense-form,
+.expense-table,
+.tip-card,
+.chart-card,
+.filter-box,
+.filter-card,
+.history-card,
+.popup,
+.login-card,
+.profile-card {
+    transition:
+        background-color 0.4s ease,
+        color 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
+}
+
+/* Prevent white flash while changing pages */
+body {
+    background-color: #0f172a;
+}
+
+/* Light mode */
+body.light-mode {
+    background-color: #f8fafc;
+}
