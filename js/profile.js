@@ -1,10 +1,22 @@
 // ======================================================
-// ================= EXPENSE TRACKER PRO =================
-// ===================== PROFILE JS =======================
-// ============== NO EXPENSE/INCOME LOCALSTORAGE =========
+// ============== EXPENSE TRACKER PRO ===================
+// ===================== PROFILE JS ======================
+// ============== SERVER API VERSION ====================
 // ======================================================
 
 "use strict";
+
+// ======================================================
+// ================= API CONFIG ==========================
+// ======================================================
+
+const API_BASE =
+    "https://expense-tracker-pro-production-b745.up.railway.app";
+
+console.log("======================================");
+console.log("PROFILE JS LOADED");
+console.log("API:", API_BASE);
+console.log("======================================");
 
 // ======================================================
 // ================= USER EMAIL ==========================
@@ -57,126 +69,50 @@ const saveProfileBtn =
     $("saveProfile");
 
 // ======================================================
-// ================= LOAD PROFILE EMAIL ==================
+// ================= API HELPER ==========================
 // ======================================================
 
-if (profileEmail) {
-    profileEmail.value =
-        userEmail;
-}
+async function profileAPI(
+    endpoint,
+    options = {}
+) {
 
-// ======================================================
-// ================= LOAD PROFILE DATA ===================
-// ======================================================
-
-let savedProfile = null;
-
-try {
-    savedProfile =
-        JSON.parse(
-            localStorage.getItem(
-                "profileData"
-            )
-        );
-} catch (error) {
-
-    console.warn(
-        "Invalid profileData found. Resetting profile data."
-    );
-
-    localStorage.removeItem(
-        "profileData"
-    );
-
-    savedProfile = null;
-}
-
-// ======================================================
-// ================= DEFAULT PROFILE =====================
-// ======================================================
-
-if (profileCurrency &&
-    !profileCurrency.value) {
-
-    profileCurrency.value =
-        "INR";
-}
-
-// ======================================================
-// ================= APPLY PROFILE DATA ==================
-// ======================================================
-
-if (savedProfile) {
-
-    if (profileName) {
-
-        profileName.value =
-            savedProfile.name || "";
-    }
-
-    if (profileCountry) {
-
-        profileCountry.value =
-            savedProfile.country || "";
-    }
-
-    if (profileCurrency) {
-
-        profileCurrency.value =
-            savedProfile.currency ||
-            "INR";
-    }
-
-    if (minimumBalance) {
-
-        minimumBalance.value =
-            savedProfile.minimumBalance ||
-            "";
-    }
-}
-
-// ======================================================
-// ================= PROFILE IMAGE LOAD ==================
-// ======================================================
-
-function loadProfileImage() {
-
-    const savedImage =
-        localStorage.getItem(
-            "profileImage"
+    const response =
+        await fetch(
+            API_BASE + endpoint,
+            {
+                ...options,
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                    ...(options.headers || {})
+                }
+            }
         );
 
-    if (
-        savedImage &&
-        profileImg
-    ) {
+    let data;
 
-        profileImg.src =
-            savedImage;
-
-        profileImg.style.display =
-            "block";
-
-        if (profileLetter) {
-
-            profileLetter.style.display =
-                "none";
-        }
-
-        return;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error(
+            "Invalid server response"
+        );
     }
 
-    if (profileImg) {
+    if (!response.ok) {
 
-        profileImg.style.display =
-            "none";
+        throw new Error(
+            data.message ||
+            "Profile API request failed"
+        );
     }
 
-    showProfileLetter();
+    return data;
 }
 
 // ======================================================
-// ================= PROFILE LETTER =====================
+// ================= PROFILE LETTER ======================
 // ======================================================
 
 function showProfileLetter() {
@@ -185,13 +121,32 @@ function showProfileLetter() {
         return;
     }
 
-    const name =
-        profileName?.value?.trim() ||
-        savedProfile?.name?.trim() ||
-        "User";
+    let name = "";
+
+    if (
+        profileName &&
+        profileName.value
+    ) {
+
+        name =
+            profileName.value.trim();
+    }
+
+    if (!name && userEmail) {
+
+        name =
+            userEmail
+                .split("@")[0]
+                .trim();
+    }
+
+    if (!name) {
+        name = "User";
+    }
 
     profileLetter.innerText =
-        name.charAt(0)
+        name
+            .charAt(0)
             .toUpperCase();
 
     profileLetter.style.display =
@@ -204,16 +159,157 @@ function showProfileLetter() {
 
 function updateProfileLetter() {
 
-    const savedImage =
-        localStorage.getItem(
-            "profileImage"
-        );
+    if (
+        profileImg &&
+        profileImg.style.display === "block" &&
+        profileImg.src
+    ) {
 
-    if (savedImage) {
+        if (profileLetter) {
+            profileLetter.style.display =
+                "none";
+        }
+
         return;
     }
 
     showProfileLetter();
+}
+
+// ======================================================
+// ================= LOAD PROFILE FROM API ==============
+// ======================================================
+
+async function loadProfile() {
+
+    if (!userEmail) {
+        return;
+    }
+
+    try {
+
+        console.log(
+            "Loading profile:",
+            userEmail
+        );
+
+        const data =
+            await profileAPI(
+                "/api/profile/" +
+                encodeURIComponent(userEmail)
+            );
+
+        if (
+            !data.success ||
+            !data.profile
+        ) {
+
+            throw new Error(
+                "Profile data not received"
+            );
+        }
+
+        const profile =
+            data.profile;
+
+        // ----------------------------------------------
+        // NAME
+        // ----------------------------------------------
+
+        if (profileName) {
+
+            profileName.value =
+                profile.name || "";
+        }
+
+        // ----------------------------------------------
+        // EMAIL
+        // ----------------------------------------------
+
+        if (profileEmail) {
+
+            profileEmail.value =
+                profile.email ||
+                userEmail;
+        }
+
+        // ----------------------------------------------
+        // COUNTRY
+        // ----------------------------------------------
+
+        if (profileCountry) {
+
+            profileCountry.value =
+                profile.country || "";
+        }
+
+        // ----------------------------------------------
+        // CURRENCY
+        // ----------------------------------------------
+
+        if (profileCurrency) {
+
+            profileCurrency.value =
+                profile.currency ||
+                "INR";
+        }
+
+        // ----------------------------------------------
+        // MINIMUM BALANCE
+        // ----------------------------------------------
+
+        if (minimumBalance) {
+
+            minimumBalance.value =
+                profile.minimumBalance ?? 0;
+        }
+
+        // ----------------------------------------------
+        // PROFILE LETTER
+        // ----------------------------------------------
+
+        updateProfileLetter();
+
+        console.log(
+            "Profile loaded successfully ✅",
+            profile
+        );
+
+    } catch (error) {
+
+        console.error(
+            "LOAD PROFILE ERROR:",
+            error
+        );
+
+        // If profile doesn't exist,
+        // use default values
+
+        if (profileEmail) {
+            profileEmail.value =
+                userEmail;
+        }
+
+        if (
+            profileCurrency &&
+            !profileCurrency.value
+        ) {
+
+            profileCurrency.value =
+                "INR";
+        }
+
+        if (
+            minimumBalance &&
+            !minimumBalance.value
+        ) {
+
+            minimumBalance.value =
+                "0";
+        }
+
+        showProfileLetter();
+    }
 }
 
 // ======================================================
@@ -235,49 +331,42 @@ if (profileUpload) {
             }
 
             // ------------------------------------------
-            // IMAGE VALIDATION
+            // IMAGE TYPE
             // ------------------------------------------
 
             if (
-                !file.type.startsWith(
-                    "image/"
-                )
+                !file.type.startsWith("image/")
             ) {
 
                 alert(
                     "Please select a valid image file."
                 );
 
-                this.value =
-                    "";
+                this.value = "";
 
                 return;
             }
 
             // ------------------------------------------
-            // SIZE VALIDATION
+            // IMAGE SIZE
             // ------------------------------------------
 
             const maxSize =
                 5 * 1024 * 1024;
 
-            if (
-                file.size >
-                maxSize
-            ) {
+            if (file.size > maxSize) {
 
                 alert(
                     "Image size must be less than 5 MB."
                 );
 
-                this.value =
-                    "";
+                this.value = "";
 
                 return;
             }
 
             // ------------------------------------------
-            // READ IMAGE
+            // PREVIEW ONLY
             // ------------------------------------------
 
             const reader =
@@ -304,10 +393,12 @@ if (profileUpload) {
                             "none";
                     }
 
-                    localStorage.setItem(
-                        "profileImage",
-                        imageData
-                    );
+                    /*
+                     * IMPORTANT
+                     *
+                     * Image is previewed here.
+                     * It is NOT stored in localStorage.
+                     */
                 };
 
             reader.onerror =
@@ -318,9 +409,7 @@ if (profileUpload) {
                     );
                 };
 
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
         }
     );
 }
@@ -333,7 +422,7 @@ if (saveProfileBtn) {
 
     saveProfileBtn.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const name =
                 profileName
@@ -353,7 +442,7 @@ if (saveProfileBtn) {
             const minimum =
                 minimumBalance
                     ? minimumBalance.value.trim()
-                    : "";
+                    : "0";
 
             // ------------------------------------------
             // VALIDATION
@@ -361,12 +450,21 @@ if (saveProfileBtn) {
 
             if (!name) {
 
-                if (typeof Swal !== "undefined") {
+                if (
+                    typeof Swal !==
+                    "undefined"
+                ) {
 
                     Swal.fire({
-                        title: "Name Required",
-                        text: "Please enter your name.",
-                        icon: "warning",
+                        title:
+                            "Name Required",
+
+                        text:
+                            "Please enter your name.",
+
+                        icon:
+                            "warning",
+
                         confirmButtonColor:
                             "#4f46e5"
                     });
@@ -386,40 +484,48 @@ if (saveProfileBtn) {
             }
 
             // ------------------------------------------
-            // PROFILE OBJECT
+            // MINIMUM BALANCE VALIDATION
             // ------------------------------------------
 
-            const profile = {
+            const minimumValue =
+                Number(minimum);
 
-                name:
-                    name,
+            if (
+                !Number.isFinite(minimumValue) ||
+                minimumValue < 0
+            ) {
 
-                country:
-                    country,
+                if (
+                    typeof Swal !==
+                    "undefined"
+                ) {
 
-                currency:
-                    currency || "INR",
+                    Swal.fire({
+                        title:
+                            "Invalid Minimum Balance",
 
-                minimumBalance:
-                    minimum
-            };
+                        text:
+                            "Please enter a valid amount.",
+
+                        icon:
+                            "warning",
+
+                        confirmButtonColor:
+                            "#4f46e5"
+                    });
+
+                } else {
+
+                    alert(
+                        "Please enter a valid minimum balance."
+                    );
+                }
+
+                return;
+            }
 
             // ------------------------------------------
-            // SAVE PROFILE ONLY
-            // ------------------------------------------
-
-            localStorage.setItem(
-                "profileData",
-                JSON.stringify(
-                    profile
-                )
-            );
-
-            // Update letter immediately
-            updateProfileLetter();
-
-            // ------------------------------------------
-            // SUCCESS MESSAGE
+            // SHOW LOADING
             // ------------------------------------------
 
             if (
@@ -428,41 +534,145 @@ if (saveProfileBtn) {
             ) {
 
                 Swal.fire({
-
                     title:
-                        "Success!",
+                        "Saving Profile...",
 
                     text:
-                        "Profile Saved Successfully ✅",
+                        "Please wait",
 
-                    icon:
-                        "success",
+                    allowOutsideClick:
+                        false,
 
-                    confirmButtonColor:
-                        "#4f46e5"
-                }).then(
-                    function () {
+                    didOpen:
+                        () => {
 
-                        window.location.href =
-                            "dashboard.html";
-                    }
+                            Swal.showLoading();
+                        }
+                });
+            }
+
+            try {
+
+                console.log(
+                    "Saving profile to server..."
                 );
 
-            } else {
+                const data =
+                    await profileAPI(
+                        "/api/profile/" +
+                        encodeURIComponent(userEmail),
+                        {
+                            method: "PUT",
 
-                alert(
-                    "Profile Saved Successfully ✅"
+                            body:
+                                JSON.stringify({
+
+                                    name:
+                                        name,
+
+                                    country:
+                                        country,
+
+                                    currency:
+                                        currency,
+
+                                    minimumBalance:
+                                        minimumValue
+                                })
+                        }
+                    );
+
+                console.log(
+                    "PROFILE SAVED ✅",
+                    data
                 );
+
+                // --------------------------------------
+                // UPDATE LETTER
+                // --------------------------------------
+
+                updateProfileLetter();
+
+                // --------------------------------------
+                // SUCCESS
+                // --------------------------------------
+
+                if (
+                    typeof Swal !==
+                    "undefined"
+                ) {
+
+                    await Swal.fire({
+
+                        title:
+                            "Success!",
+
+                        text:
+                            "Profile details saved successfully ✅",
+
+                        icon:
+                            "success",
+
+                        confirmButtonColor:
+                            "#4f46e5"
+                    });
+
+                } else {
+
+                    alert(
+                        "Profile details saved successfully ✅"
+                    );
+                }
+
+                // --------------------------------------
+                // DASHBOARD
+                // --------------------------------------
 
                 window.location.href =
                     "dashboard.html";
+
+            } catch (error) {
+
+                console.error(
+                    "SAVE PROFILE ERROR:",
+                    error
+                );
+
+                if (
+                    typeof Swal !==
+                    "undefined"
+                ) {
+
+                    Swal.fire({
+
+                        title:
+                            "Save Failed",
+
+                        text:
+                            error.message ||
+                            "Unable to save profile.",
+
+                        icon:
+                            "error",
+
+                        confirmButtonColor:
+                            "#4f46e5"
+                    });
+
+                } else {
+
+                    alert(
+                        error.message ||
+                        "Unable to save profile."
+                    );
+                }
             }
         }
     );
 }
 
 // ======================================================
-// ================= BACK DASHBOARD =====================
+// ================= BACK DASHBOARD ======================
 // ======================================================
 
 function goDashboard() {
@@ -481,9 +691,7 @@ window.goDashboard =
 function loadSavedTheme() {
 
     const theme =
-        localStorage.getItem(
-            "theme"
-        );
+        localStorage.getItem("theme");
 
     if (
         theme === "light"
@@ -544,7 +752,7 @@ window.closeImagePopup =
     closeImagePopup;
 
 // ======================================================
-// ================= CHANGE PROFILE IMAGE ===============
+// ================= CHANGE PROFILE IMAGE ================
 // ======================================================
 
 function changeProfileImage() {
@@ -553,7 +761,6 @@ function changeProfileImage() {
         $("profileUpload");
 
     if (upload) {
-
         upload.click();
     }
 
@@ -676,7 +883,6 @@ function viewProfileImage() {
         </body>
 
         </html>
-
     `);
 
     popup.document.close();
@@ -691,14 +897,9 @@ window.viewProfileImage =
 
 function removeProfileImage() {
 
-    localStorage.removeItem(
-        "profileImage"
-    );
-
     if (profileImg) {
 
-        profileImg.src =
-            "";
+        profileImg.src = "";
 
         profileImg.style.display =
             "none";
@@ -747,12 +948,9 @@ document.addEventListener(
             "flex"
         ) {
 
-            const target =
-                event.target;
-
             const insidePopup =
                 popup.contains(
-                    target
+                    event.target
                 );
 
             if (!insidePopup) {
@@ -768,30 +966,19 @@ document.addEventListener(
 // ================= INITIAL LOAD ========================
 // ======================================================
 
-loadProfileImage();
-
-showProfileLetter();
-
-// If image exists, hide letter again
-const existingImage =
-    localStorage.getItem(
-        "profileImage"
-    );
-
 if (
-    existingImage &&
-    profileImg
+    profileImg &&
+    !profileImg.src
 ) {
 
     profileImg.style.display =
-        "block";
-
-    if (profileLetter) {
-
-        profileLetter.style.display =
-            "none";
-    }
+        "none";
 }
+
+showProfileLetter();
+
+// Load profile from Railway API
+loadProfile();
 
 // ======================================================
 // ================= DEBUG ===============================
@@ -811,8 +998,23 @@ console.log(
 );
 
 console.log(
-    "Expense/Income LocalStorage:",
+    "Profile LocalStorage:",
     "DISABLED ✅"
+);
+
+console.log(
+    "Profile API:",
+    "CONNECTED ✅"
+);
+
+console.log(
+    "GET:",
+    "/api/profile/:email"
+);
+
+console.log(
+    "PUT:",
+    "/api/profile/:email"
 );
 
 console.log(

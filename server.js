@@ -2360,7 +2360,353 @@ app.get(
         }
     }
 );
+// ======================================================
+// ================= USER PROFILE =======================
+// ======================================================
 
+// Create profile table if it does not exist
+async function createProfileTable() {
+    const profileSQL = `
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            country VARCHAR(100) DEFAULT '',
+            currency VARCHAR(10) DEFAULT 'INR',
+            minimum_balance DECIMAL(10,2) DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_user_profile_email (email)
+        )
+    `;
+
+    await db.promise().query(profileSQL);
+
+    console.log("user_profiles table ready");
+}
+
+// ------------------------------------------------------
+// GET PROFILE
+// ------------------------------------------------------
+
+app.get(
+    "/api/profile/:email",
+    checkDatabase,
+    async (req, res) => {
+        try {
+            const email = getEmailParam(req);
+
+            if (!email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Email is required"
+                });
+            }
+
+            // Get user basic information
+            const [users] = await db.promise().query(
+                `
+                SELECT
+                    id,
+                    name,
+                    email
+                FROM users
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+            if (!users.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
+
+            const user = users[0];
+
+            // Get profile information
+            const [profiles] = await db.promise().query(
+                `
+                SELECT
+                    country,
+                    currency,
+                    minimum_balance
+                FROM user_profiles
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+            const profile = profiles.length
+                ? profiles[0]
+                : {
+                    country: "",
+                    currency: "INR",
+                    minimum_balance: 0
+                };
+
+            // Get total income
+            const [incomeResult] = await db.promise().query(
+                `
+                SELECT
+                    COALESCE(SUM(amount), 0) AS totalIncome
+                FROM income
+                WHERE LOWER(TRIM(email)) = ?
+                `,
+                [email]
+            );
+
+            // Get total expense
+            const [expenseResult] = await db.promise().query(
+                `
+                SELECT
+                    COALESCE(SUM(amount), 0) AS totalExpense
+                FROM expenses
+                WHERE LOWER(TRIM(email)) = ?
+                `,
+                [email]
+            );
+
+            const totalIncome = Number(
+                incomeResult[0]?.totalIncome || 0
+            );
+
+            const totalExpense = Number(
+                expenseResult[0]?.totalExpense || 0
+            );
+
+            const totalBalance =
+                totalIncome - totalExpense;
+
+            res.json({
+                success: true,
+
+                profile: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+
+                    country:
+                        profile.country || "",
+
+                    currency:
+                        profile.currency || "INR",
+
+                    minimumBalance:
+                        Number(
+                            profile.minimum_balance || 0
+                        ),
+
+                    totalIncome,
+                    totalExpense,
+                    totalBalance
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "GET PROFILE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load profile",
+                error: error.message
+            });
+        }
+    }
+);
+
+
+// ------------------------------------------------------
+// SAVE / UPDATE PROFILE
+// ------------------------------------------------------
+
+app.put(
+    "/api/profile/:email",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const email = getEmailParam(req);
+
+            const name = String(
+                req.body.name || ""
+            ).trim();
+
+            const country = String(
+                req.body.country || ""
+            ).trim();
+
+            const currency = String(
+                req.body.currency || "INR"
+            ).trim();
+
+            const minimumBalance = Number(
+                req.body.minimumBalance ?? 0
+            );
+
+            if (!email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Email is required"
+                });
+            }
+
+            if (!name) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Name is required"
+                });
+            }
+
+            if (!["INR", "USD", "EUR", "GBP"].includes(currency)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid currency"
+                });
+            }
+
+            if (
+                !Number.isFinite(minimumBalance) ||
+                minimumBalance < 0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Minimum balance must be a valid number"
+                });
+            }
+
+            // Check user
+            const [users] = await db.promise().query(
+                `
+                SELECT id
+                FROM users
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [email]
+            );
+
+            if (!users.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
+
+            // Update name in users table
+            await db.promise().query(
+                `
+                UPDATE users
+                SET name = ?
+                WHERE LOWER(TRIM(email)) = ?
+                LIMIT 1
+                `,
+                [
+                    name,
+                    email
+                ]
+            );
+
+            // Insert or update profile
+            await db.promise().query(
+                `
+                INSERT INTO user_profiles
+                (
+                    email,
+                    country,
+                    currency,
+                    minimum_balance
+                )
+                VALUES (?, ?, ?, ?)
+
+                ON DUPLICATE KEY UPDATE
+                    country = VALUES(country),
+                    currency = VALUES(currency),
+                    minimum_balance = VALUES(minimum_balance)
+                `,
+                [
+                    email,
+                    country,
+                    currency,
+                    minimumBalance
+                ]
+            );
+
+            console.log(
+                "PROFILE SAVED:",
+                email
+            );
+
+            res.json({
+                success: true,
+                message: "Profile saved successfully",
+
+                profile: {
+                    name,
+                    email,
+                    country,
+                    currency,
+                    minimumBalance
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "SAVE PROFILE ERROR:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to save profile",
+                error: error.message
+            });
+        }
+    }
+);
+
+
+// ------------------------------------------------------
+// PROFILE STATUS / TEST
+// ------------------------------------------------------
+
+app.get(
+    "/api/profile-test",
+    checkDatabase,
+    async (req, res) => {
+
+        try {
+
+            const [result] = await db.promise().query(
+                "SELECT COUNT(*) AS count FROM user_profiles"
+            );
+
+            res.json({
+                success: true,
+                message: "Profile API is working",
+                profiles:
+                    result[0]?.count || 0
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message: "Profile table is not ready",
+                error: error.message
+            });
+        }
+    }
+);
 // ======================================================
 // 404
 // ======================================================

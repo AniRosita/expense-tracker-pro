@@ -1,9 +1,8 @@
 /* ======================================================
    EXPENSE TRACKER PRO - TIPS PAGE CSS
    GLOBAL DARK / LIGHT THEME
-   SAME THEME MODEL AS EXPENSE PAGE
+   SAME THEME SYSTEM AS EXPENSE PAGE
    ====================================================== */
-
 
 /* ======================================================
    GLOBAL
@@ -16,7 +15,6 @@
     font-family: 'Poppins', sans-serif;
 }
 
-
 /* ======================================================
    HTML / BODY
    ====================================================== */
@@ -25,6 +23,10 @@ html {
     min-height: 100%;
     background: #0f172a;
     scroll-behavior: smooth;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
 }
 
 body {
@@ -38,7 +40,6 @@ body {
         background-color 0.35s ease,
         color 0.35s ease;
 }
-
 
 /* ======================================================
    GLOBAL THEME TRANSITION
@@ -55,7 +56,6 @@ body.theme-transition * {
         box-shadow 0.35s ease !important;
 }
 
-
 /* ======================================================
    CONTAINER
    ====================================================== */
@@ -65,11 +65,12 @@ body.theme-transition * {
     max-width: 1200px;
     margin: 0 auto;
 
+    color: #ffffff;
+
     transition:
         background-color 0.35s ease,
         color 0.35s ease;
 }
-
 
 /* ======================================================
    PAGE TITLE
@@ -88,7 +89,6 @@ h1 {
     transition:
         color 0.35s ease;
 }
-
 
 /* ======================================================
    BACK BUTTON
@@ -110,6 +110,8 @@ h1 {
 
     font-weight: 600;
 
+    cursor: pointer;
+
     transition:
         background-color 0.3s ease,
         color 0.3s ease,
@@ -125,12 +127,13 @@ h1 {
     transform: translateY(-2px);
 }
 
-
 /* ======================================================
    TIPS GRID
    ====================================================== */
 
 .tips-grid {
+    width: 100%;
+
     display: grid;
 
     grid-template-columns:
@@ -142,13 +145,14 @@ h1 {
     gap: 20px;
 }
 
-
 /* ======================================================
    TIP CARD
    ====================================================== */
 
 .tip-card {
     background: #1e293b;
+
+    color: #ffffff;
 
     padding: 20px;
 
@@ -174,7 +178,6 @@ h1 {
         0 10px 25px rgba(168, 85, 247, 0.25);
 }
 
-
 /* ======================================================
    TIP CARD TITLE
    ====================================================== */
@@ -185,11 +188,11 @@ h1 {
     margin-bottom: 15px;
 
     font-size: 22px;
+    font-weight: 600;
 
     transition:
         color 0.35s ease;
 }
-
 
 /* ======================================================
    TIP LIST
@@ -214,7 +217,6 @@ h1 {
     margin-bottom: 0;
 }
 
-
 /* ======================================================
    LIGHT MODE
    ====================================================== */
@@ -234,7 +236,6 @@ body.light-mode {
     color: #111827;
 }
 
-
 /* ======================================================
    LIGHT CONTAINER
    ====================================================== */
@@ -244,7 +245,6 @@ body.light-mode .container {
     color: #111827;
 }
 
-
 /* ======================================================
    LIGHT TITLE
    ====================================================== */
@@ -253,7 +253,6 @@ html.light-mode h1,
 body.light-mode h1 {
     color: #7c3aed;
 }
-
 
 /* ======================================================
    LIGHT BACK BUTTON
@@ -269,7 +268,6 @@ html.light-mode .back-btn:hover,
 body.light-mode .back-btn:hover {
     background: #6d28d9;
 }
-
 
 /* ======================================================
    LIGHT TIP CARD
@@ -287,7 +285,6 @@ body.light-mode .tip-card {
         0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
-
 /* ======================================================
    LIGHT TIP CARD TITLE
    ====================================================== */
@@ -296,7 +293,6 @@ html.light-mode .tip-card h2,
 body.light-mode .tip-card h2 {
     color: #16a34a;
 }
-
 
 /* ======================================================
    LIGHT TIP TEXT
@@ -307,9 +303,8 @@ body.light-mode .tip-card ul li {
     color: #374151;
 }
 
-
 /* ======================================================
-   SCROLLBAR
+   SCROLLBAR - DARK
    ====================================================== */
 
 body::-webkit-scrollbar {
@@ -329,6 +324,10 @@ body::-webkit-scrollbar-thumb:hover {
     background: #a855f7;
 }
 
+/* ======================================================
+   SCROLLBAR - LIGHT
+   ====================================================== */
+
 html.light-mode body::-webkit-scrollbar-track,
 body.light-mode::-webkit-scrollbar-track {
     background: #f8fafc;
@@ -343,7 +342,6 @@ html.light-mode body::-webkit-scrollbar-thumb:hover,
 body.light-mode::-webkit-scrollbar-thumb:hover {
     background: #a855f7;
 }
-
 
 /* ======================================================
    MOBILE
@@ -386,7 +384,6 @@ body.light-mode::-webkit-scrollbar-thumb:hover {
         font-size: 14px;
     }
 }
-
 
 /* ======================================================
    VERY SMALL MOBILE
