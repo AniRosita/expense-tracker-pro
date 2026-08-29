@@ -1464,7 +1464,36 @@ async function handleExpenseImport(event) {
         );
     }
 }
+// ======================================================
+// ================= IMPORT UI ===========================
+// ======================================================
 
+function setupImportUI() {
+
+    const importInput =
+        document.getElementById("expenseFile");
+
+    const importBtn =
+        document.getElementById("importExpenseBtn");
+
+    if (!importInput || !importBtn) {
+        console.log("Import UI elements not found");
+        return;
+    }
+
+    importBtn.onclick = function () {
+        importInput.click();
+    };
+
+    importInput.onchange = function (event) {
+        handleExpenseImport(event);
+
+        // Allow selecting the same file again
+        importInput.value = "";
+    };
+
+    console.log("Import UI Setup Successfully ✅");
+}
 // ======================================================
 // ================= PDF DOWNLOAD ========================
 // ======================================================
