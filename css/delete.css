@@ -1,6 +1,7 @@
+```css
 /* ======================================================
    EXPENSE TRACKER PRO - DELETE HISTORY CSS
-   GLOBAL THEME COMPATIBLE
+   GLOBAL DARK / LIGHT THEME
    ====================================================== */
 
 * {
@@ -10,17 +11,44 @@
     font-family: 'Poppins', sans-serif;
 }
 
-/* ================= BODY ================= */
+/* ======================================================
+   HTML / BODY
+   ====================================================== */
 
-body {
+html {
+    min-height: 100%;
     background: #0f172a;
-    color: #f8fafc;
-    min-height: 100vh;
-    padding: 30px;
-    transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* ================= NAVBAR ================= */
+body {
+    min-height: 100vh;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 30px;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
+}
+
+/* ======================================================
+   THEME TRANSITION
+   ====================================================== */
+
+html.theme-transition,
+html.theme-transition *,
+body.theme-transition,
+body.theme-transition * {
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease !important;
+}
+
+/* ======================================================
+   NAVBAR
+   ====================================================== */
 
 .navbar {
     width: 100%;
@@ -35,31 +63,39 @@ body {
     background: #111827;
     border-bottom: 1px solid #374151;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.25);
 
     transition:
-        background 0.3s ease,
-        border-color 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .navbar h2 {
     font-size: 22px;
     font-weight: 600;
     color: #c084fc;
+
+    transition: color 0.35s ease;
 }
 
 .navbar button {
     border: none;
     background: #a855f7;
-    color: white;
+    color: #ffffff;
 
     padding: 10px 18px;
     border-radius: 8px;
 
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
 
-    transition: 0.3s;
+    transition:
+        background-color 0.3s ease,
+        transform 0.3s ease;
 }
 
 .navbar button:hover {
@@ -67,7 +103,9 @@ body {
     transform: translateY(-2px);
 }
 
-/* ================= MAIN CONTENT ================= */
+/* ======================================================
+   MAIN CONTENT
+   ====================================================== */
 
 .main-content {
     width: 100%;
@@ -75,9 +113,14 @@ body {
 
     margin: 0 auto;
     padding: 35px 20px;
+
+    transition:
+        color 0.35s ease;
 }
 
-/* ================= PAGE TITLE ================= */
+/* ======================================================
+   PAGE TITLE
+   ====================================================== */
 
 .page-title {
     margin-bottom: 25px;
@@ -87,14 +130,20 @@ body {
     font-size: 30px;
     margin-bottom: 8px;
     color: #c084fc;
+
+    transition: color 0.35s ease;
 }
 
 .page-title p {
     color: #cbd5e1;
     font-size: 15px;
+
+    transition: color 0.35s ease;
 }
 
-/* ================= FILTER CARD ================= */
+/* ======================================================
+   FILTER CARD
+   ====================================================== */
 
 .filter-card {
     background: #1e293b;
@@ -109,11 +158,14 @@ body {
 
     border: 1px solid #334155;
 
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.25);
 
     transition:
-        background 0.3s ease,
-        border-color 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .filter-card select {
@@ -123,21 +175,26 @@ body {
     border-radius: 8px;
 
     background: #0f172a;
-    color: white;
+    color: #ffffff;
 
     font-family: 'Poppins', sans-serif;
 
     cursor: pointer;
     outline: none;
 
-    transition: 0.3s;
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .filter-card select:focus {
     border-color: #a855f7;
 }
 
-/* ================= HISTORY CARD ================= */
+/* ======================================================
+   HISTORY CARD
+   ====================================================== */
 
 .history-card {
     background: #1e293b;
@@ -147,23 +204,29 @@ body {
 
     border: 1px solid #334155;
 
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.25);
 
     transition:
-        background 0.3s ease,
-        border-color 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .history-card h2 {
     margin-bottom: 20px;
     color: #dbeafe;
+
+    transition: color 0.35s ease;
 }
 
-/* ================= HISTORY ITEM ================= */
+/* ======================================================
+   HISTORY ITEM
+   ====================================================== */
 
 .history-item {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -176,7 +239,10 @@ body {
 
     background: #1e293b;
 
-    transition: 0.3s;
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .history-item:last-child {
@@ -187,7 +253,9 @@ body {
     background: #263449;
 }
 
-/* ================= HISTORY TABLE ================= */
+/* ======================================================
+   HISTORY TABLE
+   ====================================================== */
 
 .history-card table {
     width: 100%;
@@ -197,10 +265,14 @@ body {
 .history-card th,
 .history-card td {
     padding: 12px;
-
     text-align: left;
 
     border-bottom: 1px solid #334155;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .history-card th {
@@ -217,29 +289,40 @@ body {
     background: #263449;
 }
 
-/* ================= SECONDARY TEXT ================= */
+/* ======================================================
+   SECONDARY TEXT
+   ====================================================== */
 
 .history-card small,
 .history-card .date,
 .history-card .secondary-text {
     color: #94a3b8;
+
+    transition: color 0.35s ease;
 }
 
-/* ================= RESTORE BUTTON ================= */
+/* ======================================================
+   BUTTONS
+   ====================================================== */
 
-.restore-btn {
+.restore-btn,
+.permanent-delete-btn,
+.delete-btn {
     border: none;
-
-    background: #22c55e;
-    color: white;
+    color: #ffffff;
 
     padding: 8px 14px;
-
     border-radius: 7px;
 
     cursor: pointer;
 
-    transition: 0.3s;
+    transition:
+        background-color 0.3s ease,
+        transform 0.3s ease;
+}
+
+.restore-btn {
+    background: #22c55e;
 }
 
 .restore-btn:hover {
@@ -247,65 +330,39 @@ body {
     transform: translateY(-2px);
 }
 
-/* ================= PERMANENT DELETE BUTTON ================= */
-
-.permanent-delete-btn {
-    border: none;
-
+.permanent-delete-btn,
+.delete-btn {
     background: #ef4444;
-    color: white;
-
-    padding: 8px 14px;
-
-    border-radius: 7px;
-
-    cursor: pointer;
-
-    margin-left: 8px;
-
-    transition: 0.3s;
 }
 
-.permanent-delete-btn:hover {
+.permanent-delete-btn {
+    margin-left: 8px;
+}
+
+.permanent-delete-btn:hover,
+.delete-btn:hover {
     background: #dc2626;
     transform: translateY(-2px);
 }
 
-/* ================= DELETE BUTTON ================= */
-
-.delete-btn {
-    border: none;
-
-    background: #ef4444;
-    color: white;
-
-    padding: 8px 14px;
-
-    border-radius: 7px;
-
-    cursor: pointer;
-
-    transition: 0.3s;
-}
-
-.delete-btn:hover {
-    background: #dc2626;
-}
-
-/* ================= EMPTY HISTORY ================= */
+/* ======================================================
+   EMPTY HISTORY
+   ====================================================== */
 
 .empty-history {
     text-align: center;
-
     padding: 40px 20px;
-
     color: #94a3b8;
+
+    transition: color 0.35s ease;
 }
 
 /* ======================================================
-   ================= LIGHT MODE ========================
+   LIGHT MODE
    ====================================================== */
 
+html.light-mode,
+html.light-mode body,
 body.light-mode {
     background: linear-gradient(
         135deg,
@@ -316,129 +373,161 @@ body.light-mode {
     color: #111827;
 }
 
-/* ================= LIGHT NAVBAR ================= */
+/* ======================================================
+   LIGHT NAVBAR
+   ====================================================== */
 
+html.light-mode .navbar,
 body.light-mode .navbar {
     background: #ffffff;
     color: #111827;
 
     border-bottom: 2px solid #d1d5db;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+html.light-mode .navbar h2,
 body.light-mode .navbar h2 {
     color: #7c3aed;
 }
 
-body.light-mode .navbar button {
-    background: #a855f7;
-    color: white;
-}
+/* ======================================================
+   LIGHT MAIN
+   ====================================================== */
 
-/* ================= LIGHT MAIN ================= */
-
+html.light-mode .main-content,
 body.light-mode .main-content {
-    background: transparent;
     color: #111827;
 }
 
-/* ================= LIGHT TITLE ================= */
+/* ======================================================
+   LIGHT TITLE
+   ====================================================== */
 
+html.light-mode .page-title h1,
 body.light-mode .page-title h1 {
     color: #7c3aed;
 }
 
+html.light-mode .page-title p,
 body.light-mode .page-title p {
     color: #6b7280;
 }
 
-/* ================= LIGHT FILTER ================= */
+/* ======================================================
+   LIGHT FILTER
+   ====================================================== */
 
+html.light-mode .filter-card,
 body.light-mode .filter-card {
     background: #ffffff;
     color: #111827;
 
-    border: 1px solid #e5e7eb;
+    border-color: #e5e7eb;
 
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
+html.light-mode .filter-card select,
 body.light-mode .filter-card select {
     background: #ffffff;
     color: #111827;
-
-    border: 1px solid #d1d5db;
+    border-color: #d1d5db;
 }
 
-/* ================= LIGHT HISTORY ================= */
+/* ======================================================
+   LIGHT HISTORY
+   ====================================================== */
 
+html.light-mode .history-card,
 body.light-mode .history-card {
     background: #ffffff;
     color: #111827;
 
-    border: 1px solid #e5e7eb;
+    border-color: #e5e7eb;
 
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
+html.light-mode .history-card h2,
 body.light-mode .history-card h2 {
     color: #111827;
 }
 
-/* ================= LIGHT HISTORY ITEM ================= */
+/* ======================================================
+   LIGHT HISTORY ITEM
+   ====================================================== */
 
+html.light-mode .history-item,
 body.light-mode .history-item {
     background: #ffffff;
     color: #111827;
-
-    border: 1px solid #e5e7eb;
+    border-color: #e5e7eb;
 }
 
+html.light-mode .history-item:hover,
 body.light-mode .history-item:hover {
     background: #f8fafc;
 }
 
-/* ================= LIGHT TABLE ================= */
+/* ======================================================
+   LIGHT TABLE
+   ====================================================== */
 
+html.light-mode .history-card table,
 body.light-mode .history-card table {
     background: #ffffff;
     color: #111827;
 }
 
+html.light-mode .history-card th,
 body.light-mode .history-card th {
     background: #f3f4f6;
     color: #7c3aed;
-
     border-color: #d1d5db;
 }
 
+html.light-mode .history-card td,
 body.light-mode .history-card td {
     background: #ffffff;
     color: #111827;
-
     border-color: #d1d5db;
 }
 
+html.light-mode .history-card tr:hover td,
 body.light-mode .history-card tr:hover td {
     background: #f8fafc;
 }
 
-/* ================= LIGHT SECONDARY TEXT ================= */
+/* ======================================================
+   LIGHT SECONDARY TEXT
+   ====================================================== */
 
+html.light-mode .history-card small,
+html.light-mode .history-card .date,
+html.light-mode .history-card .secondary-text,
 body.light-mode .history-card small,
 body.light-mode .history-card .date,
 body.light-mode .history-card .secondary-text {
     color: #6b7280;
 }
 
-/* ================= LIGHT EMPTY ================= */
+/* ======================================================
+   LIGHT EMPTY
+   ====================================================== */
 
+html.light-mode .empty-history,
 body.light-mode .empty-history {
     color: #6b7280;
 }
 
-/* ================= SCROLLBAR ================= */
+/* ======================================================
+   SCROLLBAR
+   ====================================================== */
 
 body::-webkit-scrollbar {
     width: 8px;
@@ -457,20 +546,23 @@ body::-webkit-scrollbar-thumb:hover {
     background: #a855f7;
 }
 
+html.light-mode body::-webkit-scrollbar-track,
 body.light-mode::-webkit-scrollbar-track {
     background: #f8fafc;
 }
 
+html.light-mode body::-webkit-scrollbar-thumb,
 body.light-mode::-webkit-scrollbar-thumb {
     background: #cbd5e1;
 }
 
+html.light-mode body::-webkit-scrollbar-thumb:hover,
 body.light-mode::-webkit-scrollbar-thumb:hover {
     background: #a855f7;
 }
 
 /* ======================================================
-   ================= MOBILE ============================
+   MOBILE
    ====================================================== */
 
 @media (max-width: 600px) {
@@ -517,5 +609,5 @@ body.light-mode::-webkit-scrollbar-thumb:hover {
     .permanent-delete-btn {
         margin-left: 5px;
     }
-
 }
+```

@@ -1,364 +1,467 @@
+```css
 /* ======================================================
-   EXPENSE HISTORY / REPORT - CLEAN THEME CSS
-   DARK + LIGHT MODE
+   EXPENSE TRACKER PRO - EXPENSE HISTORY CSS
+   GLOBAL DARK + LIGHT THEME
    ====================================================== */
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* ================= BODY ================= */
+/* ======================================================
+   HTML / BODY
+   ====================================================== */
 
-body{
-    background:#0f172a;
-    color:white;
-    min-height:100vh;
-    padding:30px;
-    transition:background .3s ease, color .3s ease;
+html {
+    min-height: 100%;
+    background: #0f172a;
+    transition: background-color 0.3s ease;
 }
 
-.container{
-    max-width:1200px;
-    margin:auto;
+body {
+    background: #0f172a;
+    color: #ffffff;
+    min-height: 100vh;
+    padding: 30px;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
 }
 
-/* ================= TITLE ================= */
+/* ======================================================
+   THEME TRANSITION
+   ====================================================== */
 
-h1{
-    text-align:center;
-    margin-bottom:25px;
-    font-size:32px;
+html.theme-transition,
+html.theme-transition *,
+body.theme-transition,
+body.theme-transition * {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease !important;
 }
 
-/* ================= FILTERS ================= */
+/* ======================================================
+   CONTAINER
+   ====================================================== */
 
-.filters{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-    margin-bottom:20px;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.filters div{
-    flex:1;
-    min-width:180px;
+/* ======================================================
+   TITLE
+   ====================================================== */
+
+h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 32px;
+    color: #ffffff;
 }
 
-.filters label{
-    display:block;
-    margin-bottom:8px;
-    font-size:14px;
-    color:#cbd5e1;
+/* ======================================================
+   FILTERS
+   ====================================================== */
+
+.filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.filters div {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filters label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #cbd5e1;
 }
 
 .filters select,
-.filters input{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:10px;
-    background:#1e293b;
-    color:white;
-    outline:none;
+.filters input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #ffffff;
+    outline: none;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease;
 }
 
-/* ================= BUTTONS ================= */
-
-.buttons{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:25px;
+.filters select:focus,
+.filters input:focus {
+    border-color: #a855f7;
 }
 
-.buttons button{
-    border:none;
-    padding:12px 18px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:600;
-    transition:.3s;
+/* ======================================================
+   BUTTONS
+   ====================================================== */
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
 }
 
-.buttons button:hover{
-    transform:translateY(-2px);
+.buttons button {
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #ffffff;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+}
+
+.buttons button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 /* Report */
 
-#viewReport{
-    background:#3b82f6;
-    color:white;
+#viewReport {
+    background: #3b82f6;
 }
 
 /* PDF */
 
-#downloadPdf{
-    background:#ef4444;
-    color:white;
+#downloadPdf {
+    background: #ef4444;
 }
 
 /* Excel */
 
-#downloadExcel{
-    background:#22c55e;
-    color:white;
+#downloadExcel {
+    background: #22c55e;
 }
 
-/* ================= TOTAL CARD ================= */
+/* ======================================================
+   TOTAL CARD
+   ====================================================== */
 
-h2{
-    background:linear-gradient(
+h2 {
+    background: linear-gradient(
         135deg,
         #3b82f6,
         #06b6d4
     );
 
-    padding:20px;
-    border-radius:15px;
-    margin-bottom:25px;
-
-    text-align:center;
-    font-size:26px;
-    color:white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 26px;
+    color: #ffffff;
 }
 
-#totalExpense{
-    font-weight:bold;
+#totalExpense {
+    font-weight: bold;
 }
 
-/* ================= HISTORY ================= */
+/* ======================================================
+   EXPENSE HISTORY
+   ====================================================== */
 
-#expenseHistory{
-    display:flex;
-    flex-direction:column;
-    gap:15px;
+#expenseHistory {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-/* ================= EXPENSE CARD ================= */
+/* ======================================================
+   EXPENSE CARD
+   ====================================================== */
 
-.expense-card{
-    background:#1e293b;
-    border-left:5px solid #3b82f6;
-
-    padding:18px;
-    border-radius:12px;
+.expense-card {
+    background: #1e293b;
+    border-left: 5px solid #3b82f6;
+    padding: 18px;
+    border-radius: 12px;
 
     box-shadow:
-        0 4px 12px rgba(0,0,0,.25);
+        0 4px 12px rgba(0, 0, 0, 0.25);
 
     transition:
-        background .3s ease,
-        color .3s ease,
-        box-shadow .3s ease,
-        transform .3s ease;
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease,
+        border-color 0.3s ease;
 }
 
-.expense-card:hover{
-    transform:translateY(-2px);
+.expense-card:hover {
+    transform: translateY(-2px);
 }
 
-/* ================= CARD LINE ================= */
+/* ======================================================
+   CARD LINE
+   ====================================================== */
 
-.line{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+.line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.line h3{
-    font-size:18px;
+.line h3 {
+    font-size: 18px;
+    color: #ffffff;
 }
 
-.line p{
-    color:#22c55e;
-    font-size:20px;
-    font-weight:bold;
+.line p {
+    color: #22c55e;
+    font-size: 20px;
+    font-weight: bold;
 }
 
-.expense-card p{
-    margin-top:8px;
-    color:#cbd5e1;
+/* ======================================================
+   CARD TEXT
+   ====================================================== */
+
+.expense-card p {
+    margin-top: 8px;
+    color: #cbd5e1;
 }
 
-.expense-card span{
-    display:inline-block;
-    margin-top:10px;
+/* ======================================================
+   CATEGORY
+   ====================================================== */
 
-    background:#334155;
-    color:white;
-
-    padding:6px 12px;
-    border-radius:20px;
-
-    font-size:13px;
+.expense-card span {
+    display: inline-block;
+    margin-top: 10px;
+    background: #334155;
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
 }
 
-/* ================= BACK BUTTON ================= */
+/* ======================================================
+   BACK BUTTON
+   ====================================================== */
 
-.back{
-    margin-top:25px;
+.back {
+    margin-top: 25px;
+    background: #f59e0b;
+    color: #ffffff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
 
-    background:#f59e0b;
-    color:white;
-
-    border:none;
-    padding:12px 20px;
-
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:600;
-
-    transition:.3s;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
 }
 
-.back:hover{
-    opacity:.9;
-    transform:translateY(-2px);
+.back:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
 }
 
 /* ======================================================
    LIGHT MODE
    ====================================================== */
 
-body.light-mode{
-    background:linear-gradient(
+/* BODY */
+
+html.light-mode,
+body.light-mode {
+    background: #f8fafc;
+}
+
+html.light-mode body {
+    background: linear-gradient(
         135deg,
         #eef2ff,
         #f8fafc
     );
 
-    color:#111827;
+    color: #111827;
 }
 
-/* ================= LIGHT CONTAINER ================= */
+body.light-mode {
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #f8fafc
+    );
 
-body.light-mode .container{
-    background:#ffffff;
-
-    max-width:1200px;
-    margin:30px auto;
-    padding:25px;
-
-    border-radius:20px;
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.08);
+    color: #111827;
 }
 
-/* ================= LIGHT TITLE ================= */
+/* ======================================================
+   LIGHT TITLE
+   ====================================================== */
 
-body.light-mode h1{
-    color:#111827;
+html.light-mode h1,
+body.light-mode h1 {
+    color: #111827;
 }
 
-/* ================= LIGHT FILTER LABEL ================= */
+/* ======================================================
+   LIGHT FILTER LABEL
+   ====================================================== */
 
-body.light-mode .filters label{
-    color:#374151;
+html.light-mode .filters label,
+body.light-mode .filters label {
+    color: #374151;
 }
 
-/* ================= LIGHT INPUT ================= */
+/* ======================================================
+   LIGHT INPUTS
+   ====================================================== */
 
+html.light-mode .filters select,
+html.light-mode .filters input,
 body.light-mode .filters select,
-body.light-mode .filters input{
-    background:#ffffff;
-    color:#111827;
-
-    border:1px solid #d1d5db;
+body.light-mode .filters input {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #d1d5db;
 }
 
-/* ================= LIGHT EXPENSE CARD ================= */
+html.light-mode .filters select::placeholder,
+html.light-mode .filters input::placeholder,
+body.light-mode .filters select::placeholder,
+body.light-mode .filters input::placeholder {
+    color: #6b7280;
+}
 
-body.light-mode .expense-card{
-    background:#f8fafc;
+/* ======================================================
+   LIGHT EXPENSE CARD
+   ====================================================== */
 
-    border-left:5px solid #8b5cf6;
+html.light-mode .expense-card,
+body.light-mode .expense-card {
+    background: #ffffff;
+    color: #111827;
 
-    border-radius:15px;
-
-    padding:18px;
+    border-left: 5px solid #8b5cf6;
 
     box-shadow:
-        0 4px 12px rgba(0,0,0,.05);
+        0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* ================= LIGHT CARD TEXT ================= */
+/* ======================================================
+   LIGHT CARD TITLE
+   ====================================================== */
 
-body.light-mode .expense-card h3{
-    color:#111827;
+html.light-mode .expense-card h3,
+body.light-mode .expense-card h3 {
+    color: #111827;
 }
 
-body.light-mode .expense-card p{
-    color:#374151;
+/* ======================================================
+   LIGHT CARD TEXT
+   ====================================================== */
+
+html.light-mode .expense-card p,
+body.light-mode .expense-card p {
+    color: #374151;
 }
 
-/* Amount stays green */
+/* ======================================================
+   LIGHT AMOUNT
+   ====================================================== */
 
-body.light-mode .line p{
-    color:#16a34a;
+html.light-mode .line p,
+body.light-mode .line p {
+    color: #16a34a;
 }
 
-/* ================= LIGHT CATEGORY ================= */
+/* ======================================================
+   LIGHT CATEGORY
+   ====================================================== */
 
-body.light-mode .expense-card span{
-    background:#e5e7eb;
-    color:#374151;
+html.light-mode .expense-card span,
+body.light-mode .expense-card span {
+    background: #e5e7eb;
+    color: #374151;
 }
 
-/* ================= LIGHT H2 ================= */
+/* ======================================================
+   LIGHT TOTAL CARD
+   ====================================================== */
 
-body.light-mode h2{
-    color:white;
+html.light-mode h2,
+body.light-mode h2 {
+    color: #ffffff;
 }
 
-/* ================= MOBILE ================= */
+/* ======================================================
+   LIGHT BACK BUTTON
+   ====================================================== */
 
-@media(max-width:768px){
+html.light-mode .back,
+body.light-mode .back {
+    color: #ffffff;
+}
 
-    body{
-        padding:15px;
+/* ======================================================
+   MOBILE
+   ====================================================== */
+
+@media (max-width: 768px) {
+
+    body {
+        padding: 15px;
     }
 
-    .container{
-        width:100%;
+    .container {
+        width: 100%;
     }
 
-    body.light-mode .container{
-        margin:10px auto;
-        padding:18px;
+    .filters {
+        flex-direction: column;
     }
 
-    .filters{
-        flex-direction:column;
+    .filters div {
+        width: 100%;
     }
 
-    .filters div{
-        width:100%;
+    .buttons {
+        flex-direction: column;
     }
 
-    .buttons{
-        flex-direction:column;
+    .buttons button {
+        width: 100%;
     }
 
-    .buttons button{
-        width:100%;
+    .line {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 
-    .line{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:5px;
+    h1 {
+        font-size: 28px;
     }
 
-    h1{
-        font-size:28px;
-    }
-
-    h2{
-        font-size:22px;
+    h2 {
+        font-size: 22px;
     }
 }
+```
