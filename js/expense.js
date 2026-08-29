@@ -23,7 +23,8 @@ function getUserEmail() {
 
     if (!email) {
 
-        window.location.href = "index.html";
+        window.location.href =
+            "index.html";
 
         return null;
     }
@@ -54,7 +55,6 @@ let amountValue;
 // ======================================================
 
 const recordsPerPage = 50;
-
 let currentPage = 1;
 
 // ======================================================
@@ -88,7 +88,8 @@ function initializeElements() {
 
 async function loadExpensesFromDatabase() {
 
-    const email = getUserEmail();
+    const email =
+        getUserEmail();
 
     if (!email) {
         return false;
@@ -144,17 +145,35 @@ async function loadExpensesFromDatabase() {
             data
         );
 
+        // Support multiple backend response formats
+
         if (
+            Array.isArray(data)
+        ) {
+
+            expenses =
+                data;
+
+        } else if (
             data &&
-            data.success &&
             Array.isArray(data.expenses)
         ) {
 
-            expenses = data.expenses;
+            expenses =
+                data.expenses;
+
+        } else if (
+            data &&
+            Array.isArray(data.data)
+        ) {
+
+            expenses =
+                data.data;
 
         } else {
 
             expenses = [];
+
         }
 
         console.log(
@@ -181,12 +200,10 @@ async function loadExpensesFromDatabase() {
         if (history) {
 
             history.innerHTML = `
-
                 <div style="
                     text-align:center;
                     padding:30px;
                 ">
-
                     <h3>
                         Unable to load expenses
                     </h3>
@@ -201,9 +218,7 @@ async function loadExpensesFromDatabase() {
                     >
                         Retry
                     </button>
-
                 </div>
-
             `;
         }
 
@@ -220,18 +235,14 @@ async function loadExpensesAndRefresh() {
     if (history) {
 
         history.innerHTML = `
-
             <div style="
                 text-align:center;
                 padding:30px;
             ">
-
                 <h3>
                     Loading expenses...
                 </h3>
-
             </div>
-
         `;
     }
 
@@ -264,7 +275,8 @@ function loadYearList() {
             option => option.remove()
         );
 
-    const years = new Set();
+    const years =
+        new Set();
 
     expenses.forEach(
         item => {
@@ -293,7 +305,9 @@ function loadYearList() {
             year => {
 
                 const option =
-                    document.createElement("option");
+                    document.createElement(
+                        "option"
+                    );
 
                 option.value =
                     year;
@@ -466,16 +480,13 @@ function formatExpenseDate(dateValue) {
         return "Invalid date";
     }
 
-    return `
-        ${date.getDate()}
-        ${date.toLocaleString(
-            "default",
-            {
-                month: "long"
-            }
-        )}
-        ${date.getFullYear()}
-    `;
+    return (
+        `${date.getDate()} ` +
+        `${date.toLocaleString("default", {
+            month: "long"
+        })} ` +
+        `${date.getFullYear()}`
+    );
 }
 
 // ======================================================
@@ -554,18 +565,14 @@ function showExpense() {
     if (pageExpenses.length === 0) {
 
         history.innerHTML = `
-
             <div style="
                 text-align:center;
                 padding:30px;
             ">
-
                 <h3>
                     No Expenses Found
                 </h3>
-
             </div>
-
         `;
 
         createPagination();
@@ -601,11 +608,11 @@ function showExpense() {
 
             const displayDate =
                 formatExpenseDate(
-                    item.date
+                    item.date ||
+                    item.created_at
                 );
 
             html += `
-
                 <div class="expense-card">
 
                     <div class="line">
@@ -630,7 +637,6 @@ function showExpense() {
                     </span>
 
                 </div>
-
             `;
         }
     );
@@ -667,7 +673,9 @@ function createPagination() {
     }
 
     const pagination =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     pagination.id =
         "pagination";
@@ -679,7 +687,6 @@ function createPagination() {
         "20px";
 
     pagination.innerHTML = `
-
         <button
             id="prevBtn"
             type="button"
@@ -689,12 +696,10 @@ function createPagination() {
         </button>
 
         <span style="margin:0 15px;">
-
             Page
             ${currentPage}
             of
             ${totalPages}
-
         </span>
 
         <button
@@ -704,7 +709,6 @@ function createPagination() {
         >
             Next ▶
         </button>
-
     `;
 
     history.after(
@@ -844,7 +848,9 @@ function setupImportUI() {
     }
 
     const importButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
     importButton.id =
         "importExcel";
@@ -856,7 +862,9 @@ function setupImportUI() {
         "📥 Import Excel / CSV";
 
     const fileInput =
-        document.createElement("input");
+        document.createElement(
+            "input"
+        );
 
     fileInput.type =
         "file";
@@ -910,10 +918,7 @@ function normalizeImportRow(row) {
                     String(key)
                         .trim()
                         .toLowerCase()
-                        .replace(
-                            /[\s\_-]+/g,
-                            ""
-                        );
+                        .replace(/[\s_-]+/g, "");
 
                 result[cleanKey] =
                     row[key];
@@ -960,7 +965,6 @@ function convertImportDate(value) {
         value === null ||
         value === ""
     ) {
-
         return "";
     }
 
@@ -1087,12 +1091,8 @@ function convertImportDate(value) {
 
         return (
             `${parsedDate.getFullYear()}-` +
-            `${String(
-                parsedDate.getMonth() + 1
-            ).padStart(2, "0")}-` +
-            `${String(
-                parsedDate.getDate()
-            ).padStart(2, "0")}`
+            `${String(parsedDate.getMonth() + 1).padStart(2, "0")}-` +
+            `${String(parsedDate.getDate()).padStart(2, "0")}`
         );
     }
 
@@ -1257,10 +1257,6 @@ async function handleExpenseImport(event) {
             return;
         }
 
-        // ==================================================
-        // EXISTING DUPLICATE KEYS
-        // ==================================================
-
         const existingKeys =
             new Set(
                 expenses.map(
@@ -1341,9 +1337,7 @@ async function handleExpenseImport(event) {
 
                 const amount =
                     Number(
-                        String(
-                            amountRaw
-                        )
+                        String(amountRaw)
                             .replace(/₹/g, "")
                             .replace(/,/g, "")
                             .trim()
@@ -1368,20 +1362,21 @@ async function handleExpenseImport(event) {
                 const expense = {
 
                     email,
+
                     name,
+
                     amount,
+
                     category,
+
                     date
+
                 };
 
                 const duplicateKey =
                     createExpenseDuplicateKey(
                         expense
                     );
-
-                // ==================================================
-                // DUPLICATE IN DATABASE
-                // ==================================================
 
                 if (
                     existingKeys.has(
@@ -1393,10 +1388,6 @@ async function handleExpenseImport(event) {
 
                     return;
                 }
-
-                // ==================================================
-                // DUPLICATE INSIDE IMPORT FILE
-                // ==================================================
 
                 if (
                     importKeys.has(
@@ -1468,15 +1459,12 @@ async function handleExpenseImport(event) {
                         `${API_BASE}/expenses`,
                         {
                             method: "POST",
-
                             headers: {
                                 "Content-Type":
                                     "application/json",
-
                                 "Accept":
                                     "application/json"
                             },
-
                             body:
                                 JSON.stringify(
                                     expense
@@ -1494,11 +1482,6 @@ async function handleExpenseImport(event) {
                 ) {
 
                     savedCount++;
-
-                    console.log(
-                        "IMPORT SAVED:",
-                        expense
-                    );
 
                 } else {
 
@@ -1594,17 +1577,13 @@ function setupPDF() {
                 return;
             }
 
-            const {
-                jsPDF
-            } =
+            const { jsPDF } =
                 window.jspdf;
 
             const pdf =
                 new jsPDF();
 
-            pdf.setFontSize(
-                18
-            );
+            pdf.setFontSize(18);
 
             pdf.text(
                 "Expense Tracker Report",
@@ -1612,8 +1591,7 @@ function setupPDF() {
                 20
             );
 
-            let y =
-                35;
+            let y = 35;
 
             filterExpenses();
 
@@ -1622,9 +1600,7 @@ function setupPDF() {
                 0
             ) {
 
-                pdf.setFontSize(
-                    12
-                );
+                pdf.setFontSize(12);
 
                 pdf.text(
                     "No expenses found.",
@@ -1672,9 +1648,7 @@ function setupPDF() {
                             ""
                         );
 
-                    pdf.setFontSize(
-                        10
-                    );
+                    pdf.setFontSize(10);
 
                     pdf.text(
                         `${name} | ${amount} | ${category} | ${date}`,
@@ -1756,6 +1730,7 @@ function setupExcel() {
                         Date:
                             item.date ||
                             ""
+
                     })
                 );
 
@@ -1798,9 +1773,8 @@ function setupViewReport() {
     reportBtn.onclick =
         function () {
 
-            currentPage = 1;
-
-            showExpense();
+            window.location.href =
+                "reports.html";
         };
 }
 

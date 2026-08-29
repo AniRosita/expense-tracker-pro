@@ -10,7 +10,7 @@
 // ======================================================
 
 const API_BASE =
-    "https://expense-tracker-pro-production-b745.up.railway.app";
+    "https://expense-tracker-pro-production-b475.up.railway.app";
 
 console.log("================================");
 console.log("Auth.js Loaded");
