@@ -22,9 +22,9 @@ const PORT = Number(process.env.PORT) || 5000;
 // ======================================================
 
 const allowedOrigins = [
-    "https://expense-tracker-pro-production-98cf.up.railway.app",
-    "https://expense-tracker-pro-production-b745.up.railway.app",
     "https://expense-tracker-pro-production-99eb.up.railway.app",
+    "https://expense-tracker-pro-production-b745.up.railway.app",
+    "https://expense-tracker-pro-production-98cf.up.railway.app",
     "http://localhost:5000",
     "http://127.0.0.1:5000"
 ];
@@ -73,6 +73,9 @@ app.use(express.static(__dirname));
 // MYSQL CONFIG
 // ======================================================
 
+// Railway MySQL variables
+// Local MySQL fallback is root + empty password.
+
 const dbConfig = {
     host:
         process.env.MYSQLHOST ||
@@ -85,8 +88,8 @@ const dbConfig = {
         "root",
 
     password:
-        process.env.MYSQLPASSWORD ||
-        process.env.MYSQL_PASSWORD ||
+        process.env.MYSQLPASSWORD ??
+        process.env.MYSQL_PASSWORD ??
         "",
 
     database:
@@ -112,6 +115,10 @@ console.log("Host:", dbConfig.host);
 console.log("Port:", dbConfig.port);
 console.log("Database:", dbConfig.database);
 console.log("User:", dbConfig.user);
+console.log(
+    "Password:",
+    dbConfig.password ? "configured" : "MISSING"
+);
 console.log("======================================");
 
 // ======================================================
@@ -138,7 +145,9 @@ console.log("BREVO EMAIL CONFIG");
 
 console.log(
     "Brevo API Key:",
-    BREVO_API_KEY ? "configured OK" : "MISSING"
+    BREVO_API_KEY
+        ? "configured OK"
+        : "MISSING"
 );
 
 console.log(
@@ -169,12 +178,22 @@ function generateOTP() {
     ).toString();
 }
 
+function getEmailParam(req) {
+    try {
+        return normalizeEmail(
+            decodeURIComponent(req.params.email || "")
+        );
+    } catch {
+        return normalizeEmail(req.params.email || "");
+    }
+}
+
 // ======================================================
 // VALIDATION
 // ======================================================
 
 const gmailRegex =
-    /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
 const passwordRegex =
     /^\d{6}$/;
@@ -588,7 +607,6 @@ async function loginUser(req, res) {
             success: true,
             message:
                 "Login successful",
-
             user: {
                 id: user.id,
                 name: user.name,
@@ -635,11 +653,7 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
 
             const [results] =
                 await db.promise().query(
@@ -689,11 +703,7 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
 
             console.log(
                 "GET EXPENSES:",
@@ -716,6 +726,11 @@ app.get(
                     `,
                     [email]
                 );
+
+            console.log(
+                "Expenses found:",
+                results.length
+            );
 
             res.json({
                 success: true,
@@ -752,9 +767,7 @@ app.post(
         try {
 
             const email =
-                normalizeEmail(
-                    req.body.email
-                );
+                normalizeEmail(req.body.email);
 
             const name =
                 String(
@@ -1035,11 +1048,12 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
+
+            console.log(
+                "GET INCOME:",
+                email
+            );
 
             const [results] =
                 await db.promise().query(
@@ -1055,6 +1069,11 @@ app.get(
                     `,
                     [email]
                 );
+
+            console.log(
+                "Income found:",
+                results.length
+            );
 
             res.json({
                 success: true,
@@ -1344,11 +1363,7 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
 
             const [results] =
                 await db.promise().query(
@@ -1563,11 +1578,7 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
 
             const [expenses] =
                 await db.promise().query(
@@ -1631,18 +1642,20 @@ async function sendOTPEmail(
 ) {
 
     if (!BREVO_API_KEY) {
-
         throw new Error(
             "BREVO_API_KEY is missing in Railway Variables"
         );
     }
 
     if (!BREVO_FROM_EMAIL) {
-
         throw new Error(
             "BREVO_FROM_EMAIL is missing in Railway Variables"
         );
     }
+
+    const safeName =
+        String(userName || "User")
+            .replace(/[<>&"]/g, "");
 
     const html = `
 <!DOCTYPE html>
@@ -1672,7 +1685,7 @@ Expense Tracker Pro
 </h2>
 
 <p>
-Hello ${userName || "User"},
+Hello ${safeName},
 </p>
 
 <p>
@@ -1742,7 +1755,7 @@ Expense Tracker Pro
                 to: [
                     {
                         email: email,
-                        name: userName || "User"
+                        name: safeName
                     }
                 ],
 
@@ -1845,7 +1858,8 @@ async function forgotPassword(req, res) {
 
         const expiresAt =
             new Date(
-                Date.now() + 10 * 60 * 1000
+                Date.now() +
+                10 * 60 * 1000
             );
 
         // Delete previous OTP
@@ -2289,11 +2303,7 @@ app.get(
         try {
 
             const email =
-                normalizeEmail(
-                    decodeURIComponent(
-                        req.params.email
-                    )
-                );
+                getEmailParam(req);
 
             const [users] =
                 await db.promise().query(
@@ -2333,7 +2343,6 @@ app.get(
                 users,
                 expenses,
                 income,
-
                 counts: {
                     users: users.length,
                     expenses: expenses.length,
@@ -2409,16 +2418,34 @@ app.listen(
         );
 
         console.log(
-            "Expense Tracker Server Started"
+            "Expense Tracker Server Started 🚀"
         );
 
         console.log(
-            "Express Backend Ready"
+            "Express Backend Ready ✅"
         );
 
         console.log(
             "Server running on port:",
             PORT
+        );
+
+        console.log(
+            "Local URL: http://localhost:" + PORT
+        );
+
+        console.log(
+            "Status URL: http://localhost:" +
+            PORT +
+            "/api/status"
+        );
+
+        console.log(
+            "Railway Production URL:"
+        );
+
+        console.log(
+            "https://expense-tracker-pro-production-99eb.up.railway.app"
         );
 
         console.log(
