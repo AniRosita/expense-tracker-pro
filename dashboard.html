@@ -34,14 +34,12 @@
     rel="stylesheet"
 >
 
-
 <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 >
 
 </head>
-
 
 <body>
 
@@ -63,33 +61,27 @@
 
 
     <div class="nav-right">
-       <div
-    class="user-profile"
-    onclick="openProfile()"
->
 
-    <div id="profileCircle">
+        <!-- ================= PROFILE ================= -->
 
-    </div>
+        <div
+            class="user-profile"
+            onclick="openProfile()"
+        >
 
-    <span>
-        <i class="fa-solid fa-user"></i>
-        Profile
-    </span>
-
-</div>
-
+            <div id="profileCircle">
+                <span id="profileInitial"></span>
+            </div>
 
             <span>
-
                 <i class="fa-solid fa-user"></i>
-
                 Profile
-
             </span>
 
         </div>
 
+
+        <!-- ================= THEME ================= -->
 
         <button id="themeBtn">
 
@@ -143,6 +135,7 @@
         Reports
     </a>
 
+
     <a href="delete.html">
         Delete History
     </a>
@@ -151,9 +144,6 @@
     <a href="tips.html">
         Tips
     </a>
-
-
-    <!-- Delete History REMOVED -->
 
 
     <button id="logoutBtn">
@@ -492,7 +482,10 @@
         </button>
 
     </div>
-        <!-- ================================================== -->
+
+
+
+    <!-- ================================================== -->
     <!-- ================= REMINDER POPUP ================= -->
     <!-- ================================================== -->
 
@@ -538,10 +531,7 @@
         </h2>
 
 
-        <!-- ================= SEARCH / FILTER ============== -->
-
         <div class="expense-controls">
-
 
             <input
                 type="text"
@@ -566,12 +556,9 @@
 
             </select>
 
-
         </div>
 
 
-
-        <!-- ================= TABLE ======================== -->
 
         <table>
 
@@ -788,15 +775,11 @@
 
 <script src="js/currency.js"></script>
 
-
 <script src="js/theme.js"></script>
+
 <script src="js/dashboard.js"></script>
 
-
-
-
 <script src="js/reminder.js"></script>
-
 
 
 <script>
@@ -807,6 +790,73 @@ function openProfile() {
         "profile.html";
 
 }
+
+
+/* ======================================================
+   PROFILE FIRST LETTER
+   ====================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const profileInitial =
+            document.getElementById(
+                "profileInitial"
+            );
+
+        if (!profileInitial) {
+            return;
+        }
+
+        /*
+         * Try to get user's name
+         * from localStorage.
+         */
+        const userName =
+            localStorage.getItem("userName") ||
+            localStorage.getItem("name") ||
+            localStorage.getItem("username") ||
+            "";
+
+        if (userName.trim()) {
+
+            profileInitial.textContent =
+                userName
+                    .trim()
+                    .charAt(0)
+                    .toUpperCase();
+
+        } else {
+
+            /*
+             * If name is not available,
+             * use email first letter.
+             */
+            const email =
+                localStorage.getItem(
+                    "userEmail"
+                ) || "";
+
+            if (email.trim()) {
+
+                profileInitial.textContent =
+                    email
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase();
+
+            } else {
+
+                profileInitial.textContent =
+                    "";
+
+            }
+
+        }
+
+    }
+);
 
 </script>
 
