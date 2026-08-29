@@ -212,12 +212,6 @@ async function loadExpensesFromDatabase() {
                         Please check the server connection.
                     </p>
 
-                    <button
-                        type="button"
-                        onclick="loadExpensesAndRefresh()"
-                    >
-                        Retry
-                    </button>
                 </div>
             `;
         }
