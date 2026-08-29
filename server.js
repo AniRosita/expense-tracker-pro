@@ -2445,7 +2445,7 @@ app.listen(
         );
 
         console.log(
-            "https://expense-tracker-pro-production-99eb.up.railway.app"
+            "https://expense-tracker-pro-production-b745.up.railway.app"
         );
 
         console.log(
