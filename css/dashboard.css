@@ -1,7 +1,6 @@
-```css
 /* ======================================================
    EXPENSE TRACKER PRO - DASHBOARD CSS
-   CLEAN GLOBAL THEME
+   CLEAN GLOBAL DARK + LIGHT THEME
    ====================================================== */
 
 * {
@@ -11,39 +10,76 @@
     font-family: 'Poppins', sans-serif;
 }
 
-/* ================= BODY ================= */
+/* ======================================================
+   HTML / BODY
+   ====================================================== */
 
-body {
+html {
+    min-height: 100%;
     background: #0f172a;
-    color: #ffffff;
-    min-height: 100vh;
-    transition:
-        background-color 0.3s ease,
-        color 0.3s ease;
+    transition: background-color 0.35s ease;
 }
 
-/* ================= NAVBAR ================= */
+body {
+    min-height: 100vh;
+    background: #0f172a;
+    color: #f8fafc;
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
+}
+
+/* ======================================================
+   GLOBAL THEME TRANSITION
+   ====================================================== */
+
+html.theme-transition,
+html.theme-transition *,
+body.theme-transition,
+body.theme-transition * {
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease,
+        opacity 0.35s ease !important;
+}
+
+/* ======================================================
+   NAVBAR
+   ====================================================== */
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     padding: 15px 25px;
+
     background: #111827;
     border-bottom: 1px solid #374151;
+
     transition:
-        background-color 0.3s ease,
-        border-color 0.3s ease,
-        color 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .nav-title {
     flex: 1;
     text-align: center;
     margin: 0;
+
     font-size: 30px;
     font-weight: 700;
-    background: linear-gradient(90deg, #a855f7, #ec4899);
+
+    background: linear-gradient(
+        90deg,
+        #a855f7,
+        #ec4899
+    );
+
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -54,35 +90,54 @@ body {
     gap: 15px;
 }
 
-/* ================= MENU BUTTON ================= */
+/* ======================================================
+   MENU BUTTON
+   ====================================================== */
 
 #menuBtn {
-    background: none;
+    background: transparent;
     border: none;
-    color: white;
+    color: #ffffff;
+
     font-size: 28px;
     cursor: pointer;
+
     padding: 5px 10px;
     border-radius: 8px;
+
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.3s ease;
 }
 
 #menuBtn:hover {
     background: #334155;
+    transform: translateY(-2px);
 }
 
-/* ================= PROFILE ================= */
+/* ======================================================
+   PROFILE
+   ====================================================== */
 
 .user-profile {
     display: flex;
     align-items: center;
+
     cursor: pointer;
     padding: 0;
+
     border-radius: 50%;
+
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .user-profile img {
     width: 45px;
     height: 45px;
+
     border-radius: 50%;
     object-fit: cover;
 }
@@ -91,20 +146,31 @@ body {
     display: none;
 }
 
-/* ================= PROFILE CIRCLE ================= */
+/* ======================================================
+   PROFILE CIRCLE
+   ====================================================== */
 
 #profileCircle {
     width: 45px;
     height: 45px;
+
     border-radius: 50%;
+
     background: #a855f7;
-    color: white;
+    color: #ffffff;
+
     display: flex;
     justify-content: center;
     align-items: center;
+
     font-size: 20px;
     font-weight: 600;
+
     overflow: hidden;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
 }
 
 #profileCircle img {
@@ -113,141 +179,243 @@ body {
     object-fit: cover;
 }
 
-/* ================= LETTER PROFILE ================= */
+/* ======================================================
+   LETTER PROFILE
+   ====================================================== */
 
 .letter-profile {
     width: 45px;
     height: 45px;
+
     border-radius: 50%;
+
     display: flex;
     justify-content: center;
     align-items: center;
+
     background: #a855f7;
-    color: white;
+    color: #ffffff;
+
     font-size: 22px;
     font-weight: 600;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
 }
 
-/* ================= MAIN CONTENT ================= */
+/* ======================================================
+   MAIN CONTENT
+   ====================================================== */
 
 .main-content {
     flex: 1;
     padding: 30px;
+
+    color: #f8fafc;
+
+    transition:
+        color 0.35s ease;
 }
 
 .top-bar h1 {
     margin-bottom: 25px;
+    color: #f8fafc;
+
+    transition: color 0.35s ease;
 }
 
-/* ================= CARDS ================= */
+/* ======================================================
+   CARDS
+   ====================================================== */
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(
-        auto-fit,
-        minmax(220px, 1fr)
-    );
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+        );
+
     gap: 20px;
     margin-bottom: 30px;
 }
 
 .card {
     background: #1e293b;
+
     padding: 25px;
     border-radius: 18px;
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+
+    border: 1px solid #334155;
+
+    box-shadow:
+        0 0 15px rgba(168, 85, 247, 0.20);
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease,
-        box-shadow 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease,
+        transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
 }
 
 .card h3 {
     color: #cbd5e1;
     margin-bottom: 10px;
+
+    transition: color 0.35s ease;
 }
 
 .card h2 {
     color: #22c55e;
+
+    transition: color 0.35s ease;
 }
 
-/* ================= FORMS ================= */
+/* ======================================================
+   EXPENSE FORM
+   ====================================================== */
 
 .expense-form {
     margin-top: 25px;
+
     background: #1e293b;
+
     padding: 20px;
     border-radius: 18px;
+
+    border: 1px solid #334155;
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.20);
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease,
-        box-shadow 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .expense-form h2 {
     margin-bottom: 15px;
+    color: #f8fafc;
+
+    transition: color 0.35s ease;
 }
 
 .expense-form input,
 .expense-form select {
     width: 100%;
+
     padding: 12px;
     margin-bottom: 12px;
-    border: none;
+
+    border: 1px solid #475569;
     border-radius: 10px;
+
     outline: none;
-    background: #f8fafc;
-    color: #111827;
+
+    background: #0f172a;
+    color: #ffffff;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
+}
+
+.expense-form input:focus,
+.expense-form select:focus {
+    border-color: #a855f7;
 }
 
 .expense-form button {
     width: 100%;
+
     padding: 12px;
+
     border: none;
     border-radius: 10px;
+
     background: #a855f7;
-    color: white;
+    color: #ffffff;
+
     cursor: pointer;
+    font-weight: 600;
+
+    transition:
+        background-color 0.3s ease,
+        transform 0.3s ease,
+        opacity 0.3s ease;
 }
 
 .expense-form button:hover {
     opacity: 0.9;
+    transform: translateY(-2px);
 }
 
-/* ================= SMART REMINDER ================= */
+/* ======================================================
+   SMART REMINDER
+   ====================================================== */
 
 #saveReminderBtn {
     background: #22c55e;
+    color: #ffffff;
 }
 
 #saveReminderBtn:hover {
     opacity: 0.85;
 }
 
-/* ================= POPUP ================= */
+/* ======================================================
+   POPUP
+   ====================================================== */
 
 .popup {
     display: none;
+
     position: fixed;
+
     top: 50%;
     left: 50%;
+
     transform: translate(-50%, -50%);
+
     width: 350px;
+
     background: #1e293b;
+    color: #f8fafc;
+
     padding: 25px;
     border-radius: 20px;
+
     text-align: center;
-    box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+
+    border: 1px solid #334155;
+
+    box-shadow:
+        0 0 25px rgba(168, 85, 247, 0.5);
+
     z-index: 1000;
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease,
-        box-shadow 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .popup h3 {
     color: #c084fc;
     margin-bottom: 15px;
+
+    transition: color 0.35s ease;
 }
 
 .popup p {
@@ -257,59 +425,93 @@ body {
 .popup input,
 .popup select {
     width: 100%;
+
     padding: 10px;
     margin: 8px 0;
+
     border-radius: 8px;
-    border: none;
+    border: 1px solid #475569;
+
     outline: none;
+
+    background: #0f172a;
+    color: #ffffff;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .popup button {
     padding: 10px;
+
     border: none;
     border-radius: 8px;
+
     cursor: pointer;
     margin-top: 10px;
 }
 
-/* ================= REMINDER BUTTONS ================= */
+/* ======================================================
+   REMINDER BUTTONS
+   ====================================================== */
 
 #acceptReminderBtn {
     background: #22c55e;
-    color: white;
+    color: #ffffff;
+
     padding: 10px;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
     margin: 5px;
 }
 
 #skipReminderBtn {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
+
     padding: 10px;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
     margin: 5px;
 }
 
-/* ================= EXPENSE TABLE ================= */
+/* ======================================================
+   EXPENSE TABLE
+   ====================================================== */
 
 .expense-table {
     margin-top: 30px;
+
     background: #1e293b;
+
     padding: 20px;
     border-radius: 18px;
+
+    border: 1px solid #334155;
+
     overflow-x: auto;
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.20);
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease,
-        box-shadow 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
 }
 
 .expense-table h2 {
     margin-bottom: 15px;
+    color: #f8fafc;
 }
 
 table {
@@ -321,21 +523,36 @@ th,
 td {
     padding: 12px;
     text-align: left;
+
     border-bottom: 1px solid #374151;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
 th {
     color: #a855f7;
 }
 
-/* ================= EDIT BUTTON ================= */
+td {
+    color: #f8fafc;
+}
+
+/* ======================================================
+   EDIT BUTTON
+   ====================================================== */
 
 .edit-btn {
     background: #22c55e;
-    color: white;
+    color: #ffffff;
+
     border: none;
+
     padding: 8px 12px;
     border-radius: 6px;
+
     cursor: pointer;
     margin-right: 5px;
 }
@@ -344,14 +561,19 @@ th {
     opacity: 0.8;
 }
 
-/* ================= DELETE BUTTON ================= */
+/* ======================================================
+   DELETE BUTTON
+   ====================================================== */
 
 .delete-btn {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
+
     border: none;
+
     padding: 8px 12px;
     border-radius: 6px;
+
     cursor: pointer;
 }
 
@@ -359,29 +581,39 @@ th {
     opacity: 0.8;
 }
 
-/* ================= EDIT POPUP ================= */
+/* ======================================================
+   EDIT POPUP BUTTONS
+   ====================================================== */
 
 #updateExpenseBtn {
     background: #22c55e;
-    color: white;
+    color: #ffffff;
+
     width: 100%;
     padding: 12px;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
 }
 
 #closeEditBtn {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
+
     width: 100%;
     padding: 12px;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
 }
 
-/* ================= SEARCH FILTER ================= */
+/* ======================================================
+   SEARCH FILTER
+   ====================================================== */
 
 .expense-controls {
     display: flex;
@@ -392,31 +624,59 @@ th {
 .expense-controls input,
 .expense-controls select {
     padding: 10px;
+
     border-radius: 10px;
-    border: none;
+    border: 1px solid #475569;
+
     outline: none;
+
     flex: 1;
+
+    background: #0f172a;
+    color: #ffffff;
+
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
 }
 
-/* ================= TIPS ================= */
+/* ======================================================
+   TIPS
+   ====================================================== */
 
 .tips-section {
     margin-top: 30px;
+
     display: grid;
-    grid-template-columns: repeat(
-        auto-fit,
-        minmax(300px, 1fr)
-    );
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(300px, 1fr)
+        );
+
     gap: 20px;
 }
 
 .tip-card {
     background: #1e293b;
+
     padding: 20px;
     border-radius: 18px;
+
+    border: 1px solid #334155;
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease;
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease,
+        transform 0.3s ease;
+}
+
+.tip-card:hover {
+    transform: translateY(-2px);
 }
 
 .tip-card h3 {
@@ -424,58 +684,57 @@ th {
     margin-bottom: 10px;
 }
 
-/* ================= LOGO ================= */
+/* ======================================================
+   LOGO
+   ====================================================== */
 
-.logo-section {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-.logo-section img {
-    width: 90px;
-    height: 90px;
-    border-radius: 20px;
-    object-fit: cover;
-    margin-bottom: 10px;
-}
-
-.logo-section h2 {
-    color: #a855f7;
-    font-size: 20px;
-}
-
+.logo-section,
 .app-logo {
     text-align: center;
     margin-bottom: 25px;
 }
 
+.logo-section img,
 .app-logo img {
     width: 90px;
     height: 90px;
+
     border-radius: 20px;
     object-fit: cover;
+
     margin-bottom: 10px;
 }
 
+.logo-section h2,
 .app-logo h2 {
     color: #a855f7;
     font-size: 20px;
 }
 
-/* ================= SIDEBAR ================= */
+/* ======================================================
+   SIDEBAR
+   ====================================================== */
 
 .side-menu {
     position: fixed;
+
     top: 0;
     left: -250px;
+
     width: 250px;
     height: 100vh;
+
     background: #111827;
+
     padding: 25px 20px;
+
     transition:
         left 0.3s ease,
-        background-color 0.3s ease;
+        background-color 0.35s ease,
+        box-shadow 0.35s ease;
+
     z-index: 1000;
+
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -486,25 +745,36 @@ th {
 
 .side-menu a {
     display: block;
+
     width: 100%;
-    color: white;
+
+    color: #ffffff;
+
     text-decoration: none;
+
     margin: 8px 0;
     padding: 12px 15px;
+
     border-radius: 10px;
+
     transition:
         background-color 0.3s ease,
         color 0.3s ease,
         transform 0.3s ease;
+
     font-size: 15px;
 }
 
 .side-menu a:hover {
     background: #a855f7;
+    color: #ffffff;
+
     transform: translateX(5px);
 }
 
-/* ================= DELETE HISTORY ================= */
+/* ======================================================
+   DELETE HISTORY SIDEBAR ITEM
+   ====================================================== */
 
 .side-menu a[href="delete.html"] {
     background: #334155;
@@ -512,29 +782,39 @@ th {
 
 .side-menu a[href="delete.html"]:hover {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
 }
 
-/* ================= THEME BUTTON ================= */
+/* ======================================================
+   THEME BUTTON
+   ====================================================== */
 
 #themeBtn {
     width: auto;
     min-width: 100px;
+
     padding: 10px 15px;
+
     background: #334155;
-    color: white;
+    color: #ffffff;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
+
     font-size: 15px;
+
     transition:
-        background-color 0.3s ease,
-        color 0.3s ease,
+        background-color 0.35s ease,
+        color 0.35s ease,
         transform 0.3s ease;
 }
 
 #themeBtn:hover {
     background: #a855f7;
+    color: #ffffff;
+
     transform: translateY(-2px);
 }
 
@@ -543,18 +823,26 @@ th {
     margin-right: 8px;
 }
 
-/* ================= LOGOUT ================= */
+/* ======================================================
+   LOGOUT
+   ====================================================== */
 
 #logoutBtn {
     width: 100%;
+
     padding: 12px 15px;
     margin-top: 10px;
+
     background: #ef4444;
-    color: white;
+    color: #ffffff;
+
     border: none;
     border-radius: 10px;
+
     cursor: pointer;
+
     font-size: 15px;
+
     transition:
         background-color 0.3s ease,
         transform 0.3s ease;
@@ -565,7 +853,9 @@ th {
     transform: translateX(5px);
 }
 
-/* ================= SIDEBAR SCROLLBAR ================= */
+/* ======================================================
+   SIDEBAR SCROLLBAR
+   ====================================================== */
 
 .side-menu::-webkit-scrollbar {
     width: 5px;
@@ -580,115 +870,213 @@ th {
    LIGHT MODE
    ====================================================== */
 
+html.light-mode,
 body.light-mode {
     background: linear-gradient(
         135deg,
         #eef2ff,
         #f8fafc
     );
+
     color: #111827;
 }
 
-/* ================= LIGHT NAVBAR ================= */
+/* ======================================================
+   LIGHT NAVBAR
+   ====================================================== */
 
+html.light-mode .navbar,
 body.light-mode .navbar {
     background: #ffffff;
     color: #111827;
+
     border-bottom: 2px solid #d1d5db;
+
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+html.light-mode #menuBtn,
 body.light-mode #menuBtn {
-    background: #3b82f6;
-    color: white;
+    background: transparent;
+    color: #111827;
 }
 
-/* ================= LIGHT CARDS ================= */
+html.light-mode #menuBtn:hover,
+body.light-mode #menuBtn:hover {
+    background: #e5e7eb;
+}
 
+/* ======================================================
+   LIGHT MAIN
+   ====================================================== */
+
+html.light-mode .main-content,
+body.light-mode .main-content {
+    color: #111827;
+}
+
+html.light-mode .top-bar h1,
+body.light-mode .top-bar h1 {
+    color: #111827;
+}
+
+/* ======================================================
+   LIGHT CARDS
+   ====================================================== */
+
+html.light-mode .card,
+html.light-mode .expense-form,
+html.light-mode .expense-table,
+html.light-mode .tip-card,
 body.light-mode .card,
 body.light-mode .expense-form,
 body.light-mode .expense-table,
 body.light-mode .tip-card {
     background: #ffffff;
     color: #111827;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+    border-color: #e5e7eb;
+
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
-/* ================= LIGHT TEXT ================= */
+/* ======================================================
+   LIGHT CARD TEXT
+   ====================================================== */
 
-body.light-mode h1,
-body.light-mode h2,
-body.light-mode h3,
-body.light-mode p,
-body.light-mode span,
-body.light-mode label,
-body.light-mode th,
-body.light-mode td {
+html.light-mode .card h3,
+body.light-mode .card h3 {
+    color: #374151;
+}
+
+html.light-mode .card h2,
+body.light-mode .card h2 {
+    color: #16a34a;
+}
+
+html.light-mode .expense-form h2,
+html.light-mode .expense-table h2,
+body.light-mode .expense-form h2,
+body.light-mode .expense-table h2 {
     color: #111827;
 }
 
-/* ================= LIGHT INPUTS ================= */
+html.light-mode .tip-card h3,
+body.light-mode .tip-card h3 {
+    color: #7c3aed;
+}
 
+/* ======================================================
+   LIGHT INPUTS
+   ====================================================== */
+
+html.light-mode input,
+html.light-mode select,
 body.light-mode input,
 body.light-mode select {
     background: #ffffff;
     color: #111827;
+
     border: 1px solid #d1d5db;
 }
 
-/* ================= LIGHT TABLE ================= */
+html.light-mode input::placeholder,
+body.light-mode input::placeholder {
+    color: #6b7280;
+}
 
+html.light-mode input:focus,
+html.light-mode select:focus,
+body.light-mode input:focus,
+body.light-mode select:focus {
+    border-color: #8b5cf6;
+}
+
+/* ======================================================
+   LIGHT TABLE
+   ====================================================== */
+
+html.light-mode table,
 body.light-mode table {
     background: #ffffff;
     color: #111827;
 }
 
+html.light-mode th,
 body.light-mode th {
     color: #7c3aed;
+    border-bottom-color: #d1d5db;
 }
 
+html.light-mode td,
 body.light-mode td {
-    border-bottom: 1px solid #d1d5db;
+    color: #111827;
+    border-bottom-color: #d1d5db;
 }
 
-/* ================= LIGHT SIDEBAR ================= */
+html.light-mode tr:hover td,
+body.light-mode tr:hover td {
+    background: #f8fafc;
+}
 
+/* ======================================================
+   LIGHT SIDEBAR
+   ====================================================== */
+
+html.light-mode .side-menu,
 body.light-mode .side-menu {
     background: #ffffff;
-    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.08);
+
+    box-shadow:
+        5px 0 20px rgba(0, 0, 0, 0.08);
 }
 
+html.light-mode .side-menu a,
 body.light-mode .side-menu a {
     color: #111827;
 }
 
+html.light-mode .side-menu a:hover,
 body.light-mode .side-menu a:hover {
     background: #a855f7;
-    color: white;
+    color: #ffffff;
 }
 
+html.light-mode .side-menu a[href="delete.html"],
 body.light-mode .side-menu a[href="delete.html"] {
     background: #e5e7eb;
+    color: #111827;
 }
 
+html.light-mode .side-menu a[href="delete.html"]:hover,
 body.light-mode .side-menu a[href="delete.html"]:hover {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
 }
 
-/* ================= LIGHT THEME BUTTON ================= */
+/* ======================================================
+   LIGHT THEME BUTTON
+   ====================================================== */
 
+html.light-mode #themeBtn,
 body.light-mode #themeBtn {
     background: #cbd5e1;
     color: #111827;
 }
 
+html.light-mode #themeBtn:hover,
 body.light-mode #themeBtn:hover {
     background: #a855f7;
-    color: white;
+    color: #ffffff;
 }
 
-/* ================= LIGHT PROFILE ================= */
+/* ======================================================
+   LIGHT PROFILE
+   ====================================================== */
 
+html.light-mode .user-profile,
 body.light-mode .user-profile {
     background: #dbeafe;
     border: 2px solid #93c5fd;
@@ -696,30 +1084,90 @@ body.light-mode .user-profile {
     padding: 8px 15px;
 }
 
-body.light-mode #profileCircle {
-    background: #3b82f6;
-}
-
+html.light-mode #profileCircle,
+body.light-mode #profileCircle,
+html.light-mode .letter-profile,
 body.light-mode .letter-profile {
     background: #3b82f6;
+    color: #ffffff;
 }
 
-/* ================= LIGHT POPUP ================= */
+/* ======================================================
+   LIGHT POPUP
+   ====================================================== */
 
+html.light-mode .popup,
 body.light-mode .popup {
     background: #ffffff;
     color: #111827;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+
+    border-color: #e5e7eb;
+
+    box-shadow:
+        0 5px 25px rgba(0, 0, 0, 0.20);
 }
 
+html.light-mode .popup h3,
 body.light-mode .popup h3 {
     color: #7c3aed;
 }
 
-/* ================= IMPORT ================= */
+html.light-mode .popup p,
+body.light-mode .popup p {
+    color: #374151;
+}
+
+html.light-mode .popup input,
+html.light-mode .popup select,
+body.light-mode .popup input,
+body.light-mode .popup select {
+    background: #ffffff;
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+/* ======================================================
+   IMPORT
+   ====================================================== */
 
 #importExpenseBtn {
     margin-top: 10px;
+}
+
+/* ======================================================
+   SCROLLBAR
+   ====================================================== */
+
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #a855f7;
+}
+
+html.light-mode body::-webkit-scrollbar-track,
+body.light-mode::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+html.light-mode body::-webkit-scrollbar-thumb,
+body.light-mode::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+}
+
+html.light-mode body::-webkit-scrollbar-thumb:hover,
+body.light-mode::-webkit-scrollbar-thumb:hover {
+    background: #a855f7;
 }
 
 /* ======================================================
@@ -760,36 +1208,14 @@ body.light-mode .popup h3 {
         min-width: auto;
         padding: 9px 12px;
     }
-}
-```
-/* ======================================================
-   GLOBAL THEME TRANSITION - DASHBOARD
-   ====================================================== */
 
-html,
-body,
-body *,
-html * {
-    transition:
-        background-color 0.35s ease,
-        color 0.35s ease,
-        border-color 0.35s ease,
-        box-shadow 0.35s ease !important;
-}
+    .nav-right {
+        gap: 8px;
+    }
 
-/* ======================================================
-   HTML LIGHT MODE SUPPORT
-   ====================================================== */
-
-html.light-mode {
-    background: #f8fafc;
-}
-
-html.light-mode body {
-    background: linear-gradient(
-        135deg,
-        #eef2ff,
-        #f8fafc
-    );
-    color: #111827;
+    .user-profile {
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
 }
