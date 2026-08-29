@@ -1196,3 +1196,30 @@ body.light-mode::-webkit-scrollbar-thumb:hover {
         background: transparent;
     }
 }
+/* ================= PROFILE LETTER ================= */
+
+#profileCircle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #a855f7;
+    color: #ffffff;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* Remove image completely */
+#profileCircle img {
+    display: none !important;
+}
