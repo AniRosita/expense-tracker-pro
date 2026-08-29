@@ -533,3 +533,11 @@ body.light-mode::-webkit-scrollbar-thumb:hover {
         text-align: center;
     }
 }
+/* ================= CENTER LOGIN CARD ================= */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
