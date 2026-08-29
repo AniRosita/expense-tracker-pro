@@ -1,3 +1,8 @@
+/* ======================================================
+   EXPENSE HISTORY / REPORT - CLEAN THEME CSS
+   DARK + LIGHT MODE
+   ====================================================== */
+
 *{
     margin:0;
     padding:0;
@@ -5,11 +10,14 @@
     font-family:'Poppins',sans-serif;
 }
 
+/* ================= BODY ================= */
+
 body{
     background:#0f172a;
     color:white;
     min-height:100vh;
     padding:30px;
+    transition:background .3s ease, color .3s ease;
 }
 
 .container{
@@ -17,13 +25,15 @@ body{
     margin:auto;
 }
 
+/* ================= TITLE ================= */
+
 h1{
     text-align:center;
     margin-bottom:25px;
     font-size:32px;
 }
 
-/* FILTERS */
+/* ================= FILTERS ================= */
 
 .filters{
     display:flex;
@@ -52,9 +62,10 @@ h1{
     border-radius:10px;
     background:#1e293b;
     color:white;
+    outline:none;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 
 .buttons{
     display:flex;
@@ -69,44 +80,57 @@ h1{
     border-radius:10px;
     cursor:pointer;
     font-weight:600;
-    transition:0.3s;
+    transition:.3s;
 }
 
 .buttons button:hover{
     transform:translateY(-2px);
 }
 
+/* Report */
+
 #viewReport{
     background:#3b82f6;
     color:white;
 }
+
+/* PDF */
 
 #downloadPdf{
     background:#ef4444;
     color:white;
 }
 
+/* Excel */
+
 #downloadExcel{
     background:#22c55e;
     color:white;
 }
 
-/* TOTAL CARD */
+/* ================= TOTAL CARD ================= */
 
 h2{
-    background:linear-gradient(135deg,#3b82f6,#06b6d4);
+    background:linear-gradient(
+        135deg,
+        #3b82f6,
+        #06b6d4
+    );
+
     padding:20px;
     border-radius:15px;
     margin-bottom:25px;
+
     text-align:center;
     font-size:26px;
+    color:white;
 }
 
 #totalExpense{
     font-weight:bold;
 }
 
-/* HISTORY */
+/* ================= HISTORY ================= */
 
 #expenseHistory{
     display:flex;
@@ -114,15 +138,30 @@ h2{
     gap:15px;
 }
 
-/* CARD */
+/* ================= EXPENSE CARD ================= */
 
 .expense-card{
     background:#1e293b;
     border-left:5px solid #3b82f6;
+
     padding:18px;
     border-radius:12px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.25);
+
+    transition:
+        background .3s ease,
+        color .3s ease,
+        box-shadow .3s ease,
+        transform .3s ease;
 }
+
+.expense-card:hover{
+    transform:translateY(-2px);
+}
+
+/* ================= CARD LINE ================= */
 
 .line{
     display:flex;
@@ -148,35 +187,157 @@ h2{
 .expense-card span{
     display:inline-block;
     margin-top:10px;
+
     background:#334155;
+    color:white;
+
     padding:6px 12px;
     border-radius:20px;
+
     font-size:13px;
 }
 
-/* BACK BUTTON */
+/* ================= BACK BUTTON ================= */
 
 .back{
     margin-top:25px;
+
     background:#f59e0b;
     color:white;
+
     border:none;
     padding:12px 20px;
+
     border-radius:10px;
     cursor:pointer;
     font-weight:600;
+
+    transition:.3s;
 }
 
 .back:hover{
-    opacity:0.9;
+    opacity:.9;
+    transform:translateY(-2px);
 }
 
-/* MOBILE */
+/* ======================================================
+   LIGHT MODE
+   ====================================================== */
+
+body.light-mode{
+    background:linear-gradient(
+        135deg,
+        #eef2ff,
+        #f8fafc
+    );
+
+    color:#111827;
+}
+
+/* ================= LIGHT CONTAINER ================= */
+
+body.light-mode .container{
+    background:#ffffff;
+
+    max-width:1200px;
+    margin:30px auto;
+    padding:25px;
+
+    border-radius:20px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.08);
+}
+
+/* ================= LIGHT TITLE ================= */
+
+body.light-mode h1{
+    color:#111827;
+}
+
+/* ================= LIGHT FILTER LABEL ================= */
+
+body.light-mode .filters label{
+    color:#374151;
+}
+
+/* ================= LIGHT INPUT ================= */
+
+body.light-mode .filters select,
+body.light-mode .filters input{
+    background:#ffffff;
+    color:#111827;
+
+    border:1px solid #d1d5db;
+}
+
+/* ================= LIGHT EXPENSE CARD ================= */
+
+body.light-mode .expense-card{
+    background:#f8fafc;
+
+    border-left:5px solid #8b5cf6;
+
+    border-radius:15px;
+
+    padding:18px;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.05);
+}
+
+/* ================= LIGHT CARD TEXT ================= */
+
+body.light-mode .expense-card h3{
+    color:#111827;
+}
+
+body.light-mode .expense-card p{
+    color:#374151;
+}
+
+/* Amount stays green */
+
+body.light-mode .line p{
+    color:#16a34a;
+}
+
+/* ================= LIGHT CATEGORY ================= */
+
+body.light-mode .expense-card span{
+    background:#e5e7eb;
+    color:#374151;
+}
+
+/* ================= LIGHT H2 ================= */
+
+body.light-mode h2{
+    color:white;
+}
+
+/* ================= MOBILE ================= */
 
 @media(max-width:768px){
 
+    body{
+        padding:15px;
+    }
+
+    .container{
+        width:100%;
+    }
+
+    body.light-mode .container{
+        margin:10px auto;
+        padding:18px;
+    }
+
     .filters{
         flex-direction:column;
+    }
+
+    .filters div{
+        width:100%;
     }
 
     .buttons{
@@ -192,112 +353,12 @@ h2{
         align-items:flex-start;
         gap:5px;
     }
-}
-body.light-mode{
-    background:#f5f5f5;
-    color:#111;
-}
-/* LIGHT THEME */
 
-body.light-theme{
-    background:#f5f7fb;
-    color:#222;
-}
+    h1{
+        font-size:28px;
+    }
 
-body.light-theme .container{
-    background:#ffffff;
-}
-
-body.light-theme h1,
-body.light-theme h2,
-body.light-theme h3,
-body.light-theme label{
-    color:#222;
-}
-
-body.light-theme .expense-card{
-    background:#f8fafc;
-    border:1px solid #ddd;
-}
-
-body.light-theme .expense-card p,
-body.light-theme .expense-card span{
-    color:#444;
-}
-
-body.light-theme select,
-body.light-theme input{
-    background:#fff;
-    color:#222;
-    border:1px solid #ccc;
-}
-/* LIGHT MODE */
-
-body.light-mode{
-    background:#f5f7fb;
-    color:#111827;
-}
-
-body.light-mode .container{
-    background:#ffffff;
-    color:#111827;
-}
-
-body.light-mode h1,
-body.light-mode h2,
-body.light-mode h3,
-body.light-mode label{
-    color:#111827;
-}
-
-body.light-mode .expense-card{
-    background:#ffffff;
-    border:1px solid #d1d5db;
-    color:#111827;
-}
-
-body.light-mode .expense-card p,
-body.light-mode .expense-card span{
-    color:#374151;
-}
-
-body.light-mode select,
-body.light-mode input{
-    background:#ffffff;
-    color:#111827;
-    border:1px solid #d1d5db;
-}
-
-body.light-mode button{
-    color:white;
-}
-/* 1. PAGE BACKGROUND */
-body.light-mode{
-    background:linear-gradient(
-        135deg,
-        #eef2ff,
-        #f8fafc
-    );
-}
-/* 2. CONTAINER */
-body.light-mode .container{
-    background:#ffffff;
-    max-width:1200px;
-    margin:30px auto;
-    padding:25px;
-    border-radius:20px;
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,0.08);
-}
-/* 3. EXPENSE CARD */
-body.light-mode .expense-card{
-    background:#f8fafc;
-    border-left:5px solid #8b5cf6;
-    border-radius:15px;
-    padding:15px;
-    margin-bottom:15px;
-
-    box-shadow:
-    0 4px 12px rgba(0,0,0,0.05);
+    h2{
+        font-size:22px;
+    }
 }
