@@ -1,160 +1,198 @@
 ```javascript
-// ======================================================
-// ================= EXPENSE TRACKER PRO =================
-// ===================== THEME JS =========================
-// ======================================================
+/* ======================================================
+   EXPENSE TRACKER PRO - GLOBAL THEME SYSTEM
+   ====================================================== */
 
 "use strict";
 
-// ======================================================
-// ================= GET SAVED THEME ====================
-// ======================================================
+(function () {
 
-function getSavedTheme() {
+    /* ==================================================
+       GET SAVED THEME
+       ================================================== */
 
-    const savedTheme = localStorage.getItem("theme");
+    const savedTheme = localStorage.getItem("theme") || "dark";
 
-    return savedTheme === "light"
-        ? "light"
-        : "dark";
-}
 
-// ======================================================
-// ================= APPLY GLOBAL THEME =================
-// ======================================================
+    /* ==================================================
+       APPLY THEME
+       ================================================== */
 
-function applyGlobalTheme(theme) {
+    function applyTheme(theme) {
 
-    const body = document.body;
+        const html = document.documentElement;
+        const body = document.body;
 
-    if (!body) {
-        return;
+        if (theme === "light") {
+
+            html.classList.add("light-mode");
+
+            if (body) {
+                body.classList.add("light-mode");
+            }
+
+        } else {
+
+            html.classList.remove("light-mode");
+
+            if (body) {
+                body.classList.remove("light-mode");
+            }
+        }
     }
 
-    // Smooth theme transition
-    body.classList.add("theme-transition");
 
-    if (theme === "light") {
-        body.classList.add("light-mode");
+    /* ==================================================
+       APPLY INITIAL THEME
+       ================================================== */
+
+    applyTheme(savedTheme);
+
+
+    /* ==================================================
+       THEME BUTTON
+       ================================================== */
+
+    function setupThemeButton() {
+
+        const themeBtn = document.getElementById("themeBtn");
+
+        if (!themeBtn) {
+            return;
+        }
+
+
+        /* Avoid duplicate event listeners */
+
+        if (themeBtn.dataset.themeReady === "true") {
+            return;
+        }
+
+        themeBtn.dataset.themeReady = "true";
+
+
+        /* ==================================================
+           BUTTON CLICK
+           ================================================== */
+
+        themeBtn.addEventListener("click", function () {
+
+            const html = document.documentElement;
+
+            const isLight =
+                html.classList.contains("light-mode");
+
+
+            const newTheme =
+                isLight ? "dark" : "light";
+
+
+            /* Smooth transition */
+
+            document.body.classList.add("theme-transition");
+
+
+            /* Save theme */
+
+            localStorage.setItem("theme", newTheme);
+
+
+            /* Apply theme */
+
+            applyTheme(newTheme);
+
+
+            /* Update button */
+
+            updateThemeButton();
+
+
+            /* Remove transition class */
+
+            setTimeout(function () {
+
+                document.body.classList.remove(
+                    "theme-transition"
+                );
+
+            }, 400);
+
+        });
+
+    }
+
+
+    /* ==================================================
+       UPDATE THEME BUTTON TEXT
+       ================================================== */
+
+    function updateThemeButton() {
+
+        const themeBtn =
+            document.getElementById("themeBtn");
+
+        if (!themeBtn) {
+            return;
+        }
+
+
+        const isLight =
+            document.documentElement.classList.contains(
+                "light-mode"
+            );
+
+
+        if (isLight) {
+
+            themeBtn.innerHTML =
+                "🌙 Dark Mode";
+
+        } else {
+
+            themeBtn.innerHTML =
+                "☀️ Light Mode";
+        }
+
+    }
+
+
+    /* ==================================================
+       DOM READY
+       ================================================== */
+
+    if (document.readyState === "loading") {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                applyTheme(
+                    localStorage.getItem("theme") || "dark"
+                );
+
+                setupThemeButton();
+                updateThemeButton();
+
+            }
+        );
+
     } else {
-        body.classList.remove("light-mode");
+
+        applyTheme(
+            localStorage.getItem("theme") || "dark"
+        );
+
+        setupThemeButton();
+        updateThemeButton();
+
     }
 
-    // Remove transition class after animation
-    window.requestAnimationFrame(function () {
 
-        setTimeout(function () {
-            body.classList.remove("theme-transition");
-        }, 350);
+    /* ==================================================
+       GLOBAL THEME FUNCTIONS
+       ================================================== */
 
-    });
+    window.applyTheme = applyTheme;
 
-    updateGlobalThemeButton();
-}
-
-// ======================================================
-// ================= LOAD GLOBAL THEME ==================
-// ======================================================
-
-function loadGlobalTheme() {
-
-    const savedTheme = getSavedTheme();
-
-    applyGlobalTheme(savedTheme);
-}
-
-// ======================================================
-// ================ UPDATE THEME BUTTON =================
-// ======================================================
-
-function updateGlobalThemeButton() {
-
-    const themeButtons = document.querySelectorAll(
-        "#themeBtn, .theme-btn"
-    );
-
-    const isLight =
-        document.body &&
-        document.body.classList.contains("light-mode");
-
-    themeButtons.forEach(function (button) {
-
-        button.innerHTML = isLight
-            ? "🌙 Dark Mode"
-            : "☀️ Light Mode";
-
-    });
-}
-
-// ======================================================
-// ================= CHANGE THEME ========================
-// ======================================================
-
-function toggleGlobalTheme() {
-
-    const isLight =
-        document.body.classList.contains("light-mode");
-
-    const newTheme =
-        isLight ? "dark" : "light";
-
-    // Save globally BEFORE changing page
-    localStorage.setItem(
-        "theme",
-        newTheme
-    );
-
-    // Apply immediately
-    applyGlobalTheme(newTheme);
-}
-
-// ======================================================
-// ================= THEME BUTTON CLICK =================
-// ======================================================
-
-document.addEventListener("click", function (event) {
-
-    const button = event.target.closest(
-        "#themeBtn, .theme-btn"
-    );
-
-    if (!button) {
-        return;
-    }
-
-    event.preventDefault();
-
-    toggleGlobalTheme();
-
-});
-
-// ======================================================
-// ================= PAGE LOAD ===========================
-// ======================================================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    // Apply saved theme to current page
-    loadGlobalTheme();
-
-});
-
-// ======================================================
-// ================= GLOBAL FUNCTIONS ====================
-// ======================================================
-
-window.getSavedTheme =
-    getSavedTheme;
-
-window.applyGlobalTheme =
-    applyGlobalTheme;
-
-window.loadGlobalTheme =
-    loadGlobalTheme;
-
-window.toggleGlobalTheme =
-    toggleGlobalTheme;
-
-window.updateGlobalThemeButton =
-    updateGlobalThemeButton;
+})();
 ```

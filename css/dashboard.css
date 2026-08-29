@@ -1,5 +1,7 @@
+```css
 /* ======================================================
-   EXPENSE TRACKER PRO - CLEAN GLOBAL THEME CSS
+   EXPENSE TRACKER PRO - DASHBOARD CSS
+   CLEAN GLOBAL THEME
    ====================================================== */
 
 * {
@@ -15,7 +17,9 @@ body {
     background: #0f172a;
     color: #ffffff;
     min-height: 100vh;
-    transition: background 0.3s ease, color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
 }
 
 /* ================= NAVBAR ================= */
@@ -27,7 +31,10 @@ body {
     padding: 15px 25px;
     background: #111827;
     border-bottom: 1px solid #374151;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease;
 }
 
 .nav-title {
@@ -149,7 +156,10 @@ body {
     padding: 25px;
     border-radius: 18px;
     box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
-    transition: background 0.3s ease, color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 .card h3 {
@@ -168,7 +178,10 @@ body {
     background: #1e293b;
     padding: 20px;
     border-radius: 18px;
-    transition: background 0.3s ease, color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 .expense-form h2 {
@@ -226,6 +239,10 @@ body {
     text-align: center;
     box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
     z-index: 1000;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 .popup h3 {
@@ -285,6 +302,10 @@ body {
     padding: 20px;
     border-radius: 18px;
     overflow-x: auto;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 .expense-table h2 {
@@ -393,6 +414,9 @@ th {
     background: #1e293b;
     padding: 20px;
     border-radius: 18px;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
 }
 
 .tip-card h3 {
@@ -448,7 +472,9 @@ th {
     height: 100vh;
     background: #111827;
     padding: 25px 20px;
-    transition: left 0.3s ease, background 0.3s ease;
+    transition:
+        left 0.3s ease,
+        background-color 0.3s ease;
     z-index: 1000;
     overflow-y: auto;
     overflow-x: hidden;
@@ -466,7 +492,10 @@ th {
     margin: 8px 0;
     padding: 12px 15px;
     border-radius: 10px;
-    transition: 0.3s;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.3s ease;
     font-size: 15px;
 }
 
@@ -475,7 +504,7 @@ th {
     transform: translateX(5px);
 }
 
-/* Delete History */
+/* ================= DELETE HISTORY ================= */
 
 .side-menu a[href="delete.html"] {
     background: #334155;
@@ -489,22 +518,29 @@ th {
 /* ================= THEME BUTTON ================= */
 
 #themeBtn {
-    width: 100%;
-    padding: 12px 15px;
-    margin-top: 15px;
-    margin-bottom: 10px;
+    width: auto;
+    min-width: 100px;
+    padding: 10px 15px;
     background: #334155;
     color: white;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-size: 15px;
-    transition: 0.3s;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.3s ease;
 }
 
 #themeBtn:hover {
     background: #a855f7;
-    transform: translateX(5px);
+    transform: translateY(-2px);
+}
+
+#themeBtn i,
+#logoutBtn i {
+    margin-right: 8px;
 }
 
 /* ================= LOGOUT ================= */
@@ -519,17 +555,14 @@ th {
     border-radius: 10px;
     cursor: pointer;
     font-size: 15px;
-    transition: 0.3s;
+    transition:
+        background-color 0.3s ease,
+        transform 0.3s ease;
 }
 
 #logoutBtn:hover {
     background: #dc2626;
     transform: translateX(5px);
-}
-
-#themeBtn i,
-#logoutBtn i {
-    margin-right: 8px;
 }
 
 /* ================= SIDEBAR SCROLLBAR ================= */
@@ -722,4 +755,10 @@ body.light-mode .popup h3 {
     .navbar {
         padding: 12px 15px;
     }
+
+    #themeBtn {
+        min-width: auto;
+        padding: 9px 12px;
+    }
 }
+```

@@ -1,4 +1,8 @@
 ```css
+/* ======================================================
+   EXPENSE TRACKER PRO - GLOBAL STYLE
+   ====================================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -7,16 +11,37 @@
 }
 
 /* ======================================================
-   BODY
+   HTML / BODY
    ====================================================== */
+
+html {
+    min-height: 100%;
+    background: #0f172a;
+    transition: background-color 0.35s ease;
+}
 
 body {
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background: #0f172a;
-    overflow: hidden;
+    color: #ffffff;
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease;
+}
+
+/* ======================================================
+   GLOBAL THEME TRANSITION
+   ====================================================== */
+
+html.theme-transition,
+html.theme-transition *,
+body.theme-transition,
+body.theme-transition * {
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease !important;
 }
 
 /* ======================================================
@@ -25,14 +50,18 @@ body {
 
 .background {
     position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .glow {
     position: absolute;
     border-radius: 50%;
     filter: blur(120px);
+    pointer-events: none;
 }
 
 .glow1 {
@@ -52,7 +81,7 @@ body {
 }
 
 /* ======================================================
-   LOGIN CONTAINER
+   LOGIN
    ====================================================== */
 
 .login-container {
@@ -66,6 +95,7 @@ body {
     border-radius: 25px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     text-align: center;
@@ -78,8 +108,7 @@ body {
 .logo {
     width: 80px;
     height: 80px;
-    margin: auto;
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -101,7 +130,7 @@ body {
    ====================================================== */
 
 .login-card h1 {
-    color: white;
+    color: #ffffff;
     margin-bottom: 8px;
 }
 
@@ -111,7 +140,7 @@ body {
 }
 
 /* ======================================================
-   INPUT BOX
+   INPUT
    ====================================================== */
 
 .input-box {
@@ -133,8 +162,8 @@ body {
     width: 100%;
     border: none;
     outline: none;
-    background: none;
-    color: white;
+    background: transparent;
+    color: #ffffff;
     font-size: 15px;
 }
 
@@ -151,7 +180,7 @@ button {
     padding: 14px;
     border: none;
     border-radius: 12px;
-    color: white;
+    color: #ffffff;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -182,7 +211,7 @@ button:hover {
 }
 
 /* ======================================================
-   TOAST NOTIFICATION
+   TOAST
    ====================================================== */
 
 .toast {
@@ -190,7 +219,7 @@ button:hover {
     top: 20px;
     right: 20px;
     background: #22c55e;
-    color: white;
+    color: #ffffff;
     padding: 15px 25px;
     border-radius: 12px;
     font-weight: 600;
@@ -204,7 +233,6 @@ button:hover {
 }
 
 @keyframes slideIn {
-
     from {
         transform: translateX(100%);
         opacity: 0;
@@ -229,51 +257,85 @@ button:hover {
 }
 
 /* ======================================================
-   GLOBAL SMOOTH THEME TRANSITION
+   LIGHT MODE
    ====================================================== */
 
 /*
-   Theme changes smoothly only when the user
-   clicks the Theme button.
+   IMPORTANT:
+   Theme preload adds light-mode to HTML.
+   Therefore both html.light-mode and
+   body.light-mode are supported.
 */
-
-body.theme-transition,
-body.theme-transition * {
-    transition:
-        background-color 0.35s ease,
-        color 0.35s ease,
-        border-color 0.35s ease,
-        box-shadow 0.35s ease !important;
-}
-
-/* ======================================================
-   THEME BACKGROUND
-   ====================================================== */
-
-/*
-   Dark theme is the default.
-   Light theme is applied to both html and body
-   because the preload script adds the class to html.
-*/
-
-html {
-    background: #0f172a;
-}
 
 html.light-mode {
     background: #f8fafc;
 }
 
-body {
-    background-color: #0f172a;
+html.light-mode body,
+body.light-mode {
+    background: #f8fafc;
+    color: #111827;
 }
 
-body.light-mode {
-    background-color: #f8fafc;
+html.light-mode .login-card,
+body.light-mode .login-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+html.light-mode .login-card h1,
+body.light-mode .login-card h1 {
+    color: #111827;
+}
+
+html.light-mode .login-card p,
+body.light-mode .login-card p {
+    color: #475569;
+}
+
+html.light-mode .input-box,
+body.light-mode .input-box {
+    background: #ffffff;
+    border-color: #d1d5db;
+}
+
+html.light-mode .input-box input,
+body.light-mode .input-box input {
+    color: #111827;
+}
+
+html.light-mode .input-box input::placeholder,
+body.light-mode .input-box input::placeholder {
+    color: #64748b;
 }
 
 /* ======================================================
-   MOBILE RESPONSIVE
+   GLOBAL PAGE COMPONENTS
+   ====================================================== */
+
+.navbar,
+.side-menu,
+.card,
+.expense-form,
+.expense-table,
+.tip-card,
+.chart-card,
+.filter-box,
+.filter-card,
+.history-card,
+.popup,
+.profile-card,
+.smart-card {
+    transition:
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+/* ======================================================
+   MOBILE
    ====================================================== */
 
 @media (max-width: 480px) {
@@ -283,5 +345,10 @@ body.light-mode {
         padding: 25px;
     }
 
+    .toast {
+        left: 15px;
+        right: 15px;
+        top: 15px;
+        text-align: center;
+    }
 }
-```
