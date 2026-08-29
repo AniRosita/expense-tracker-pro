@@ -172,11 +172,21 @@ window.apiRequest = apiRequest;
 
 // ======================================================
 // ================= FORMAT CURRENCY =====================
+// ========== USE GLOBAL CURRENCY SYSTEM =================
 // ======================================================
 
-function formatCurrency(amount) {
+function formatDashboardCurrency(amount) {
     const value = Number(amount) || 0;
 
+    // Use currency.js global formatter if available
+    if (
+        typeof window.formatCurrency === "function" &&
+        window.formatCurrency !== formatDashboardCurrency
+    ) {
+        return window.formatCurrency(value);
+    }
+
+    // Fallback - INR
     return (
         "₹" +
         value.toLocaleString("en-IN", {
@@ -186,7 +196,7 @@ function formatCurrency(amount) {
     );
 }
 
-window.formatCurrency = formatCurrency;
+window.formatDashboardCurrency = formatDashboardCurrency;
 
 // ======================================================
 // ================= NORMALIZE DATE ======================
